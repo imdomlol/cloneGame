@@ -98,25 +98,38 @@ drive Phase 1 + Phase 2.
       something like Bevy/Rust, Unity DOTS, Godot+ECS at the top — but
       they must come from the LLM, not from the reference table below).
 
-### Engine candidates reference — They Are Billions multiplayer
+### Engine choice — decided 2026-05-19: Bevy + lockstep
 
-The user's stated goal: solve the multiplayer gap in They Are Billions,
-with tens of thousands of enemy entities active on the map at all times.
-That problem is dominated by two constraints — **deterministic simulation**
-(can't replicate 30k entity states across the wire; must lockstep on
-inputs only) and **ECS-shaped data layout** (entity counts that high
-demand data-oriented design). Phase 0 v2's engine proposer should surface
-these or better; the list below is reference, not hard-coded.
+**Chosen:** Bevy (Rust) with **deterministic lockstep networking** and a
+**fixed-tick sim decoupled from an interpolated render tick** for smooth
+multiplayer feel at 30k+ entities.
 
-| Engine | Pros | Cons |
-| --- | --- | --- |
-| **Bevy / Rust** | ECS-native, Rust gives binary-deterministic math out of the box (fixed-point is straightforward), `bevy_replicon` / `lightyear` for lockstep, open source, code-only surface keeps codegen scope small | Rust learning curve; engine still pre-1.0, breaking changes |
-| **Unity DOTS / C#** | Mature DOTS handles 100k+ entities, Netcode for Entities is production-grade, mainstream tooling and asset ecosystem | C# IL2CPP floating-point determinism is fragile across platforms — needs `Unity.Mathematics.fixed` or third-party deterministic math; engine is closed-source |
-| **Godot 4 + ECS bolt-on** | Open source, fast iteration, scripting close to Python, decent built-in multiplayer | No native ECS — must integrate `godot-ecs` or similar; not battle-tested at 10k+ entity counts; networking is state-replication first, not lockstep |
-| **Custom (Flecs + SDL/Vulkan)** | Maximum control over determinism + entity count ceiling | Massive engineering cost; only worth it if codegen output is the *only* source |
+Recorded in `game-config.json -> chosen_engine`. Binding determinism
+rules for Phase 2 codegen are in `CLAUDE.md > "Target engine"`.
 
-Phase 2 reads `chosen_engine` and generates code targeting that engine's
-idioms.
+**Why Bevy over the runner-up (Godot 4):** the Phase 0 v2 proposer
+scored Godot higher (0.87 vs 0.82) but did so from titles-only samples
+and missed the multiplayer goal — its own con list flags networking as
+"not a blocker for single-player focus," which is exactly the blocker
+here. For 30k entities on the wire, only lockstep survives bandwidth,
+which requires bit-identical sim across clients. Bevy's ECS + Rust gives
+that foundation natively; Godot would require rewriting the sim layer
+in C++ extensions with manual fixed-point math, which is "stop using
+most of Godot."
+
+**Tradeoffs accepted:**
+- Bevy is pre-1.0 — pin the version in `Cargo.toml`, bump deliberately.
+- Rust skills required — fewer drop-in hires than C# / GDScript.
+- UI ecosystem less mature — colony-resource HUD will need more custom
+  code than a Unity or Godot equivalent.
+
+**Architecture sketch (encoded in CLAUDE.md, applied by Phase 2 codegen):**
+- Sim: Bevy `FixedUpdate` schedule, 20–30Hz, deterministic system order,
+  fixed-point math, seeded RNG, no `HashMap` iteration, no transcendentals.
+- Render: Bevy `Update` schedule, vsync rate, interpolates between the
+  last two sim states. Floats and `HashMap` are fine here.
+- Networking: only player inputs cross the wire. Periodic state checksum
+  broadcast — first mismatch = desync detected, log offending tick.
 
 ---
 
@@ -175,9 +188,10 @@ vault notes under `vault/<kind>/<slug>.md`.
 Goal: take the sanitized vault, retrieve relevant chunks per task, and
 generate production-ready game code with a Claude codegen loop.
 
-**Status: not started. No longer blocked on a hard-coded engine choice —
-engine selection becomes a Phase 0 v2 LLM proposal + human approval. Phase
-2 reads `chosen_engine` from `game-config.json` and adapts.**
+**Status: not started. Engine decided (Bevy + lockstep, see Phase 0
+section). Phase 2 reads `chosen_engine` from `game-config.json` and
+generates code that honors the determinism rules in
+`CLAUDE.md > "Target engine"`.**
 
 ### Engineering tasks (greenfield)
 
@@ -194,6 +208,11 @@ engine selection becomes a Phase 0 v2 LLM proposal + human approval. Phase
       < 2,500 tokens. **Template** with placeholders that a small
       generator fills in from `chosen_engine` + `kinds.*.frontmatter_schema`,
       producing the per-game engine baseline at first Phase 2 run.
+      Must encode the determinism rules from `CLAUDE.md > "Target engine"`
+      verbatim — fixed-point math, no transcendentals in sim, seeded RNG,
+      forced system order, no `HashMap` iteration in sim. Plus the
+      sim/render split (FixedUpdate vs Update) and the periodic-checksum
+      desync detector.
 - [ ] `phase2/codegen.py` — Anthropic SDK call with `cache_control: ephemeral`
       on the engine baseline
 - [ ] `build/system_map.yaml` — rolling Haiku-summarised state of generated
@@ -219,6 +238,7 @@ engine selection becomes a Phase 0 v2 LLM proposal + human approval. Phase
 | `human_approved` gate in `game-config.json` | Phase 0 | Cheap insurance against an LLM-proposed taxonomy slipping into production ingest. Phase 1 warns when the flag is `false`. |
 | **Per-kind schemas as data in `game-config.json`, not hand-coded files** | 2026-05-19 | Original design coupled schemas to code, requiring manual authoring per game. Goal is to reverse-engineer arbitrary games — anything game-specific must live in `game-config.json`. Phase 0 v2 LLM proposes; human approves via existing diff gate. |
 | **Engine selection as LLM proposal + human approval, not hard-coded** | 2026-05-19 | Different games need different engines (RTS with 30k entities ≠ turn-based card game). Engine choice cascades into Phase 2 codegen, so it belongs alongside taxonomy in `game-config.json`, gated by the same `human_approved` flag. |
+| **Bevy + lockstep + fixed-sim/interpolated-render for They Are Billions** | 2026-05-19 | Chosen over the higher-scored Godot 4 because the proposer scored from titles-only samples and missed the multiplayer goal. 30k entities on the wire requires lockstep, which requires bit-identical sim; Bevy's ECS + Rust + native `FixedUpdate` schedule give that natively. Smooth feel comes from running the deterministic sim at 20–30Hz and decoupling the render to interpolate between sim states at vsync rate. Determinism rules captured in CLAUDE.md > "Target engine". |
 
 ---
 

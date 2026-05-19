@@ -17,8 +17,27 @@ Phase 2  vault/ ──► repomix XML ──► Chroma index ──► codegen L
 ```
 
 - **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to map raw wiki categories to engine-relevant `kinds`, and writes `game-config.proposed.json` with a colored diff. A human must approve the diff; approval flips `human_approved: true` in `game-config.json`. Phase 1 warns when this is false.
-- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, runs each page through a headless LLM CLI (`claude -p` or `codex exec`), validates the resulting YAML frontmatter against `schemas/*.schema.json`, and writes either `vault/<kind>/<slug>.md` or `vault/_quarantine/<slug>.md`. Compile output is cached by SHA-256 of `(wikitext + system prompt + model id)`, so unchanged pages skip the LLM call on re-runs.
-- **Phase 2** is greenfield. The target engine has not been chosen (Godot/GDScript? Unity/C#? Bevy/Rust? — see "Open questions" in `plan.md`). Do not invent Phase 2 code without explicit user direction.
+- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, runs each page through a headless LLM CLI (`claude -p` or `codex exec`), validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus the per-kind `frontmatter_schema` inlined under `kinds.<kind>` in `game-config.json`, and writes either `vault/<kind>/<slug>.md` or `vault/_quarantine/<slug>.md`. Compile output is cached by SHA-256 of `(wikitext + system prompt + model id)`, so unchanged pages skip the LLM call on re-runs.
+- **Phase 2** is greenfield. Target engine is **Bevy (Rust)** with **deterministic lockstep** networking — see "Target engine" section below for the binding determinism rules. Do not invent Phase 2 code without explicit user direction.
+
+## Target engine (chosen 2026-05-19): Bevy + lockstep
+
+Phase 2 codegen targets **Bevy (Rust)** with **deterministic lockstep networking**. This is the load-bearing decision — every Phase 2 generated sim-path system must honor the rules below or multiplayer silently desyncs. The chosen-engine record is in `game-config.json -> chosen_engine`.
+
+**Architecture:**
+- **Sim tick** runs deterministic at 20–30Hz inside Bevy's `FixedUpdate` schedule.
+- **Render tick** is decoupled (`Update` schedule, vsync/native rate) and interpolates between the last two sim states so visible motion stays smooth even though the sim is slower.
+- **Networking** is lockstep: only player inputs cross the wire. Each client runs the same sim from the same seed + input stream and converges on identical entity state tick-for-tick. State replication is forbidden — bandwidth doesn't survive at this entity count.
+
+**Determinism rules (binding on every sim-path file Phase 2 generates):**
+
+1. **Fixed-point math for sim state.** Positions, velocities, damage, RNG seeds — anything that affects what the next tick computes — must use `fixed` / `sfixed` crates, not `f32`/`f64`. Floats are fine for render-only state (camera, particle visual offsets, UI animation).
+2. **No transcendentals in the sim path.** `sin`, `cos`, `sqrt`, `atan2` on floats vary across CPUs and compiler versions. Use fixed-point approximations or precomputed lookup tables.
+3. **Seeded RNG everywhere.** Replace `rand::thread_rng()` with a per-tick `ChaCha8Rng` seeded from `(game_seed, tick_number)`. Every random draw in the sim path uses it. Render-side cosmetic randomness can use thread_rng.
+4. **Deterministic system order.** Bevy's scheduler parallelizes by default — concurrent systems run in non-deterministic order. Force order on sim systems with `.chain()` or explicit `before()`/`after()` constraints.
+5. **No `HashMap` iteration in sim code.** Rust's default `HashMap` randomizes its hash seed per-process; iteration order differs across runs. Use `BTreeMap`, sorted `Vec`, or `IndexMap` with a fixed `BuildHasher`.
+
+**Validation:** every sim tick should compute a checksum of the canonical state (entity transforms + key game state). Periodically broadcast the hash; first mismatch across clients = desync detected → log the offending tick and the diverging entity set. Build this in from Phase 2 day one — desync bugs surface immediately, not three weeks into integration testing.
 
 ## Common commands
 
@@ -47,8 +66,8 @@ There is **no test suite, no linter, no build step, no CI**. Validation happens 
 - `game-config.json` — Phase 0 output / Phase 1 input. `kinds` defines the taxonomy; `categories` defines what Phase 1 fetches; `human_approved` gates production runs.
 - `phase1.config.toml` — Phase 1 runtime config (wiki API endpoint, retry/throttle, LLM mode + model, cache dir).
 - `prompts/wiki-compile-system.md` — system prompt for the Phase 1 compile LLM. Edits to this invalidate the SHA-256 cache.
-- `schemas/_universal.schema.json` — required-on-every-file frontmatter fields. Per-kind schemas extend this via `allOf`.
-- `schemas/{item,skill,enemy,mechanic,location,npc,quest,system}.schema.json` — per-kind validators. Currently missing: `building`, `unit`, `organization` (the Phase-0-approved kinds for They Are Billions). Pages with these kinds get universal-only validation plus a one-time warning.
+- `schemas/_universal.schema.json` — required-on-every-file frontmatter fields. Per-kind frontmatter contracts live as data in `game-config.json -> kinds.<kind>.frontmatter_schema`, not as files.
+- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{required: [...], properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 v2 can LLM-propose them per target game. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
 
 ## Conventions & gotchas
 
@@ -56,7 +75,7 @@ There is **no test suite, no linter, no build step, no CI**. Validation happens 
 - **LLM access is via headless CLI, not the Anthropic/OpenAI SDK.** Both Phase 0 and Phase 1 shell out to `claude -p` or `codex exec`. If you need a different provider, route through `_run_llm_command` in `phase0_analyze.py` or `run_llm` in `phase1_ingest.py` rather than introducing a new SDK dependency. Cache keys include the model id, so model swaps invalidate cached compiles automatically.
 - **Frontmatter parsing is hand-rolled** in `phase1_ingest.py` (`parse_yaml_map` / `parse_block`). It handles the subset of YAML the compile prompt produces; don't assume full YAML compatibility. If frontmatter is getting mis-parsed, fix the compile prompt before reaching for a full YAML library.
 - **Wikilink invariant**: every `[[wiki_link]]` in a vault file body must be mirrored in `depends_on:` in the frontmatter. The compile system prompt enforces this; Phase 2's graph expansion will rely on it.
-- **The taxonomy lives in `game-config.json`, not in code.** Adding a new `kind` means: (1) add it to `kinds` in `game-config.json`, (2) optionally add `schemas/<kind>.schema.json`, (3) re-run Phase 0 or hand-edit `categories` to route wiki categories to it.
+- **The taxonomy AND per-kind schemas live in `game-config.json`, not in code.** Adding a new `kind` means: (1) add it to `kinds` in `game-config.json`, (2) optionally add a `frontmatter_schema` block under that kind, (3) re-run Phase 0 or hand-edit `categories` to route wiki categories to it. Phase 0 v2's LLM proposer can do (1) and (2) automatically for a new target game.
 - **The directory name `cloneGame` is aspirational.** No game code exists yet. Treat any task framed as "fix the game" as a request to work on the pipeline, unless the user explicitly says they've started Phase 2.
 
 ## Development Guidelines

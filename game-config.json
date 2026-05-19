@@ -10,411 +10,260 @@
   "kinds": {
     "building": {
       "minWikilinks": 1,
-      "description": "A constructed structure with stats, cost, requirements, and effects as required frontmatter fields."
-    },
-    "unit": {
-      "minWikilinks": 2,
-      "description": "A controllable hero or unit with stats, abilities, progression, and requirements as required frontmatter fields."
-    },
-    "enemy": {
-      "minWikilinks": 2,
-      "description": "A hostile creature with stats, loot_table, ai_profile, and resistances as required frontmatter fields.",
+      "description": "Stationary structures that players construct to defend colonies, produce resources, or unlock technologies.",
       "frontmatter_schema": {
         "required": [
-          "stats",
-          "loot_table",
-          "ai_profile",
-          "resistances"
+          "cost",
+          "health"
         ],
         "properties": {
-          "stats": {
-            "type": "object",
-            "additionalProperties": {
-              "type": [
-                "number",
-                "integer"
-              ]
-            }
+          "cost": {
+            "type": "string",
+            "description": "Resource cost to construct"
           },
-          "loot_table": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "chance"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9_]+$"
-                },
-                "chance": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                },
-                "min": {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                "max": {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              }
-            }
+          "health": {
+            "type": "integer",
+            "description": "Hit points"
           },
-          "ai_profile": {
-            "type": "object",
-            "additionalProperties": true
+          "build_time": {
+            "type": "string"
           },
-          "resistances": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "number"
-            }
+          "production_type": {
+            "type": "string"
+          },
+          "population_usage": {
+            "type": "string"
+          },
+          "tech_requirement": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "unit": {
+      "minWikilinks": 1,
+      "description": "Soldiers and heroes that players command to defend against infected swarms.",
+      "frontmatter_schema": {
+        "required": [
+          "cost",
+          "health",
+          "damage"
+        ],
+        "properties": {
+          "cost": {
+            "type": "string"
+          },
+          "health": {
+            "type": "integer"
+          },
+          "damage": {
+            "type": "integer"
+          },
+          "attack_speed": {
+            "type": "string"
+          },
+          "movement_speed": {
+            "type": "string"
+          },
+          "squad_size": {
+            "type": "integer"
+          },
+          "special_ability": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "character": {
+      "minWikilinks": 1,
+      "description": "Named campaign protagonists who lead defenses against infected invasions.",
+      "frontmatter_schema": {
+        "required": [
+          "faction",
+          "role"
+        ],
+        "properties": {
+          "faction": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "commanded_unit": {
+            "type": "string"
+          },
+          "unique_ability": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "infected": {
+      "minWikilinks": 0,
+      "description": "Hostile creatures that attack player colonies in waves.",
+      "frontmatter_schema": {
+        "required": [
+          "health",
+          "damage"
+        ],
+        "properties": {
+          "health": {
+            "type": "integer"
+          },
+          "damage": {
+            "type": "integer"
+          },
+          "attack_speed": {
+            "type": "string"
+          },
+          "movement_speed": {
+            "type": "string"
+          },
+          "infected_type": {
+            "type": "string"
+          },
+          "special_attack": {
+            "type": "string"
           }
         }
       }
     },
     "mechanic": {
       "minWikilinks": 2,
-      "description": "A core gameplay rule with formula, inputs, outputs, and edge_cases as required frontmatter fields.",
+      "description": "Core gameplay systems that govern economy, combat, or progression.",
       "frontmatter_schema": {
         "required": [
-          "formula",
-          "inputs",
-          "outputs",
-          "edge_cases"
+          "mechanic_type"
         ],
         "properties": {
-          "formula": {
-            "type": "string",
-            "minLength": 1
+          "mechanic_type": {
+            "type": "string"
           },
-          "inputs": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "name",
-                "type"
-              ],
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "type": {
-                  "type": "string"
-                },
-                "range": {
-                  "type": "object",
-                  "properties": {
-                    "min": {
-                      "type": "number"
-                    },
-                    "max": {
-                      "type": "number"
-                    }
-                  }
-                }
-              }
-            }
+          "affected_systems": {
+            "type": "string"
           },
-          "outputs": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "name",
-                "type"
-              ],
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "type": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "edge_cases": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "balance_impact": {
+            "type": "string"
           }
         }
       }
     },
-    "system": {
-      "minWikilinks": 2,
-      "description": "A meta-system with controlled_entities, state_transitions, and progression nodes as required frontmatter fields.",
+    "wonder": {
+      "minWikilinks": 1,
+      "description": "Powerful late-game buildings with unique abilities that significantly impact gameplay.",
       "frontmatter_schema": {
         "required": [
-          "controlled_entities",
-          "state_transitions"
+          "cost",
+          "unique_ability"
         ],
         "properties": {
-          "controlled_entities": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "string",
-              "pattern": "^[a-z0-9_]+$"
-            }
-          },
-          "state_transitions": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "required": [
-                "from",
-                "to",
-                "trigger"
-              ],
-              "properties": {
-                "from": {
-                  "type": "string"
-                },
-                "to": {
-                  "type": "string"
-                },
-                "trigger": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "location": {
-      "minWikilinks": 1,
-      "description": "A playable map or location with map_layout, objectives, difficulty, and enemy_spawns as required frontmatter fields.",
-      "frontmatter_schema": {
-        "properties": {
-          "biome": {
+          "cost": {
             "type": "string"
           },
-          "connected_to": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^[a-z0-9_]+$"
-            }
+          "health": {
+            "type": "integer"
           },
-          "spawns": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^[a-z0-9_]+$"
-            }
-          }
-        }
-      }
-    },
-    "npc": {
-      "minWikilinks": 1,
-      "description": "A named character with role, relationships, lore, and affiliations as required frontmatter fields.",
-      "frontmatter_schema": {
-        "properties": {
-          "role": {
+          "unique_ability": {
             "type": "string"
           },
-          "location": {
-            "type": "string",
-            "pattern": "^[a-z0-9_]+$"
+          "tech_requirement": {
+            "type": "string"
           },
-          "offers": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^[a-z0-9_]+$"
-            }
+          "build_time": {
+            "type": "string"
           }
         }
       }
     },
     "organization": {
       "minWikilinks": 1,
-      "description": "A faction or group with members, goals, lore, and affiliated_locations as required frontmatter fields."
-    },
-    "item": {
-      "minWikilinks": 1,
-      "description": "A usable or craftable item with stats, requirements, tags, and optional crafting fields.",
+      "description": "Factions and groups involved in the campaign narrative.",
       "frontmatter_schema": {
         "required": [
-          "stats",
-          "requirements",
-          "tags"
+          "faction_type"
         ],
         "properties": {
-          "stats": {
-            "type": "object",
-            "additionalProperties": {
-              "type": [
-                "number",
-                "integer"
-              ]
-            }
+          "faction_type": {
+            "type": "string"
           },
-          "requirements": {
-            "type": "object",
-            "additionalProperties": {
-              "type": [
-                "number",
-                "integer",
-                "string"
-              ]
-            }
+          "campaign_role": {
+            "type": "string"
           },
-          "crafting": {
-            "type": "object",
-            "properties": {
-              "recipe_id": {
-                "type": "string"
-              },
-              "materials": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": [
-                    "id",
-                    "qty"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "pattern": "^[a-z0-9_]+$"
-                    },
-                    "qty": {
-                      "type": "integer",
-                      "minimum": 1
-                    }
-                  }
-                }
-              },
-              "station": {
-                "type": "string"
-              }
-            }
+          "headquarter_location": {
+            "type": "string"
+          },
+          "allied_with": {
+            "type": "string"
           }
         }
       }
     },
-    "skill": {
-      "minWikilinks": 1,
-      "description": "An ability with cost, cooldown, effects, and scaling fields.",
+    "location": {
+      "minWikilinks": 0,
+      "description": "Named regions and areas within the game world.",
       "frontmatter_schema": {
         "required": [
-          "cost",
-          "cooldown",
-          "effects",
-          "scaling"
+          "region_type"
         ],
         "properties": {
-          "cost": {
-            "type": "object",
-            "additionalProperties": {
-              "type": [
-                "number",
-                "integer"
-              ]
-            }
+          "region_type": {
+            "type": "string"
           },
-          "cooldown": {
-            "type": "number",
-            "minimum": 0
+          "strategic_value": {
+            "type": "string"
           },
-          "effects": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            },
-            "minItems": 1
-          },
-          "scaling": {
-            "type": "object",
-            "additionalProperties": {
-              "type": [
-                "number",
-                "string"
-              ]
-            }
+          "featured_in_campaigns": {
+            "type": "string"
           }
         }
       }
     },
-    "quest": {
+    "campaign_map": {
       "minWikilinks": 1,
-      "description": "A quest with prerequisites, objectives, rewards, and flags_set fields.",
+      "description": "Designed challenge maps with predetermined objectives and conditions.",
       "frontmatter_schema": {
         "required": [
-          "prerequisites",
-          "objectives",
-          "rewards",
-          "flags_set"
+          "difficulty",
+          "objective"
         ],
         "properties": {
-          "prerequisites": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "pattern": "^[a-z0-9_]+$"
-            }
+          "difficulty": {
+            "type": "string"
           },
-          "objectives": {
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "description"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9_]+$"
-                },
-                "description": {
-                  "type": "string"
-                },
-                "optional": {
-                  "type": "boolean"
-                }
-              }
-            }
+          "objective": {
+            "type": "string"
           },
-          "rewards": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "id",
-                "qty"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string",
-                  "pattern": "^[a-z0-9_]+$"
-                },
-                "qty": {
-                  "type": "integer",
-                  "minimum": 1
-                }
-              }
-            }
+          "initial_resources": {
+            "type": "string"
           },
-          "flags_set": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "wave_count": {
+            "type": "integer"
+          },
+          "recommended_composition": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "survival_map": {
+      "minWikilinks": 0,
+      "description": "Procedurally-varied maps where players defend against endless infected waves.",
+      "frontmatter_schema": {
+        "required": [
+          "environment_type"
+        ],
+        "properties": {
+          "environment_type": {
+            "type": "string"
+          },
+          "map_size": {
+            "type": "string"
+          },
+          "difficulty_progression": {
+            "type": "string"
+          },
+          "biome_features": {
+            "type": "string"
           }
         }
       }
@@ -429,18 +278,28 @@
     },
     {
       "name": "Campaign Maps",
-      "kind": "location",
+      "kind": "campaign_map",
       "member_count": 24
     },
     {
       "name": "Infected",
-      "kind": "enemy",
+      "kind": "infected",
       "member_count": 17
     },
     {
-      "name": "Mechanics",
-      "kind": "mechanic",
-      "member_count": 9
+      "name": "Special Infected",
+      "kind": "infected",
+      "member_count": 5
+    },
+    {
+      "name": "Runners",
+      "kind": "infected",
+      "member_count": 3
+    },
+    {
+      "name": "Walkers",
+      "kind": "infected",
+      "member_count": 3
     },
     {
       "name": "Units",
@@ -448,28 +307,18 @@
       "member_count": 9
     },
     {
+      "name": "Mechanics",
+      "kind": "mechanic",
+      "member_count": 9
+    },
+    {
       "name": "Wonders",
-      "kind": "building",
+      "kind": "wonder",
       "member_count": 6
     },
     {
-      "name": "Special Infected",
-      "kind": "enemy",
-      "member_count": 5
-    },
-    {
       "name": "Characters",
-      "kind": "npc",
-      "member_count": 3
-    },
-    {
-      "name": "Runners",
-      "kind": "enemy",
-      "member_count": 3
-    },
-    {
-      "name": "Walkers",
-      "kind": "enemy",
+      "kind": "character",
       "member_count": 3
     },
     {
@@ -478,24 +327,115 @@
       "member_count": 2
     },
     {
-      "name": "Research",
-      "kind": "system",
-      "member_count": 2
-    },
-    {
       "name": "Locations",
       "kind": "location",
       "member_count": 1
     },
     {
-      "name": "New Empire",
-      "kind": "organization",
-      "member_count": 1
-    },
-    {
       "name": "Survival Maps",
-      "kind": "location",
+      "kind": "survival_map",
       "member_count": 1
     }
-  ]
+  ],
+  "engine_candidates": [
+    {
+      "name": "Godot 4",
+      "language": "GDScript / C++ (optional)",
+      "pros": [
+        "Lightweight 2D engine specifically optimized for isometric tower defense",
+        "Built-in tilemap system and mature procedural generation libraries for survival map seeding",
+        "GDScript enables rapid iteration on complex game mechanics (building placement, unit pathfinding, wave logic)",
+        "Excellent entity management for dense populations (43 building types, 28 infected variants, swarm AI)",
+        "Open-source with zero runtime costs; strong precedent in indie strategy games",
+        "Fast reload cycle supports tight game-design feedback loops"
+      ],
+      "cons": [
+        "Smaller plugin ecosystem than Unity (fewer pre-built RTS/tower defense systems)",
+        "GDScript knowledge doesn't transfer outside Godot",
+        "Community is growing but smaller for advanced colony-management patterns",
+        "Networking requires third-party solutions (not a blocker for single-player focus)"
+      ],
+      "fit_score": 0.87,
+      "links": [
+        "https://godotengine.org",
+        "https://docs.godotengine.org/en/stable/community/tutorials/2d/using_2d_characters/physics_introduction.html"
+      ]
+    },
+    {
+      "name": "Bevy",
+      "language": "Rust",
+      "pros": [
+        "ECS architecture perfectly models entity-heavy swarms (natural representation of 28 infected types commanding coordinated groups)",
+        "Deterministic simulation guarantees reproducible procedural maps with fixed seeds (critical for survival mode verification)",
+        "Rust's type system prevents mutation bugs across complex building/unit/infected interactions",
+        "Exceptional real-time performance under high entity count; zero garbage collection pauses during wave simulation",
+        "Strong procedural generation and pathfinding crates (bevy_xpbd, pathfinding)"
+      ],
+      "cons": [
+        "Newer ecosystem with fewer finished tower defense reference implementations",
+        "Rust learning curve steeper than GDScript; slower team onboarding",
+        "UI framework less mature (Colony resource HUD requires custom work vs. market solutions)",
+        "Smaller community for debugging colony-specific mechanics (balancing infected waves, economy)"
+      ],
+      "fit_score": 0.82,
+      "links": [
+        "https://bevyengine.org",
+        "https://docs.rs/bevy/0.13.1/bevy/ecs/index.html"
+      ]
+    },
+    {
+      "name": "Unity",
+      "language": "C#",
+      "pros": [
+        "Industry standard with mature tower defense precedent (numerous shipped tower defense titles)",
+        "Rich asset marketplace for pathfinding, procedural generation, and colony UI templates",
+        "uGUI framework purpose-built for resource management HUDs (economy, population, research tech trees)",
+        "Netcode ecosystem ready if campaign co-op is added later",
+        "Large existing team expertise in C#; rapid prototyping through UI Builder"
+      ],
+      "cons": [
+        "Heavier runtime than needed for 2D isometric scope; increased binary size and memory footprint",
+        "Per-seat licensing; potential revenue-share obligations above threshold",
+        "Over-engineered for tower defense scope; managing 3D infrastructure overhead for 2D game",
+        "Slower iteration cycle due to compilation and scene management complexity"
+      ],
+      "fit_score": 0.76,
+      "links": [
+        "https://unity.com/download",
+        "https://docs.unity.com/Manual/index.html"
+      ]
+    },
+    {
+      "name": "Unreal Engine 5",
+      "language": "C++ / Blueprints",
+      "pros": [
+        "Mature engine with professional-grade AI systems (Unreal's Behaviour Trees suit complex infected swarm coordination)",
+        "Exceptional performance pipeline for rendering and physics under dense entity scenarios",
+        "Strong C++ ecosystem for deterministic simulation (fixed-point arithmetic, seeded RNG)",
+        "Scalable architecture if campaign narrative expands or multiplayer is added",
+        "Established talent pool; lower recruitment friction for experienced C++ engine programmers"
+      ],
+      "cons": [
+        "Significantly overspecified for 2D isometric tower defense scope",
+        "C++ compilation overhead slows iteration; Blueprints add project complexity",
+        "Large disk and memory footprint (2D game does not justify Nanite/Lumen infrastructure)",
+        "Steep learning curve; 3D-first tools create friction for 2D isometric design",
+        "Smaller isometric RTS community within Unreal ecosystem"
+      ],
+      "fit_score": 0.64,
+      "links": [
+        "https://www.unrealengine.com/",
+        "https://docs.unrealengine.com/5.3/en-US/"
+      ]
+    }
+  ],
+  "chosen_engine": {
+    "name": "Bevy",
+    "language": "Rust",
+    "selected_from": "engine_candidates[1]",
+    "selected_on": "2026-05-19",
+    "networking_model": "deterministic lockstep",
+    "architecture": "fixed-tick sim (20-30Hz) decoupled from interpolated render tick; only inputs cross the wire",
+    "notes": "Determinism rules are binding on all Phase 2 sim-path code. See CLAUDE.md > 'Target engine' for the full rule set."
+  }
 }
