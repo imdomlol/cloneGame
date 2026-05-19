@@ -24,6 +24,11 @@ pip-wheel-metadata/
 # Project generated outputs and local caches
 vault/
 .phase1_cache/
+# Phase 0 proposals are regenerated on every run; the source of truth is game-config.json
+*.proposed.json
+# Phase 2 vector index (Chroma). The build/ directory (above) already covers build/repomix-output.xml.
+chroma/
+.chroma/
 
 # Local secrets and machine-specific config
 .env
