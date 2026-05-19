@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "defaultKind": "concept",
+  "kinds": {
+    "concept": {
+      "minWikilinks": 0,
+      "description": "A standalone idea, technique, or pattern worth documenting."
+    },
+    "entity": {
+      "minWikilinks": 1,
+      "description": "A specific thing — a person, product, organization, or named artifact."
+    },
+    "comparison": {
+      "minWikilinks": 2,
+      "description": "A side-by-side analysis weighing two or more concepts or entities."
+    },
+    "overview": {
+      "minWikilinks": 3,
+      "description": "A top-down map page that situates several concepts within a domain."
+    }
+  },
+  "seedPages": []
+}

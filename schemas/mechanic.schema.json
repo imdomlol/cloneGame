@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cloneGame.local/schemas/mechanic.schema.json",
+  "title": "Mechanic",
+  "allOf": [{ "$ref": "_universal.schema.json" }],
+  "type": "object",
+  "required": ["formula", "inputs", "outputs", "edge_cases"],
+  "properties": {
+    "type": { "const": "mechanic" },
+    "formula": { "type": "string", "minLength": 1 },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "range": {
+            "type": "object",
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      }
+    },
+    "edge_cases": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

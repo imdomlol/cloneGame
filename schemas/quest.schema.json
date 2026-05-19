@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cloneGame.local/schemas/quest.schema.json",
+  "title": "Quest",
+  "allOf": [{ "$ref": "_universal.schema.json" }],
+  "type": "object",
+  "required": ["prerequisites", "objectives", "rewards", "flags_set"],
+  "properties": {
+    "type": { "const": "quest" },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+    },
+    "objectives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "description": { "type": "string" },
+          "optional": { "type": "boolean" }
+        }
+      }
+    },
+    "rewards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "qty"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "qty": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "flags_set": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

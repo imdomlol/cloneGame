@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cloneGame.local/schemas/npc.schema.json",
+  "title": "NPC",
+  "allOf": [{ "$ref": "_universal.schema.json" }],
+  "type": "object",
+  "properties": {
+    "type": { "const": "npc" },
+    "role": { "type": "string" },
+    "location": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "offers": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+    }
+  }
+}

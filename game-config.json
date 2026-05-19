@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "game": {
+    "name": "They Are Billions",
+    "wiki_base_url": "https://they-are-billions.fandom.com/wiki/"
+  },
+  "human_approved": false,
+  "phase0_notes": "Kinds below are the deployment-guide §1.3 taxonomy seeded as a baseline. A future Phase 0 taxonomy-discovery LLM should propose a game-specific refinement of this list, and a human must flip `human_approved` to true before Phase 1 ingest runs in production.",
+  "defaultKind": "concept",
+  "kinds": {
+    "item": {
+      "minWikilinks": 1,
+      "description": "A craftable, equippable, or consumable object. Required sub-fields: stats, requirements, tags. Subtypes: weapon, armor, consumable, resource."
+    },
+    "skill": {
+      "minWikilinks": 1,
+      "description": "An ability triggered by a unit or building. Required sub-fields: cost, cooldown, effects, scaling. Subtypes: active, passive."
+    },
+    "enemy": {
+      "minWikilinks": 1,
+      "description": "A hostile entity the player fights. Required sub-fields: stats, loot_table, ai_profile, resistances."
+    },
+    "mechanic": {
+      "minWikilinks": 1,
+      "description": "A self-contained piece of game logic — damage formula, status effect, resource transformation. Required sub-fields: formula, inputs, outputs, edge_cases."
+    },
+    "location": {
+      "minWikilinks": 1,
+      "description": "A named map, region, or sub-area with distinct rules or content."
+    },
+    "npc": {
+      "minWikilinks": 1,
+      "description": "A non-hostile named character (vendor, quest-giver, story figure)."
+    },
+    "quest": {
+      "minWikilinks": 1,
+      "description": "An objective-driven mission. Required sub-fields: prerequisites, objectives, rewards, flags_set."
+    },
+    "system": {
+      "minWikilinks": 2,
+      "description": "A meta-system that coordinates other entities — crafting, economy, leveling, day-night cycle. Required sub-fields: controlled_entities, state_transitions."
+    },
+    "concept": {
+      "minWikilinks": 0,
+      "description": "Catch-all for content that doesn't fit a typed kind yet. Routed to vault/concepts/ and flagged for human re-classification."
+    }
+  },
+  "seedPages": []
+}
