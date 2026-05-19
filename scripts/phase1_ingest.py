@@ -249,6 +249,21 @@ def universal_schema(root: Path, kinds: set[str]) -> dict[str, Any]:
     return schema
 
 
+def kind_frontmatter_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any] | None:
+    kinds = game_config.get("kinds", {})
+    kind_config = kinds.get(kind) if isinstance(kinds, dict) else None
+    if not isinstance(kind_config, dict):
+        return None
+    frontmatter_schema = kind_config.get("frontmatter_schema")
+    if not isinstance(frontmatter_schema, dict):
+        return None
+    if not frontmatter_schema.get("required") and not frontmatter_schema.get("properties"):
+        return None
+    schema = {"type": "object"}
+    schema.update(frontmatter_schema)
+    return schema
+
+
 def validate_basic(data: dict[str, Any], schemas: list[dict[str, Any]]) -> list[str]:
     errors: list[str] = []
     for schema in schemas:
@@ -276,13 +291,17 @@ def validate_jsonschema(
 
 
 def validation_errors(
-    root: Path, data: dict[str, Any], kind: str, kinds: set[str]
+    root: Path,
+    data: dict[str, Any],
+    kind: str,
+    kinds: set[str],
+    game_config: dict[str, Any],
 ) -> tuple[list[str], bool]:
     schemas = [universal_schema(root, kinds)]
-    kind_path = root / "schemas" / f"{kind}.schema.json"
-    has_kind_schema = kind_path.exists()
-    if has_kind_schema:
-        schemas.append(read_json(kind_path))
+    kind_schema = kind_frontmatter_schema(game_config, kind)
+    has_kind_schema = kind_schema is not None
+    if kind_schema is not None:
+        schemas.append(kind_schema)
     return validate_jsonschema(data, schemas, root), has_kind_schema
 
 
@@ -300,19 +319,48 @@ def write_result(root: Path, kind: str, slug: str, markdown: str, errors: list[s
     return path
 
 
-def category_plan(game_config: dict[str, Any]) -> list[dict[str, str]]:
+def category_plan(game_config: dict[str, Any]) -> list[dict[str, Any]]:
     cats = game_config.get("categories", [])
     return [c for c in cats if isinstance(c.get("name"), str) and isinstance(c.get("kind"), str)]
 
 
-def print_dry_run(api: str, cats: list[dict[str, str]], user_agent: str, retries: int) -> int:
+def configured_member_count(cat: dict[str, Any]) -> int | None:
+    count = cat.get("member_count")
+    return count if isinstance(count, int) else None
+
+
+def dry_run_count(api: str, cat: dict[str, Any], user_agent: str, retries: int) -> tuple[int, str]:
+    try:
+        return len(category_members(api, cat["name"], user_agent, retries)), "api"
+    except (TimeoutError, urllib.error.URLError) as exc:
+        count = configured_member_count(cat)
+        if count is not None:
+            return count, "configured"
+        raise RuntimeError(f"could not enumerate {cat['name']}") from exc
+
+
+def configured_dry_run_count(cat: dict[str, Any]) -> int:
+    count = configured_member_count(cat)
+    if count is None:
+        raise RuntimeError(f"missing configured member_count for {cat['name']}")
+    return count
+
+
+def print_dry_run(api: str, cats: list[dict[str, Any]], user_agent: str, retries: int) -> int:
+    use_api = True
     for cat in cats:
-        count = len(category_members(api, cat["name"], user_agent, retries))
-        print(f"{cat['name']} ({cat['kind']}): {count} pages")
+        count, source = (
+            dry_run_count(api, cat, user_agent, retries)
+            if use_api
+            else (configured_dry_run_count(cat), "configured")
+        )
+        use_api = source == "api"
+        suffix = "" if source == "api" else " (configured)"
+        print(f"{cat['name']} ({cat['kind']}): {count} pages{suffix}")
     return 0
 
 
-def process_page(ctx: dict[str, Any], cat: dict[str, str], member: dict[str, Any]) -> bool:
+def process_page(ctx: dict[str, Any], cat: dict[str, Any], member: dict[str, Any]) -> bool:
     title = str(member.get("title", ""))
     text, rev = page_wikitext(ctx["api"], title, ctx["ua"], ctx["retries"])
     source = text + f"\n\nSOURCE_URL: {page_url(ctx['base_url'], title)}\nSOURCE_REVISION: {rev}\n"
@@ -320,7 +368,9 @@ def process_page(ctx: dict[str, Any], cat: dict[str, str], member: dict[str, Any
     key = cache_key(text, ctx["system_prompt"], ctx["model"])
     markdown, status = cached_or_compile(ctx["cache_dir"], key, prompt, ctx["mode"], ctx["model"])
     fm, errors = frontmatter(markdown)
-    schema_errors, has_schema = validation_errors(ctx["root"], fm, cat["kind"], ctx["kinds"])
+    schema_errors, has_schema = validation_errors(
+        ctx["root"], fm, cat["kind"], ctx["kinds"], ctx["game_config"]
+    )
     ctx["missing_kinds"].add(cat["kind"]) if not has_schema else None
     errors.extend(schema_errors)
     slug = slugify(str(fm.get("id") or title))
@@ -330,7 +380,7 @@ def process_page(ctx: dict[str, Any], cat: dict[str, str], member: dict[str, Any
     return bool(errors)
 
 
-def ingest(ctx: dict[str, Any], cats: list[dict[str, str]], limit: int | None) -> int:
+def ingest(ctx: dict[str, Any], cats: list[dict[str, Any]], limit: int | None) -> int:
     quarantined = 0
     delay = int(ctx["delay_ms"]) / 1000
     for cat in cats:
@@ -368,6 +418,7 @@ def build_context(
         "system_prompt": prompt_path.read_text(encoding="utf-8"),
         "cache_dir": root / config.get("cache", {}).get("dir", ".phase1_cache"),
         "kinds": set(game_config.get("kinds", {}).keys()),
+        "game_config": game_config,
         "missing_kinds": set(),
         "started_at": dt.datetime.now(dt.UTC).isoformat(),
     }
