@@ -35,40 +35,40 @@ from the target wiki. Phase 0 sits in front of Phase 1.
 
 ### Prerequisites (§4.1 of the guide)
 
-- [x] `llm-wiki-compiler` available — vendored at `vendor/llm-wiki-compiler/`
-      (atomicstrata fork, Node CLI; guide's `pipx install` was a fiction)
-- [x] Schema layer patched for arbitrary kinds —
-      `vendor/llm-wiki-compiler/src/schema/{types,loader,helpers}.ts`
+- [x] `llm-wiki-compiler` replaced by `scripts/phase1_ingest.py`
+      (MediaWiki API + headless Claude/Codex compile step)
+- [x] Schema layer available for arbitrary Phase 0 kinds via
+      `game-config.json` + `schemas/*.schema.json`
 - [x] Wiki base URL + page-type router rules — `phase1.config.toml`
       (intent) + `game-config.json` (runtime)
 - [x] JSON Schemas per kind — `schemas/_universal.schema.json` +
       `schemas/{item,skill,enemy,mechanic,location,npc,quest,system}.schema.json`
-- [x] Quarantine mechanism — `scripts/phase1_sort.py` (smoke-tested:
-      1 sorted, 2 quarantined, exit 1 when any quarantine)
+- [x] Quarantine mechanism — `scripts/phase1_ingest.py`
+      (schema failures write to `vault/_quarantine/`)
 - [x] Compile-stage system prompt captured — `prompts/wiki-compile-system.md`
 
 ### Runtime ingest (the actual data work)
 
-- [!] Batch ingest driver for `they-are-billions.fandom.com`
-      - **Blocker:** `llmwiki ingest` takes one URL at a time; no built-in crawler
-      - Needed: Python script that hits the Fandom MediaWiki API, enumerates
-        all pages, throttles per `phase1.config.toml [ingest]`, calls
-        `node vendor/llm-wiki-compiler/dist/cli.js ingest <url>` for each
-- [!] `ANTHROPIC_API_KEY` set in environment (or alt provider via `LLMWIKI_PROVIDER`)
-- [ ] Run `llmwiki compile` over `sources/`
-- [ ] Run `python scripts/phase1_sort.py` → expect exit code 0
+- [x] Batch ingest driver for `they-are-billions.fandom.com`
+      - `python scripts/phase1_ingest.py --dry-run` enumerates page counts
+      - `python scripts/phase1_ingest.py --limit 1` compiles one page/category
+      - Full run throttles/retries per `phase1.config.toml [ingest]`
+- [!] Claude CLI or Codex CLI authenticated locally for the selected
+      `[compile] llm_mode`
+- [x] Compile wiki pages through headless LLM CLI and write `vault/<kind>/`
+- [x] Validate and route failures during ingest
 - [ ] Inspect `vault/_quarantine/` if non-empty; iterate on compile prompt
       or extend `kinds` in `game-config.json`
 
-### Frontmatter validation (deferred)
+### Frontmatter validation
 
 The guide's §1.3 promises strict per-type validation. The patched llmwiki
-tool only enforces `minWikilinks`. Bridging this:
+tool only enforced `minWikilinks`. Bridged in the replacement ingest path:
 
-- [ ] Wire the `schemas/*.schema.json` into `phase1_sort.py` (or a sibling
-      `phase1_validate.py`) so files with valid `kind` but invalid
-      sub-fields also route to `_quarantine/`
-- [ ] Decide on validator: `jsonschema` package is the obvious pick
+- [x] Wire the `schemas/*.schema.json` into `scripts/phase1_ingest.py` so
+      invalid frontmatter routes to `_quarantine/`
+- [x] Decide on validator: use `jsonschema` when installed, with a small
+      required-field fallback for environments that have not installed it yet
 
 ---
 
@@ -112,6 +112,10 @@ exists yet; everything below is greenfield once Phase 1 produces a clean vault.
 | Post-compile Python sorter instead of native per-kind output | Phase 1 prereqs | Obsidian wikilinks resolve by filename, so moving files between dirs doesn't break links. Sorter is reversible; tool keeps working against `wiki/concepts/` |
 | Add `game-config.json` as a new schema candidate, top of priority list | Phase 1 prereqs | Phase 0 contract needs a stable file the patched loader will pick up automatically; old `.llmwiki/schema.json` still works as a fallback |
 | Write `phase1.config.toml` even though no tool reads it | Phase 1 prereqs | Guide §4.1 calls it out by name; it's the canonical documentation surface for wiki base URL + routing intent |
+| Replace vendored Node compiler with single-file Python ingest | Phase 1 ingest | The vendored `llm-wiki-compiler` was removed; `scripts/phase1_ingest.py` now owns API enumeration, LLM compile calls, validation, cache, and quarantine routing |
+| Cache compiled markdown by SHA-256 of page wikitext + raw system prompt + model id | Phase 1 ingest | Source text, prompt edits, or model swaps are the inputs that change compile output; the key avoids stale reuse while allowing unchanged source revisions to skip LLM calls |
+| Retry MediaWiki 429/5xx and URL timeouts with exponential backoff | Phase 1 ingest | Keeps transient Fandom/API failures from aborting the batch while respecting `[ingest].retry_count`; backoff is capped by retry count and sleeps at most 30s per attempt |
+| Missing per-kind schemas are universal-only validation with a one-time warning | Phase 1 ingest | `building`, `unit`, and `organization` schemas are out of scope, but Phase 0 approved those kinds; universal validation extends the type enum from `game-config.json` |
 
 ---
 
