@@ -18,27 +18,406 @@
     },
     "enemy": {
       "minWikilinks": 2,
-      "description": "A hostile creature with stats, loot_table, ai_profile, and resistances as required frontmatter fields."
+      "description": "A hostile creature with stats, loot_table, ai_profile, and resistances as required frontmatter fields.",
+      "frontmatter_schema": {
+        "required": [
+          "stats",
+          "loot_table",
+          "ai_profile",
+          "resistances"
+        ],
+        "properties": {
+          "stats": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "integer"
+              ]
+            }
+          },
+          "loot_table": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "chance"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                },
+                "chance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "min": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "max": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "ai_profile": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "resistances": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        }
+      }
     },
     "mechanic": {
       "minWikilinks": 2,
-      "description": "A core gameplay rule with formula, inputs, outputs, and edge_cases as required frontmatter fields."
+      "description": "A core gameplay rule with formula, inputs, outputs, and edge_cases as required frontmatter fields.",
+      "frontmatter_schema": {
+        "required": [
+          "formula",
+          "inputs",
+          "outputs",
+          "edge_cases"
+        ],
+        "properties": {
+          "formula": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "range": {
+                  "type": "object",
+                  "properties": {
+                    "min": {
+                      "type": "number"
+                    },
+                    "max": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "type"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "edge_cases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     "system": {
       "minWikilinks": 2,
-      "description": "A meta-system with controlled_entities, state_transitions, and progression nodes as required frontmatter fields."
+      "description": "A meta-system with controlled_entities, state_transitions, and progression nodes as required frontmatter fields.",
+      "frontmatter_schema": {
+        "required": [
+          "controlled_entities",
+          "state_transitions"
+        ],
+        "properties": {
+          "controlled_entities": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          },
+          "state_transitions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "from",
+                "to",
+                "trigger"
+              ],
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                },
+                "trigger": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "location": {
       "minWikilinks": 1,
-      "description": "A playable map or location with map_layout, objectives, difficulty, and enemy_spawns as required frontmatter fields."
+      "description": "A playable map or location with map_layout, objectives, difficulty, and enemy_spawns as required frontmatter fields.",
+      "frontmatter_schema": {
+        "properties": {
+          "biome": {
+            "type": "string"
+          },
+          "connected_to": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          },
+          "spawns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          }
+        }
+      }
     },
     "npc": {
       "minWikilinks": 1,
-      "description": "A named character with role, relationships, lore, and affiliations as required frontmatter fields."
+      "description": "A named character with role, relationships, lore, and affiliations as required frontmatter fields.",
+      "frontmatter_schema": {
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          }
+        }
+      }
     },
     "organization": {
       "minWikilinks": 1,
       "description": "A faction or group with members, goals, lore, and affiliated_locations as required frontmatter fields."
+    },
+    "item": {
+      "minWikilinks": 1,
+      "description": "A usable or craftable item with stats, requirements, tags, and optional crafting fields.",
+      "frontmatter_schema": {
+        "required": [
+          "stats",
+          "requirements",
+          "tags"
+        ],
+        "properties": {
+          "stats": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "integer"
+              ]
+            }
+          },
+          "requirements": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "integer",
+                "string"
+              ]
+            }
+          },
+          "crafting": {
+            "type": "object",
+            "properties": {
+              "recipe_id": {
+                "type": "string"
+              },
+              "materials": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "qty"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9_]+$"
+                    },
+                    "qty": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              },
+              "station": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "skill": {
+      "minWikilinks": 1,
+      "description": "An ability with cost, cooldown, effects, and scaling fields.",
+      "frontmatter_schema": {
+        "required": [
+          "cost",
+          "cooldown",
+          "effects",
+          "scaling"
+        ],
+        "properties": {
+          "cost": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "integer"
+              ]
+            }
+          },
+          "cooldown": {
+            "type": "number",
+            "minimum": 0
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "minItems": 1
+          },
+          "scaling": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "string"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "quest": {
+      "minWikilinks": 1,
+      "description": "A quest with prerequisites, objectives, rewards, and flags_set fields.",
+      "frontmatter_schema": {
+        "required": [
+          "prerequisites",
+          "objectives",
+          "rewards",
+          "flags_set"
+        ],
+        "properties": {
+          "prerequisites": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          },
+          "objectives": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "description"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "optional": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "rewards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "qty"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                },
+                "qty": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "flags_set": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   },
   "seedPages": [],
