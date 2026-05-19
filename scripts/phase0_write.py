@@ -53,7 +53,10 @@ def write_proposal(
 
     merged = dict(current)
     merged["kinds"] = analysis["kinds"]
-    merged["seedPages"] = analysis["seedPages"]
+    merged["categories"] = analysis["categories"]
+    # `seedPages` is reserved by llm-wiki-compiler for auto-generated pages.
+    # Keep it empty so the tool doesn't synthesize pages from thin air.
+    merged["seedPages"] = []
     merged["human_approved"] = False
 
     _write_json(proposed_path, merged)
@@ -102,15 +105,13 @@ def write_proposal(
 
     print(
         "\n--- Phase 0 Complete ---\n\n"
-        "Next step (semi-automated): obtain the They Are Billions XML page dump.\n\n"
-        "Option A - Fandom Special:Export (small wikis / targeted pages):\n"
-        "  https://they-are-billions.fandom.com/wiki/Special:Export\n"
-        "  Select pages by category, download XML, save to: sources/tab-wiki-dump.xml\n\n"
-        "Option B - Wikia/Fandom database dump mirror (full wiki):\n"
-        "  Check: https://s3.amazonaws.com/wikia_xml_dumps/  (if available for this wiki)\n"
-        "  Or use the MediaWiki API with action=query&export=1&exportnowrap=1\n\n"
-        "Place the dump at sources/tab-wiki-dump.xml before running Phase 1.\n"
-        "Run: python scripts/phase1_validate_dump.py  (not yet written) to verify.\n"
+        "Next step: run Phase 1 batch ingest. The driver will:\n"
+        "  1. Read `categories` from game-config.json\n"
+        "  2. For each category, enumerate all member pages via the MediaWiki API\n"
+        "     (action=query&list=categorymembers)\n"
+        "  3. For each page, fetch clean wikitext via action=parse&prop=wikitext\n"
+        "  4. Route compiled output to vault/<kind>/ based on the category's mapped kind\n\n"
+        "No XML dump or manual export needed - the API drives the whole ingest.\n"
     )
 
     return True

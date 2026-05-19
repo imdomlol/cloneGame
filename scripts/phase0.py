@@ -42,6 +42,20 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Run fetch + analyze, print proposed JSON to stdout, skip write/confirmation",
     )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help=(
+            "Model for taxonomy analysis. Claude mode defaults to "
+            "claude-haiku-4-5-20251001; Codex mode uses Codex config unless set."
+        ),
+    )
+    parser.add_argument(
+        "--llm-mode",
+        choices=("claude", "codex"),
+        default="claude",
+        help="LLM CLI to use for taxonomy analysis (default: claude)",
+    )
     return parser.parse_args(argv)
 
 
@@ -77,17 +91,20 @@ def main(argv: list[str]) -> int:
             f"Failed to import scripts/phase0_analyze.py ({e}). This file is out of scope for this task."
         )
 
-    analysis = phase0_analyze.analyze_taxonomy(categories)
+    analyze_kwargs = {"mode": args.llm_mode}
+    if args.model:
+        analyze_kwargs["model"] = args.model
+    analysis = phase0_analyze.analyze_taxonomy(categories, **analyze_kwargs)
     kinds = analysis.get("kinds") if isinstance(analysis, dict) else None
-    seed_pages = analysis.get("seedPages") if isinstance(analysis, dict) else None
-    if not isinstance(kinds, dict) or not isinstance(seed_pages, list):
+    mapped_categories = analysis.get("categories") if isinstance(analysis, dict) else None
+    if not isinstance(kinds, dict) or not isinstance(mapped_categories, list):
         raise SystemExit(
-            "phase0_analyze.analyze_taxonomy() must return a dict with 'kinds' (object) and 'seedPages' (array)."
+            "phase0_analyze.analyze_taxonomy() must return a dict with 'kinds' (object) and 'categories' (array)."
         )
-    print(f"Discovered {len(kinds)} kinds, {len(seed_pages)} seed pages.")
+    print(f"Discovered {len(kinds)} kinds, {len(mapped_categories)} mapped categories.")
 
     if args.dry_run:
-        print(json.dumps({"kinds": kinds, "seedPages": seed_pages}, indent=2, ensure_ascii=False))
+        print(json.dumps({"kinds": kinds, "categories": mapped_categories}, indent=2, ensure_ascii=False))
         return 0
 
     try:

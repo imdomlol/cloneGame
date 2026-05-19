@@ -118,6 +118,7 @@ def _query_all_categories(
         "list": "allcategories",
         "aclimit": "max",
         "acminsize": str(int(min_members)),
+        "acprop": "size",
         "format": "json",
     }
 
@@ -157,12 +158,13 @@ def _query_category_members(
     category_name: str,
     *,
     user_agent: str | None,
+    limit: int = 10,
 ) -> list[str]:
     params: dict[str, object] = {
         "action": "query",
         "list": "categorymembers",
         "cmtitle": f"Category:{category_name}",
-        "cmlimit": "2",
+        "cmlimit": str(int(limit)),
         "cmtype": "page",
         "format": "json",
     }
@@ -232,6 +234,7 @@ def fetch_taxonomy(wiki_base_url: str, min_members: int = 3) -> list[dict]:
             api_endpoint,
             item["name"],
             user_agent=user_agent,
+            limit=10,
         )
 
     filtered.sort(key=lambda d: int(d.get("member_count", 0)), reverse=True)
