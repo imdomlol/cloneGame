@@ -156,6 +156,18 @@ def cached_or_compile(
     return output, "compiled"
 
 
+def strip_llm_chatter(markdown: str) -> str:
+    # Agentic CLIs sometimes wrap output in "I'll convert this..." preamble
+    # or ```markdown ... ``` fences despite a strict-output prompt. Locate the
+    # first '---' line and drop everything before it; trim a trailing ```.
+    lines = markdown.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if line.strip() == "---":
+            stripped = "".join(lines[i:])
+            return re.sub(r"\n```\s*\Z", "\n", stripped)
+    return markdown
+
+
 def frontmatter(markdown: str) -> tuple[dict[str, Any], list[str]]:
     match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", markdown, re.S)
     if not match:
@@ -367,6 +379,7 @@ def process_page(ctx: dict[str, Any], cat: dict[str, Any], member: dict[str, Any
     prompt = compile_prompt(ctx["system_prompt"], cat["kind"], source)
     key = cache_key(text, ctx["system_prompt"], ctx["model"])
     markdown, status = cached_or_compile(ctx["cache_dir"], key, prompt, ctx["mode"], ctx["model"])
+    markdown = strip_llm_chatter(markdown)
     fm, errors = frontmatter(markdown)
     schema_errors, has_schema = validation_errors(
         ctx["root"], fm, cat["kind"], ctx["kinds"], ctx["game_config"]
