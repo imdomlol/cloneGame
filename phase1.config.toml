@@ -1,67 +1,35 @@
-# Phase 1 configuration — spec artifact.
+# Phase 1 ingest configuration.
 #
-# The deployment guide §4.1 requires "wiki base URL + page-type router rules
-# committed to llmwiki.toml". The actual atomicstrata/llm-wiki-compiler tool
-# does not read this file — its runtime config is `game-config.json` (picked
-# up by the patched schema loader). This file captures the same intent in the
-# format the guide specifies so the routing contract is reviewable and the
-# Phase 0 taxonomy-discovery LLM has a stable input shape to consume.
+# Read by scripts/phase1_ingest.py at runtime. Category-to-kind routing now
+# lives in game-config.json (`categories` field, produced by Phase 0).
 
 [wiki]
 name = "They Are Billions"
 base_url = "https://they-are-billions.fandom.com/wiki/"
 api_endpoint = "https://they-are-billions.fandom.com/api.php"
-source_revision_strategy = "mediawiki-revid"  # use MediaWiki page revid as source_revision
+source_revision_strategy = "mediawiki-revid"
 
 [ingest]
-# Per-page-batch retry / throttle. The CLI ingests one URL at a time;
-# batch driver lives in scripts/phase1_ingest.py (not yet written — Phase 1
-# step 4 "zero quarantined files" requires it).
 concurrency = 4
 retry_count = 3
 request_delay_ms = 250
 user_agent = "cloneGame-phase1/0.1 (research; contact: mutaphoenix@gmail.com)"
 
-# Page-type router rules. URL pattern → vault `type` field.
-# First match wins. Patterns are anchored to base_url.
-# Phase 0 LLM is expected to refine these once the wiki has been surveyed —
-# initial rules below are heuristic seed values.
-[[router.rule]]
-pattern = "/wiki/Category:Units"
-type = "enemy"
-subtype_from_segment = 4   # last path segment becomes subtype hint
+[compile]
+# Path to the system prompt file used for wikitext -> vault markdown compilation.
+system_prompt_path = "prompts/wiki-compile-system.md"
+# Headless LLM CLI mode. claude -p is the default; codex is the alternate.
+llm_mode = "claude"
+model = "claude-haiku-4-5-20251001"
 
-[[router.rule]]
-pattern = "/wiki/Category:Buildings"
-type = "item"
-subtype = "structure"
-
-[[router.rule]]
-pattern = "/wiki/Category:Resources"
-type = "item"
-subtype = "resource"
-
-[[router.rule]]
-pattern = "/wiki/Category:Tech"
-type = "system"
-subtype = "research"
-
-[[router.rule]]
-pattern = "/wiki/Category:Game_Mechanics"
-type = "mechanic"
-
-[[router.rule]]
-pattern = "/wiki/Category:Maps"
-type = "location"
-
-# Default fallback when no rule matches. The compile-stage LLM may still
-# upgrade `concept` → a typed kind during extraction (with confidence < 1.0).
-[router.default]
-type = "concept"
+[cache]
+# Content-hash cache directory. Each entry stores the source revision hash so
+# unchanged pages skip the LLM call on re-runs.
+dir = ".phase1_cache"
 
 [quarantine]
-# §1.3: "Files failing validation are emitted to vault/_quarantine/ with a
-# validation_errors: block and excluded from the Repomix bundle in Phase 2."
+# Files failing schema validation are written here with a `validation_errors:`
+# YAML block and excluded from Phase 2 bundling.
 output_dir = "vault/_quarantine/"
 fail_on_unknown_kind = true
 fail_on_missing_required_field = true
