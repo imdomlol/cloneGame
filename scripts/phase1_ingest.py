@@ -116,16 +116,37 @@ def page_url(base_url: str, title: str) -> str:
     return base_url.rstrip("/") + "/" + urllib.parse.quote(title.replace(" ", "_"))
 
 
-def compile_prompt(template: str, kind: str, source: str) -> str:
+def raw_kind_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any]:
+    # Per-kind frontmatter schema as authored in game-config.json, including
+    # `required` if present. Used in the compile prompt so the LLM sees the
+    # full contract. Validation goes through kind_frontmatter_schema, which
+    # strips `required` (see plan.md decision log).
+    kinds = game_config.get("kinds", {})
+    if not isinstance(kinds, dict):
+        return {}
+    kind_config = kinds.get(kind)
+    if not isinstance(kind_config, dict):
+        return {}
+    schema = kind_config.get("frontmatter_schema")
+    return schema if isinstance(schema, dict) else {}
+
+
+def compile_prompt(
+    template: str, kind: str, source: str, game_config: dict[str, Any]
+) -> str:
+    schema = raw_kind_schema(game_config, kind)
+    schema_json = json.dumps(schema, indent=2, ensure_ascii=False) if schema else "{}"
     prompt = template.replace("{{type_hint}}", kind)
+    prompt = prompt.replace("{{kind_schema}}", schema_json)
     return prompt.replace("{{stripped_html}}", source)
 
 
-def cache_key(wikitext: str, system_prompt: str, model: str) -> str:
+def cache_key(rendered_prompt: str, model: str) -> str:
+    # Hashes the FINAL rendered prompt (template + kind + schema + wikitext)
+    # plus the model id. Any change to wikitext, system prompt, or per-kind
+    # schema invalidates the cache automatically.
     h = hashlib.sha256()
-    h.update(wikitext.encode("utf-8"))
-    h.update(b"\0")
-    h.update(system_prompt.encode("utf-8"))
+    h.update(rendered_prompt.encode("utf-8"))
     h.update(b"\0")
     h.update(model.encode("utf-8"))
     return h.hexdigest()
@@ -262,18 +283,15 @@ def universal_schema(root: Path, kinds: set[str]) -> dict[str, Any]:
 
 
 def kind_frontmatter_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any] | None:
-    kinds = game_config.get("kinds", {})
-    kind_config = kinds.get(kind) if isinstance(kinds, dict) else None
-    if not isinstance(kind_config, dict):
+    # Per-kind schema for VALIDATION. Strips `required` so per-kind fields are
+    # optional — universal schema's required list is the only presence gate;
+    # per-kind validation only enforces TYPE on fields that happen to be
+    # present. See plan.md decision log.
+    schema = raw_kind_schema(game_config, kind)
+    properties = schema.get("properties") if isinstance(schema, dict) else None
+    if not isinstance(properties, dict) or not properties:
         return None
-    frontmatter_schema = kind_config.get("frontmatter_schema")
-    if not isinstance(frontmatter_schema, dict):
-        return None
-    if not frontmatter_schema.get("required") and not frontmatter_schema.get("properties"):
-        return None
-    schema = {"type": "object"}
-    schema.update(frontmatter_schema)
-    return schema
+    return {"type": "object", "properties": properties}
 
 
 def validate_basic(data: dict[str, Any], schemas: list[dict[str, Any]]) -> list[str]:
@@ -376,8 +394,8 @@ def process_page(ctx: dict[str, Any], cat: dict[str, Any], member: dict[str, Any
     title = str(member.get("title", ""))
     text, rev = page_wikitext(ctx["api"], title, ctx["ua"], ctx["retries"])
     source = text + f"\n\nSOURCE_URL: {page_url(ctx['base_url'], title)}\nSOURCE_REVISION: {rev}\n"
-    prompt = compile_prompt(ctx["system_prompt"], cat["kind"], source)
-    key = cache_key(text, ctx["system_prompt"], ctx["model"])
+    prompt = compile_prompt(ctx["system_prompt"], cat["kind"], source, ctx["game_config"])
+    key = cache_key(prompt, ctx["model"])
     markdown, status = cached_or_compile(ctx["cache_dir"], key, prompt, ctx["mode"], ctx["model"])
     markdown = strip_llm_chatter(markdown)
     fm, errors = frontmatter(markdown)

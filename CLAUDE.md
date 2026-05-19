@@ -16,8 +16,8 @@ Phase 1  game-config.json + wiki pages ──► vault/<kind>/<slug>.md (Obsidia
 Phase 2  vault/ ──► repomix XML ──► Chroma index ──► codegen LLM ──► game code
 ```
 
-- **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to map raw wiki categories to engine-relevant `kinds`, and writes `game-config.proposed.json` with a colored diff. A human must approve the diff; approval flips `human_approved: true` in `game-config.json`. Phase 1 warns when this is false.
-- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, runs each page through a headless LLM CLI (`claude -p` or `codex exec`), validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus the per-kind `frontmatter_schema` inlined under `kinds.<kind>` in `game-config.json`, and writes either `vault/<kind>/<slug>.md` or `vault/_quarantine/<slug>.md`. Compile output is cached by SHA-256 of `(wikitext + system prompt + model id)`, so unchanged pages skip the LLM call on re-runs.
+- **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review.
+- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types (presence of per-kind fields is NOT enforced — only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly.
 - **Phase 2** is greenfield. Target engine is **Bevy (Rust)** with **deterministic lockstep** networking — see "Target engine" section below for the binding determinism rules. Do not invent Phase 2 code without explicit user direction.
 
 ## Target engine (chosen 2026-05-19): Bevy + lockstep
@@ -67,7 +67,7 @@ There is **no test suite, no linter, no build step, no CI**. Validation happens 
 - `phase1.config.toml` — Phase 1 runtime config (wiki API endpoint, retry/throttle, LLM mode + model, cache dir).
 - `prompts/wiki-compile-system.md` — system prompt for the Phase 1 compile LLM. Edits to this invalidate the SHA-256 cache.
 - `schemas/_universal.schema.json` — required-on-every-file frontmatter fields. Per-kind frontmatter contracts live as data in `game-config.json -> kinds.<kind>.frontmatter_schema`, not as files.
-- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{required: [...], properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 v2 can LLM-propose them per target game. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
+- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{required: [...], properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. `required` is read by the compile LLM (as field-name guidance) but NOT enforced by Phase 1 validation; per-kind validation only enforces property types on fields that happen to be present. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
 
 ## Conventions & gotchas
 

@@ -16,15 +16,28 @@ of a single wiki page into a schema-conformant Obsidian Vault note.
 [OUTPUT CONTRACT]
 - Emit exactly one Markdown file with YAML frontmatter, then three sections:
   ## Description, ## Behavioral Mechanics, ## References.
-- The frontmatter MUST validate against the per-kind schema (required fields
-  + properties) inlined under `game-config.json -> kinds.{{type_hint}}.frontmatter_schema`,
-  on top of the universal frontmatter contract for these fields:
+- The frontmatter MUST include these universal fields:
   id, name, type, subtype, source_url, source_revision, extracted_at,
-  confidence, depends_on.
+  confidence, depends_on. Plus the per-kind fields named in the schema below.
 - All numbers MUST be integers or floats — never strings, never ranges (split
   ranges into `min`/`max` fields).
 - Every cross-entity reference in prose MUST be an Obsidian [[wiki_link]] using
   the target's snake_case id. Mirror every link in the `depends_on:` array.
+
+[PER-KIND FRONTMATTER SCHEMA]
+Use these field names VERBATIM — do not invent variant or prefixed names.
+- Fields in `required` are priority targets: populate them whenever the wiki
+  provides the data. If the wiki genuinely lacks data for a required field,
+  set it to 0 (numbers), "" (strings), or [] (arrays) rather than omitting.
+- Do NOT split a schema field into variants. If the schema has `cost_gold`,
+  use `cost_gold`, not `cost_gold_build` / `cost_gold_upgrade` / `gold_cost`.
+  When the wiki distinguishes build vs upgrade cost, use the BUILD/BASE value
+  as the canonical entry for the schema field.
+- Wiki data that genuinely doesn't map to any property may be added as
+  additional fields with new names.
+
+Schema for {{type_hint}}:
+{{kind_schema}}
 
 [BEHAVIORAL MECHANICS RULES]
 - One conditional per bullet. Lead with IF / THEN / ON / WHILE.
