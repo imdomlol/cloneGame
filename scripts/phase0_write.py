@@ -56,6 +56,10 @@ def write_proposal(
     merged["categories"] = analysis["categories"]
     merged["seedPages"] = []
     merged["human_approved"] = False
+    if "engine_candidates" in analysis:
+        merged["engine_candidates"] = analysis["engine_candidates"]
+    if "chosen_engine" not in merged and "chosen_engine" in current:
+        merged["chosen_engine"] = current["chosen_engine"]
 
     _write_json(proposed_path, merged)
 
@@ -99,13 +103,11 @@ def write_proposal(
 
     print(
         "\n--- Phase 0 Complete ---\n\n"
-        "Next step: run Phase 1 batch ingest. The driver will:\n"
-        "  1. Read `categories` from game-config.json\n"
-        "  2. For each category, enumerate all member pages via the MediaWiki API\n"
-        "     (action=query&list=categorymembers)\n"
-        "  3. For each page, fetch clean wikitext via action=parse&prop=wikitext\n"
-        "  4. Route compiled output to vault/<kind>/ based on the category's mapped kind\n\n"
-        "No XML dump or manual export needed - the API drives the whole ingest.\n"
+        "Next steps:\n"
+        "  1. Review the proposed engine_candidates block in game-config.json and set\n"
+        "     `chosen_engine` to one of them (or to a custom entry) before Phase 2.\n"
+        "  2. Run Phase 1 ingest. It will use kinds.<kind>.frontmatter_schema for\n"
+        "     per-kind validation; categories drive what gets fetched via the MediaWiki API.\n"
     )
 
     return True

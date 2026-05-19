@@ -59,6 +59,51 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def _sample_pages_by_category(categories: list[dict[str, Any]]) -> dict[str, list[str]]:
+    samples: dict[str, list[str]] = {}
+    for cat in categories:
+        name = cat.get("name")
+        members = cat.get("members") or []
+        if isinstance(name, str) and isinstance(members, list):
+            samples[name] = [str(m) for m in members[:2] if isinstance(m, str)]
+    return samples
+
+
+def _propose_schemas_and_engines(
+    analyze_module: Any,
+    kinds: dict[str, Any],
+    mapped_categories: list[dict[str, Any]],
+    sample_pages: dict[str, list[str]],
+    kwargs: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    print("[Phase 0] Proposing per-kind frontmatter schemas...")
+    schemas = analyze_module.propose_frontmatter_schemas(
+        kinds, mapped_categories, sample_pages, **kwargs
+    )
+    print("[Phase 0] Proposing target-engine candidates...")
+    engines = analyze_module.propose_engine_candidates(kinds, mapped_categories, **kwargs)
+    return schemas, engines
+
+
+def _merge_proposals(
+    kinds: dict[str, Any],
+    schemas: dict[str, dict[str, Any]],
+    engines: list[dict[str, Any]],
+    mapped_categories: list[dict[str, Any]],
+) -> dict[str, Any]:
+    enriched_kinds: dict[str, Any] = {}
+    for kind_key, kind_data in kinds.items():
+        entry = dict(kind_data)
+        if kind_key in schemas:
+            entry["frontmatter_schema"] = schemas[kind_key]
+        enriched_kinds[kind_key] = entry
+    return {
+        "kinds": enriched_kinds,
+        "categories": mapped_categories,
+        "engine_candidates": engines,
+    }
+
+
 def main(argv: list[str]) -> int:
     args = _parse_args(argv)
 
@@ -76,10 +121,7 @@ def main(argv: list[str]) -> int:
     try:
         import phase0_fetch  # type: ignore
     except Exception as e:  # pragma: no cover
-        raise SystemExit(
-            f"Failed to import scripts/phase0_fetch.py ({e}). "
-            "This file is out of scope for this task."
-        ) from e
+        raise SystemExit(f"Failed to import scripts/phase0_fetch.py ({e}).") from e
 
     categories = phase0_fetch.fetch_taxonomy(wiki_url, args.min_members)
     print(f"Found {len(categories)} primary categories.")
@@ -88,12 +130,9 @@ def main(argv: list[str]) -> int:
     try:
         import phase0_analyze  # type: ignore
     except Exception as e:  # pragma: no cover
-        raise SystemExit(
-            f"Failed to import scripts/phase0_analyze.py ({e}). "
-            "This file is out of scope for this task."
-        ) from e
+        raise SystemExit(f"Failed to import scripts/phase0_analyze.py ({e}).") from e
 
-    analyze_kwargs = {"mode": args.llm_mode}
+    analyze_kwargs: dict[str, Any] = {"mode": args.llm_mode}
     if args.model:
         analyze_kwargs["model"] = args.model
     analysis = phase0_analyze.analyze_taxonomy(categories, **analyze_kwargs)
@@ -106,12 +145,15 @@ def main(argv: list[str]) -> int:
         )
     print(f"Discovered {len(kinds)} kinds, {len(mapped_categories)} mapped categories.")
 
+    sample_pages = _sample_pages_by_category(categories)
+    schemas, engines = _propose_schemas_and_engines(
+        phase0_analyze, kinds, mapped_categories, sample_pages, analyze_kwargs
+    )
+    print(f"Proposed schemas for {len(schemas)} kinds, {len(engines)} engine candidates.")
+    proposal = _merge_proposals(kinds, schemas, engines, mapped_categories)
+
     if args.dry_run:
-        print(
-            json.dumps(
-                {"kinds": kinds, "categories": mapped_categories}, indent=2, ensure_ascii=False
-            )
-        )
+        print(json.dumps(proposal, indent=2, ensure_ascii=False))
         return 0
 
     try:
@@ -119,7 +161,7 @@ def main(argv: list[str]) -> int:
     except Exception as e:  # pragma: no cover
         raise SystemExit(f"Failed to import scripts/phase0_write.py ({e}).") from e
 
-    approved = phase0_write.write_proposal(analysis)
+    approved = phase0_write.write_proposal(proposal)
     return 0 if approved else 1
 
 

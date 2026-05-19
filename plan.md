@@ -10,14 +10,16 @@ Status keys: `[x]` done · `[~]` partial · `[ ]` not started · `[!]` blocked
 
 ## Current stage
 
-**Phase 1 runnable but hard-coded to They Are Billions. Phase 0 v2 in progress
-to make the pipeline truly game-agnostic. Phase 2 not started.**
+**Phase 0 v2 wired end-to-end (data-driven schemas + LLM engine candidates).
+Phase 1 runnable from the new game-config.json schema shape. Phase 2 not
+started.**
 
-The pipeline can take `they-are-billions.fandom.com` and produce a validated
-Obsidian vault on disk. But the per-kind frontmatter contracts live as
-hand-authored `schemas/*.schema.json` files — that means every new target
-game requires manual schema coding. **Phase 0 v2** moves this knowledge into
-data so the pipeline can reverse-engineer arbitrary games.
+Per-kind frontmatter contracts now live as data in `game-config.json` under
+`kinds.<kind>.frontmatter_schema`. Phase 0 grows two new LLM passes that
+propose schemas and engine candidates per target game. Phase 1's validator
+sources schemas from the config, not from `schemas/*.schema.json` files.
+The pipeline can now be re-pointed at any wiki without code changes —
+human approval of the proposed `game-config.json` is the only gate.
 
 ---
 
@@ -60,44 +62,41 @@ drive Phase 1 + Phase 2.
       `scripts/phase0.py`
 - [x] Reference run approved for They Are Billions — 15 categories → 8 kinds
 
-### Phase 0 v2 — Data-driven schemas + engine selection (in progress)
+### Phase 0 v2 — Data-driven schemas + engine selection (wired)
 
-Actionable steps, in dependency order:
-
-- [ ] **Migrate existing per-kind schemas into `game-config.json`** —
-      Codex session 1. Read each of `schemas/{item,skill,enemy,mechanic,
-      quest,system,location,npc}.schema.json`, inline each one's `required`
-      list and `properties` map under `kinds.<kind>.frontmatter_schema`,
-      delete the migrated files. Keep `_universal.schema.json` as code.
-- [ ] **Refactor Phase 1 schema loader** — same Codex session 1. In
-      `phase1_ingest.py:validation_errors`, stop reading
-      `schemas/<kind>.schema.json` from disk; build the per-kind schema
-      from `game-config.json -> kinds.<kind>.frontmatter_schema`. Keep the
-      "no per-kind schema → universal-only + one-time warning" fallback for
-      kinds that come back empty.
-- [ ] **Add Phase 0 schema-proposal LLM step** — Codex session 2. New
-      function in `phase0_analyze.py` that, given the v1 taxonomy output
-      plus 1–3 sample pages per category, returns a `frontmatter_schema`
-      (JSON-Schema-shaped `{required: [...], properties: {...}}`) for each
-      kind. Remove the hard-coded `REQUIRED_FIELDS_BY_KIND` and
-      `BASELINE_KINDS` constants — they become LLM-derived per game.
-- [ ] **Add Phase 0 engine-candidate proposal step** — Codex session 3.
-      New function in `phase0_analyze.py` that takes high-signal data
-      (entity counts per kind, category names hinting at real-time/turn-
-      based/multiplayer, total page count) and proposes 2–4 engine
-      candidates as `[{name, language, pros, cons, fit_score, links}]`.
-      Human picks one by setting `game-config.json -> chosen_engine` post-
-      approval.
-- [ ] **Wire Phase 0 v2 through `phase0.py` + `phase0_write.py`** — after
-      the three Codex sessions land. Call analyze functions in sequence
-      (taxonomy → schemas → engines), merge into one proposal shape,
-      render `frontmatter_schema` and `engine_candidates` blocks in the
-      diff for human review.
+- [x] **Migrate existing per-kind schemas into `game-config.json`** —
+      `schemas/{item,skill,enemy,mechanic,quest,system,location,npc}.schema.json`
+      inlined under `kinds.<kind>.frontmatter_schema`. Files deleted.
+      `_universal.schema.json` remains as code.
+- [x] **Refactor Phase 1 schema loader** — `phase1_ingest.validation_errors`
+      now sources per-kind schemas from `game_config["kinds"][kind].get(
+      "frontmatter_schema")`. Universal-only fallback + warning preserved.
+- [x] **Phase 0 schema-proposal LLM step** — `propose_frontmatter_schemas`
+      in `phase0_analyze.py`. Hard-coded `REQUIRED_FIELDS_BY_KIND` and
+      `BASELINE_KINDS` constants removed.
+- [x] **Phase 0 engine-candidate proposal step** —
+      `propose_engine_candidates` in `phase0_analyze.py`. Returns 2–4
+      candidates ranked by fit_score.
+- [x] **Wire Phase 0 v2 through `phase0.py` + `phase0_write.py`** — both
+      proposers invoked after `analyze_taxonomy`; results merged into the
+      proposal shape; `engine_candidates` block written to
+      `game-config.proposed.json`; `chosen_engine` preserved across runs.
+- [~] **Sample-page payload to the schema proposer is titles-only** — the
+      current wiring passes the top-2 category member *titles* (string
+      list) as the sample for each category. The schema proposer prompt
+      will get weak signal from titles alone. Follow-up: extend
+      `phase0_fetch.py` (or share `phase1_ingest.page_wikitext`) to fetch
+      wikitext snippets for 1–2 representative pages per category so the
+      LLM sees actual frontmatter-shaped content. Until then, expect to
+      hand-tune `kinds.<kind>.frontmatter_schema` after the first Phase 0
+      v2 run on a new game.
 - [ ] **Re-run Phase 0 v2 against `they-are-billions.fandom.com`** — the
-      reference deployment. Verify LLM-proposed schemas match (or improve
-      on) the migrated hand-written ones; verify engine candidates look
-      sane (expect Bevy/Rust, Unity DOTS, Godot+ECS at the top — see
-      reference below).
+      reference deployment. Verify LLM-proposed schemas roughly match the
+      migrated hand-authored ones, and that the proposer fills in
+      `building` / `unit` / `organization` (the three kinds that had no
+      hand-authored schema). Verify engine candidates look sane (expect
+      something like Bevy/Rust, Unity DOTS, Godot+ECS at the top — but
+      they must come from the LLM, not from the reference table below).
 
 ### Engine candidates reference — They Are Billions multiplayer
 
