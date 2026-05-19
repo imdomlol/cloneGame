@@ -89,7 +89,7 @@ There is **no test suite, no linter, no build step, no CI**. Validation happens 
 
 ### Pre-Commit Checks
 
-This repo is Python-only, so the JS/TS-targeted analyzer `fallow` doesn't apply. Use the Python equivalents — installable via `pip install -r requirements-dev.txt`. Configuration lives in `pyproject.toml`.
+This repo is Python-only. Use the Python tools installable via `pip install -r requirements-dev.txt`. Configuration lives in `pyproject.toml`.
 
 1. `ruff check scripts/` — lint + complexity (mccabe, max 10). Preview auto-fixes with `ruff check scripts/ --fix --diff`, apply with `ruff check scripts/ --fix`.
 2. `ruff format scripts/` — formatter. Preview with `ruff format scripts/ --diff`.
