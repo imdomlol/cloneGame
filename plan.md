@@ -14,12 +14,19 @@ from the target wiki. Phase 0 sits in front of Phase 1.
 
 - [x] Define the Phase 0 ↔ Phase 1 contract — `game-config.json` schema
 - [x] Seed `game-config.json` with the guide's 8 kinds as a baseline
-- [ ] Write the Phase 0 taxonomy-discovery LLM step
-  - Crawl a representative sample of wiki pages
-  - Propose a refined `kinds` object (add/remove/rename)
-  - Emit a diff against the current `game-config.json` for human review
-- [ ] Human review gate
-  - Set `human_approved: true` in `game-config.json` after sign-off
+- [x] Write the Phase 0 taxonomy-discovery LLM step — `scripts/phase0_fetch.py`,
+      `scripts/phase0_analyze.py`
+  - Dual-query MediaWiki API pipeline: allcategories (paginated) +
+    categorymembers (top 2 per category); heuristic maintenance filter
+  - Multi-provider LLM call (OpenAI gpt-4o-mini → Anthropic Haiku → Gemini Flash);
+    verbatim title enforcement; JSON retry; snake_case kind normalization
+- [x] Proposal writer + orchestrator — `scripts/phase0_write.py`, `scripts/phase0.py`
+  - Writes `game-config.proposed.json` with ANSI-coloured unified diff
+  - Two-stage terminal confirmation; flips `human_approved: true` on approval
+  - Prints XML dump prep instructions on completion
+  - CLI: `python scripts/phase0.py [--wiki-url URL] [--min-members N] [--dry-run]`
+- [ ] Human review gate — run `python scripts/phase0.py`, review diff, confirm
+  - Sets `human_approved: true` in `game-config.json` after sign-off
   - `phase1_sort.py` already warns when this is `false`
 
 ---
