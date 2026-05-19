@@ -27,7 +27,10 @@
     },
     "subtype": { "type": "string" },
     "source_url": { "type": "string", "format": "uri" },
-    "source_revision": { "type": "string", "minLength": 1 },
+    "source_revision": {
+      "type": ["string", "integer"],
+      "description": "MediaWiki revision id. The API returns it as an integer; older string-coerced records are still accepted."
+    },
     "extracted_at": { "type": "string", "format": "date-time" },
     "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
     "tags": { "type": "array", "items": { "type": "string" } },

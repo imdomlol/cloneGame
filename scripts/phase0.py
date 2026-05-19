@@ -59,14 +59,24 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _sample_pages_by_category(categories: list[dict[str, Any]]) -> dict[str, list[str]]:
-    samples: dict[str, list[str]] = {}
+def _sample_pages_by_category(
+    fetch_module: Any,
+    wiki_url: str,
+    categories: list[dict[str, Any]],
+) -> dict[str, list[str]]:
+    # Pull real wikitext for the first 2 pages per category so the schema
+    # proposer sees actual frontmatter-shaped content, not just page titles.
+    # Falls back to titles-only if every wikitext fetch fails (offline / API down).
+    samples = fetch_module.fetch_sample_pages_by_category(wiki_url, categories)
+    if any(snippets for snippets in samples.values()):
+        return samples
+    fallback: dict[str, list[str]] = {}
     for cat in categories:
         name = cat.get("name")
         members = cat.get("members") or []
         if isinstance(name, str) and isinstance(members, list):
-            samples[name] = [str(m) for m in members[:2] if isinstance(m, str)]
-    return samples
+            fallback[name] = [str(m) for m in members[:2] if isinstance(m, str)]
+    return fallback
 
 
 def _propose_schemas_and_engines(
@@ -145,7 +155,8 @@ def main(argv: list[str]) -> int:
         )
     print(f"Discovered {len(kinds)} kinds, {len(mapped_categories)} mapped categories.")
 
-    sample_pages = _sample_pages_by_category(categories)
+    print("[Phase 0] Fetching wikitext samples for schema proposal...")
+    sample_pages = _sample_pages_by_category(phase0_fetch, wiki_url, categories)
     schemas, engines = _propose_schemas_and_engines(
         phase0_analyze, kinds, mapped_categories, sample_pages, analyze_kwargs
     )

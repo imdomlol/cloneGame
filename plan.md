@@ -81,15 +81,15 @@ drive Phase 1 + Phase 2.
       proposers invoked after `analyze_taxonomy`; results merged into the
       proposal shape; `engine_candidates` block written to
       `game-config.proposed.json`; `chosen_engine` preserved across runs.
-- [~] **Sample-page payload to the schema proposer is titles-only** — the
-      current wiring passes the top-2 category member *titles* (string
-      list) as the sample for each category. The schema proposer prompt
-      will get weak signal from titles alone. Follow-up: extend
-      `phase0_fetch.py` (or share `phase1_ingest.page_wikitext`) to fetch
-      wikitext snippets for 1–2 representative pages per category so the
-      LLM sees actual frontmatter-shaped content. Until then, expect to
-      hand-tune `kinds.<kind>.frontmatter_schema` after the first Phase 0
-      v2 run on a new game.
+- [x] **Schema proposer reads real wikitext, not titles** —
+      `phase0_fetch.fetch_sample_pages_by_category` fetches the top-2
+      pages' wikitext per category (truncated to 4000 chars each) via
+      `action=query&prop=revisions&rvslots=main`, and `phase0.py` feeds
+      that to `propose_frontmatter_schemas` instead of bare titles.
+      Falls back to titles-only if every wikitext fetch fails.
+- [x] **Universal `source_revision` accepts integer or string** —
+      MediaWiki returns revids as integers; the prior `type: "string"`
+      constraint failed every page. Schema now allows both.
 - [ ] **Re-run Phase 0 v2 against `they-are-billions.fandom.com`** — the
       reference deployment. Verify LLM-proposed schemas roughly match the
       migrated hand-authored ones, and that the proposer fills in

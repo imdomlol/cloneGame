@@ -188,6 +188,84 @@ def _query_category_members(
     return titles
 
 
+def _extract_main_slot(revision: object) -> dict | None:
+    if not isinstance(revision, dict):
+        return None
+    slot = revision.get("slots", {}).get("main")
+    return slot if isinstance(slot, dict) else None
+
+
+def _query_page_wikitext(
+    api_endpoint: str,
+    title: str,
+    *,
+    user_agent: str | None,
+) -> str | None:
+    params: dict[str, object] = {
+        "action": "query",
+        "titles": title,
+        "prop": "revisions",
+        "rvprop": "content",
+        "rvslots": "main",
+        "format": "json",
+    }
+    try:
+        data = _http_get_json(_build_url(api_endpoint, params), user_agent=user_agent)
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+        return None
+
+    pages = (data.get("query") or {}).get("pages")
+    if not isinstance(pages, dict):
+        return None
+    for page in pages.values():
+        if not isinstance(page, dict):
+            continue
+        revisions = page.get("revisions")
+        if not isinstance(revisions, list) or not revisions:
+            continue
+        slot = _extract_main_slot(revisions[0])
+        if slot is None:
+            continue
+        content = slot.get("*") or slot.get("content")
+        if isinstance(content, str):
+            return content
+    return None
+
+
+def fetch_sample_pages_by_category(
+    wiki_base_url: str,
+    categories: list[dict],
+    samples_per_category: int = 2,
+    max_chars_per_sample: int = 4000,
+) -> dict[str, list[str]]:
+    """
+    Fetch wikitext for the first N member pages of each category, truncated
+    to `max_chars_per_sample`. Output shape matches what
+    `phase0_analyze.propose_frontmatter_schemas` expects:
+        {<category_name>: [<wikitext snippet>, ...]}
+    Pages whose wikitext can't be fetched are skipped.
+    """
+    repo_root = Path(__file__).resolve().parents[1]
+    user_agent = _load_user_agent_from_phase1_config(repo_root)
+    api_endpoint = _api_url(wiki_base_url)
+
+    out: dict[str, list[str]] = {}
+    for cat in categories:
+        name = cat.get("name")
+        members = cat.get("members") or []
+        if not isinstance(name, str) or not isinstance(members, list):
+            continue
+        snippets: list[str] = []
+        for title in members[:samples_per_category]:
+            if not isinstance(title, str):
+                continue
+            content = _query_page_wikitext(api_endpoint, title, user_agent=user_agent)
+            if content:
+                snippets.append(content[:max_chars_per_sample])
+        out[name] = snippets
+    return out
+
+
 def fetch_taxonomy(wiki_base_url: str, min_members: int = 3) -> list[dict]:
     """
     Query the MediaWiki API for primary gameplay categories, filter out
