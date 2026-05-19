@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import re
@@ -5,7 +6,6 @@ import subprocess
 import sys
 import tempfile
 from typing import Any
-
 
 REQUIRED_FIELDS_BY_KIND = {
     "item": ["stats", "requirements", "tags"],
@@ -59,10 +59,7 @@ def _claude_call(prompt: str, model: str | None) -> str:
 
     out = result.stdout.strip()
     if not out:
-        raise ValueError(
-            f"claude -p returned empty output.\n"
-            f"  stderr: {result.stderr.strip()}"
-        )
+        raise ValueError(f"claude -p returned empty output.\n  stderr: {result.stderr.strip()}")
 
     return out
 
@@ -96,22 +93,19 @@ def _codex_call(prompt: str, model: str | None) -> str:
 
         out = ""
         if output_path and os.path.exists(output_path):
-            with open(output_path, "r", encoding="utf-8") as f:
+            with open(output_path, encoding="utf-8") as f:
                 out = f.read().strip()
         if not out:
             out = result.stdout.strip()
         if not out:
             raise ValueError(
-                f"codex exec returned empty output.\n"
-                f"  stderr: {result.stderr.strip()}"
+                f"codex exec returned empty output.\n  stderr: {result.stderr.strip()}"
             )
         return out
     finally:
         if output_path:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(output_path)
-            except OSError:
-                pass
 
 
 def _llm_call(prompt: str, mode: str = DEFAULT_MODE, model: str | None = None) -> str:
@@ -151,18 +145,24 @@ def _build_prompt(categories: list[dict[str, Any]]) -> str:
         "Each category has a name, member_count, and sample member page titles for context.\n"
         "\n"
         "Task:\n"
-        "1) Discard any remaining meta/community/maintenance categories you recognise semantically.\n"
-        "2) Map surviving categories into a `kinds` object. Use fine-grained kinds - do NOT collapse\n"
-        "   distinct entity types (e.g. buildings, heroes, enemies, locations) into a single catch-all.\n"
-        f"   Baseline kinds to start from (keep all that have evidence in the categories): {baseline_block}\n"
+        "1) Discard any remaining meta/community/maintenance categories you recognise"
+        " semantically.\n"
+        "2) Map surviving categories into a `kinds` object. Use fine-grained kinds - do NOT"
+        " collapse\n"
+        "   distinct entity types (e.g. buildings, heroes, enemies, locations) into a single"
+        " catch-all.\n"
+        "   Baseline kinds to start from (keep all that have evidence in the categories):"
+        f" {baseline_block}\n"
         "   You may add new kinds if the wiki has entity types not covered by the baseline.\n"
         "   Each kind must have:\n"
         "   - a snake_case key\n"
         "   - `minWikilinks` as an int 0..3 (higher for more interconnected entity types)\n"
-        "   - a one-sentence `description` that explicitly names the required frontmatter sub-fields for that kind.\n"
+        "   - a one-sentence `description` that explicitly names the required frontmatter"
+        " sub-fields for that kind.\n"
         "     Required fields by kind:\n"
         f"{required_block}\n"
-        "3) For `categories`: emit one entry per surviving input category, classifying it to a kind.\n"
+        "3) For `categories`: emit one entry per surviving input category, classifying it to"
+        " a kind.\n"
         "   - Category `name` must be VERBATIM from the input (case-sensitive, no paraphrasing).\n"
         "   - `kind` must be one of the kinds you defined above.\n"
         "   - This list will drive Phase 1 ingest: every member page of these categories will be\n"
@@ -203,13 +203,13 @@ def _parse_json_with_retry(
         content = _strip_fences(_llm_call(p, mode, model))
         try:
             return json.loads(content)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             last_err = e
     assert last_err is not None
     raise ValueError(f"LLM returned invalid JSON after retry: {last_err}")
 
 
-def _validate_output(result: dict[str, Any], categories: list[dict[str, Any]]) -> dict[str, Any]:
+def _assert_output_shape(result: dict[str, Any]) -> None:
     if not isinstance(result, dict):
         raise ValueError("Expected result to be a JSON object.")
     if "kinds" not in result or "categories" not in result:
@@ -219,43 +219,65 @@ def _validate_output(result: dict[str, Any], categories: list[dict[str, Any]]) -
     if not isinstance(result["categories"], list):
         raise ValueError('"categories" must be an array.')
 
+
+def _coerce_member_count(raw: Any) -> int:
+    try:
+        return int(raw or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _build_name_to_count(categories: list[dict[str, Any]]) -> dict[str, int]:
     name_to_count: dict[str, int] = {}
     for cat in categories:
         name = cat.get("name")
         if isinstance(name, str):
-            try:
-                name_to_count[name] = int(cat.get("member_count") or 0)
-            except (TypeError, ValueError):
-                name_to_count[name] = 0
+            name_to_count[name] = _coerce_member_count(cat.get("member_count"))
+    return name_to_count
 
-    normalized_kinds: dict[str, dict[str, Any]] = {}
-    kind_key_map: dict[str, str] = {}
-    for key, val in result["kinds"].items():
+
+def _normalize_kinds(
+    raw_kinds: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+    normalized: dict[str, dict[str, Any]] = {}
+    key_map: dict[str, str] = {}
+    for key, val in raw_kinds.items():
         norm_key = _snake_case(str(key))
-        kind_key_map[str(key)] = norm_key
+        key_map[str(key)] = norm_key
         if not isinstance(val, dict):
             raise ValueError(f'Kind "{key}" must be an object.')
-        min_wikilinks = int(val.get("minWikilinks", 0))
-        min_wikilinks = max(0, min(3, min_wikilinks))
+        min_wikilinks = max(0, min(3, int(val.get("minWikilinks", 0))))
         description = str(val.get("description", "")).strip()
-        normalized_kinds[norm_key] = {"minWikilinks": min_wikilinks, "description": description}
+        normalized[norm_key] = {"minWikilinks": min_wikilinks, "description": description}
+    return normalized, key_map
 
-    normalized_categories: list[dict[str, Any]] = []
-    for entry in result["categories"]:
-        if not isinstance(entry, dict):
-            continue
-        name = entry.get("name")
-        if not isinstance(name, str) or name not in name_to_count:
-            raise ValueError(f'Category name must be verbatim from input. Bad name: {name!r}')
-        kind = entry.get("kind")
-        kind_str = str(kind) if kind is not None else ""
-        kind_norm = kind_key_map.get(kind_str, _snake_case(kind_str))
-        if kind_norm not in normalized_kinds:
-            raise ValueError(f'Category {name!r} maps to unknown kind: {kind_norm!r}')
-        normalized_categories.append(
-            {"name": name, "kind": kind_norm, "member_count": name_to_count[name]}
-        )
 
+def _normalize_category_entry(
+    entry: dict[str, Any],
+    name_to_count: dict[str, int],
+    normalized_kinds: dict[str, dict[str, Any]],
+    kind_key_map: dict[str, str],
+) -> dict[str, Any]:
+    name = entry.get("name")
+    if not isinstance(name, str) or name not in name_to_count:
+        raise ValueError(f"Category name must be verbatim from input. Bad name: {name!r}")
+    kind = entry.get("kind")
+    kind_str = str(kind) if kind is not None else ""
+    kind_norm = kind_key_map.get(kind_str, _snake_case(kind_str))
+    if kind_norm not in normalized_kinds:
+        raise ValueError(f"Category {name!r} maps to unknown kind: {kind_norm!r}")
+    return {"name": name, "kind": kind_norm, "member_count": name_to_count[name]}
+
+
+def _validate_output(result: dict[str, Any], categories: list[dict[str, Any]]) -> dict[str, Any]:
+    _assert_output_shape(result)
+    name_to_count = _build_name_to_count(categories)
+    normalized_kinds, kind_key_map = _normalize_kinds(result["kinds"])
+    normalized_categories = [
+        _normalize_category_entry(entry, name_to_count, normalized_kinds, kind_key_map)
+        for entry in result["categories"]
+        if isinstance(entry, dict)
+    ]
     return {"kinds": normalized_kinds, "categories": normalized_categories}
 
 
@@ -282,7 +304,7 @@ def _main() -> int:
         return 0
     except SystemExit:
         raise
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 

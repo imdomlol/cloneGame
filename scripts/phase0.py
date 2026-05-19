@@ -16,7 +16,7 @@ def _add_scripts_to_sys_path() -> None:
 
 
 def _read_json(path: str) -> dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, dict):
         raise ValueError(f"{path} must contain a JSON object at the top level.")
@@ -77,8 +77,9 @@ def main(argv: list[str]) -> int:
         import phase0_fetch  # type: ignore
     except Exception as e:  # pragma: no cover
         raise SystemExit(
-            f"Failed to import scripts/phase0_fetch.py ({e}). This file is out of scope for this task."
-        )
+            f"Failed to import scripts/phase0_fetch.py ({e}). "
+            "This file is out of scope for this task."
+        ) from e
 
     categories = phase0_fetch.fetch_taxonomy(wiki_url, args.min_members)
     print(f"Found {len(categories)} primary categories.")
@@ -88,8 +89,9 @@ def main(argv: list[str]) -> int:
         import phase0_analyze  # type: ignore
     except Exception as e:  # pragma: no cover
         raise SystemExit(
-            f"Failed to import scripts/phase0_analyze.py ({e}). This file is out of scope for this task."
-        )
+            f"Failed to import scripts/phase0_analyze.py ({e}). "
+            "This file is out of scope for this task."
+        ) from e
 
     analyze_kwargs = {"mode": args.llm_mode}
     if args.model:
@@ -99,18 +101,23 @@ def main(argv: list[str]) -> int:
     mapped_categories = analysis.get("categories") if isinstance(analysis, dict) else None
     if not isinstance(kinds, dict) or not isinstance(mapped_categories, list):
         raise SystemExit(
-            "phase0_analyze.analyze_taxonomy() must return a dict with 'kinds' (object) and 'categories' (array)."
+            "phase0_analyze.analyze_taxonomy() must return a dict with "
+            "'kinds' (object) and 'categories' (array)."
         )
     print(f"Discovered {len(kinds)} kinds, {len(mapped_categories)} mapped categories.")
 
     if args.dry_run:
-        print(json.dumps({"kinds": kinds, "categories": mapped_categories}, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {"kinds": kinds, "categories": mapped_categories}, indent=2, ensure_ascii=False
+            )
+        )
         return 0
 
     try:
         import phase0_write  # type: ignore
     except Exception as e:  # pragma: no cover
-        raise SystemExit(f"Failed to import scripts/phase0_write.py ({e}).")
+        raise SystemExit(f"Failed to import scripts/phase0_write.py ({e}).") from e
 
     approved = phase0_write.write_proposal(analysis)
     return 0 if approved else 1

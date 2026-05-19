@@ -15,7 +15,6 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-
 _FILTER_SUBSTRINGS = [
     "stub",
     "cleanup",
@@ -254,8 +253,14 @@ def _load_default_wiki_base_url(repo_root: Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Fetch a filtered wiki category taxonomy via MediaWiki API.")
-    parser.add_argument("wiki_base_url", nargs="?", help="Wiki base URL (e.g. https://.../wiki/). Defaults to game-config.json.")
+    parser = argparse.ArgumentParser(
+        description="Fetch a filtered wiki category taxonomy via MediaWiki API."
+    )
+    parser.add_argument(
+        "wiki_base_url",
+        nargs="?",
+        help="Wiki base URL (e.g. https://.../wiki/). Defaults to game-config.json.",
+    )
     args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parents[1]
@@ -277,4 +282,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

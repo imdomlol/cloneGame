@@ -65,7 +65,9 @@ def request_json(url: str, user_agent: str, retry_count: int) -> dict[str, Any]:
     raise RuntimeError("unreachable retry loop")
 
 
-def category_members(api: str, category: str, user_agent: str, retries: int) -> list[dict[str, Any]]:
+def category_members(
+    api: str, category: str, user_agent: str, retries: int
+) -> list[dict[str, Any]]:
     params: dict[str, object] = {
         "action": "query",
         "list": "categorymembers",
@@ -142,7 +144,9 @@ def run_llm(prompt: str, mode: str, model: str) -> str:
     return proc.stdout
 
 
-def cached_or_compile(cache_dir: Path, key: str, prompt: str, mode: str, model: str) -> tuple[str, str]:
+def cached_or_compile(
+    cache_dir: Path, key: str, prompt: str, mode: str, model: str
+) -> tuple[str, str]:
     path = cache_dir / f"{key}.md"
     if path.exists():
         return path.read_text(encoding="utf-8"), "cached"
@@ -256,10 +260,14 @@ def validate_basic(data: dict[str, Any], schemas: list[dict[str, Any]]) -> list[
     return errors
 
 
-def validate_jsonschema(data: dict[str, Any], schemas: list[dict[str, Any]], root: Path) -> list[str]:
+def validate_jsonschema(
+    data: dict[str, Any], schemas: list[dict[str, Any]], root: Path
+) -> list[str]:
     if jsonschema is None:
         return validate_basic(data, schemas)
-    resolver = jsonschema.RefResolver(base_uri=(root / "schemas").as_uri() + "/", referrer=schemas[0])
+    resolver = jsonschema.RefResolver(
+        base_uri=(root / "schemas").as_uri() + "/", referrer=schemas[0]
+    )
     errors: list[str] = []
     for schema in schemas:
         validator = jsonschema.Draft202012Validator(schema, resolver=resolver)
@@ -267,7 +275,9 @@ def validate_jsonschema(data: dict[str, Any], schemas: list[dict[str, Any]], roo
     return errors
 
 
-def validation_errors(root: Path, data: dict[str, Any], kind: str, kinds: set[str]) -> tuple[list[str], bool]:
+def validation_errors(
+    root: Path, data: dict[str, Any], kind: str, kinds: set[str]
+) -> tuple[list[str], bool]:
     schemas = [universal_schema(root, kinds)]
     kind_path = root / "schemas" / f"{kind}.schema.json"
     has_kind_schema = kind_path.exists()
@@ -331,15 +341,18 @@ def ingest(ctx: dict[str, Any], cats: list[dict[str, str]], limit: int | None) -
                 quarantined += int(process_page(ctx, cat, member))
             except Exception as exc:
                 title = str(member.get("title", "unknown"))
-                markdown = f"---\nid: {slugify(title)}\nname: {title}\ntype: {cat['kind']}\n---\n"
-                write_result(ctx["root"], cat["kind"], slugify(title), markdown, [str(exc)])
-                print(f"[quarantined] {cat['name']} / {title} -> vault/_quarantine/{slugify(title)}.md")
+                slug = slugify(title)
+                markdown = f"---\nid: {slug}\nname: {title}\ntype: {cat['kind']}\n---\n"
+                write_result(ctx["root"], cat["kind"], slug, markdown, [str(exc)])
+                print(f"[quarantined] {cat['name']} / {title} -> vault/_quarantine/{slug}.md")
                 quarantined += 1
             time.sleep(delay)
     return quarantined
 
 
-def build_context(root: Path, config: dict[str, Any], game_config: dict[str, Any]) -> dict[str, Any]:
+def build_context(
+    root: Path, config: dict[str, Any], game_config: dict[str, Any]
+) -> dict[str, Any]:
     compile_cfg = config.get("compile", {})
     ingest_cfg = config.get("ingest", {})
     prompt_path = root / str(compile_cfg.get("system_prompt_path"))
@@ -361,8 +374,12 @@ def build_context(root: Path, config: dict[str, Any], game_config: dict[str, Any
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Ingest They Are Billions wiki pages into an Obsidian vault.")
-    parser.add_argument("--dry-run", action="store_true", help="Only enumerate category member counts.")
+    parser = argparse.ArgumentParser(
+        description="Ingest They Are Billions wiki pages into an Obsidian vault."
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Only enumerate category member counts."
+    )
     parser.add_argument("--limit", type=int, help="Ingest at most N pages per category.")
     args = parser.parse_args(argv)
     root = repo_root()
@@ -374,7 +391,10 @@ def main(argv: list[str] | None = None) -> int:
         return print_dry_run(ctx["api"], cats, ctx["ua"], ctx["retries"])
     quarantined = ingest(ctx, cats, args.limit)
     if ctx["missing_kinds"]:
-        print("warning: missing per-kind schemas: " + ", ".join(sorted(ctx["missing_kinds"])), file=sys.stderr)
+        print(
+            "warning: missing per-kind schemas: " + ", ".join(sorted(ctx["missing_kinds"])),
+            file=sys.stderr,
+        )
     return quarantined
 
 

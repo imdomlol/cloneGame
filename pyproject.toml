@@ -1,0 +1,24 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["vault", "build", ".phase1_cache"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes (unused imports, undefined names)
+    "I",        # isort
+    "B",        # flake8-bugbear
+    "C90",      # mccabe complexity
+    "UP",       # pyupgrade
+    "SIM",      # flake8-simplify
+    "RUF",      # ruff-specific
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.vulture]
+min_confidence = 80
+paths = ["scripts"]
+exclude = ["__pycache__"]

@@ -26,7 +26,7 @@ def _colorize_diff_line(line: str) -> str:
 
 
 def _read_json(path: str) -> dict[str, Any]:
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, dict):
         raise ValueError(f"{path} must contain a JSON object at the top level.")
@@ -54,8 +54,6 @@ def write_proposal(
     merged = dict(current)
     merged["kinds"] = analysis["kinds"]
     merged["categories"] = analysis["categories"]
-    # `seedPages` is reserved by llm-wiki-compiler for auto-generated pages.
-    # Keep it empty so the tool doesn't synthesize pages from thin air.
     merged["seedPages"] = []
     merged["human_approved"] = False
 
@@ -80,9 +78,7 @@ def write_proposal(
             print(line)
 
     try:
-        accept = input(
-            "Review the diff above.\nAccept this taxonomy proposal? [y/N]: "
-        ).strip()
+        accept = input("Review the diff above.\nAccept this taxonomy proposal? [y/N]: ").strip()
     except EOFError:
         accept = ""
 
@@ -91,9 +87,7 @@ def write_proposal(
         return False
 
     try:
-        promote = input(
-            "Set human_approved: true and make this the active config? [y/N]: "
-        ).strip()
+        promote = input("Set human_approved: true and make this the active config? [y/N]: ").strip()
     except EOFError:
         promote = ""
 
