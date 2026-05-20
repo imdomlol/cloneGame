@@ -16,8 +16,8 @@ Phase 1  game-config.json + wiki pages ──► vault/<kind>/<slug>.md (Obsidia
 Phase 2  vault/ ──► repomix XML ──► Chroma index ──► codegen LLM ──► game code
 ```
 
-- **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review.
-- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types (presence of per-kind fields is NOT enforced — only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly.
+- **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review — note this file is gitignored (`*.proposed.json` in `.gitignore`), so the diff is only meaningful between local runs, not across commits.
+- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, **trims it** (HTML comments, `[[Category:]]` tags, `[[File:]]`/`[[Image:]]` links, image-only `<gallery>` blocks, repeated blank lines — see `trim_wikitext` in `phase1_ingest.py`) to save tokens while keeping infoboxes/stat tables/formulas/wikilinks intact, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types (presence of per-kind fields is NOT enforced — only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the trim function, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly. Production config in `phase1.config.toml` currently pins `llm_mode = "codex"` + `model = "gpt-5.4-mini"`.
 - **Phase 2** is greenfield. Target engine is **Bevy (Rust)** with **deterministic lockstep** networking — see "Target engine" section below for the binding determinism rules. Do not invent Phase 2 code without explicit user direction.
 
 ## Target engine (chosen 2026-05-19): Bevy + lockstep
@@ -57,7 +57,13 @@ python scripts/phase1_ingest.py                     # full ingest
 pip install jsonschema                              # optional; enables full Draft 2020-12 validation instead of the required-fields fallback
 ```
 
-There is **no test suite, no linter, no build step, no CI**. Validation happens inline during Phase 1 ingest — non-zero exit code from `phase1_ingest.py` means files were quarantined. Inspect `vault/_quarantine/*.md` (each has a `validation_errors:` block at the top) and either fix the compile prompt or extend `kinds` in `game-config.json`.
+Tests (unit tests for `phase1_ingest` helpers — `trim_wikitext`, frontmatter parsing, validation, completed-source indexing):
+```powershell
+python -m unittest discover tests             # run everything under tests/
+python -m unittest tests.test_phase1_ingest   # one module
+```
+
+There is **no build step and no CI** — `ruff`/`vulture` (see "Pre-Commit Checks" below) and the `unittest` suite are the full local gate. Pipeline validation happens inline during Phase 1 ingest: a non-zero exit code from `phase1_ingest.py` means files were quarantined. Inspect `vault/_quarantine/*.md` (each has a `validation_errors:` block at the top) and either fix the compile prompt or extend `kinds` in `game-config.json`.
 
 ## Key files for navigation
 
@@ -84,6 +90,8 @@ There is **no test suite, no linter, no build step, no CI**. Validation happens 
 
 - Files must be smaller than 400 lines excluding comments. Once 400 is exceeded, initiate a refactor.
 - Functions must be smaller than 40 lines excluding comments and the catch/finally blocks of try/catch sections. If a function exceeds that, refactor it.
+- **Known outlier:** `scripts/phase1_ingest.py` is currently ~811 lines and exceeds the 400-line rule. A split is pending; do not let this file motivate a drive-by refactor — but also do not pile more code into it without first carving out a module (candidates: `trim_wikitext`, frontmatter parsing, validation, cache I/O).
+- `scripts/phase0_analyze.py` is ~398 lines — right at the line. Treat any net-add as a refactor trigger.
 
 ### Clean Code Rules
 
@@ -99,22 +107,21 @@ There is **no test suite, no linter, no build step, no CI**. Validation happens 
 
 ### Comments and Documentation
 
-- Include a substantial JSDoc comment at the top of each file. For python files, use google style docstrings
-- Write clear comments for complex logic
-- Document public APIs and functions
-- Use JSDoc comments for functions
-- Keep comments up-to-date with code changes
-- Document any non-obvious behavior
+- This is a Python-only repo. Use Google-style docstrings at the top of each module and on every public function/class. No JSDoc.
+- Write clear comments for complex logic; comment the *why*, not the *what*.
+- Keep comments up-to-date with code changes.
+- Document any non-obvious behavior (cache-key inputs, validation fallbacks, etc.).
 
 ### Pre-Commit Checks
 
 This repo is Python-only. Use the Python tools installable via `pip install -r requirements-dev.txt`. Configuration lives in `pyproject.toml`.
 
-1. `ruff check scripts/` — lint + complexity (mccabe, max 10). Preview auto-fixes with `ruff check scripts/ --fix --diff`, apply with `ruff check scripts/ --fix`.
-2. `ruff format scripts/` — formatter. Preview with `ruff format scripts/ --diff`.
-3. `vulture scripts/` — dead-code detection. Report-only; fix flagged items manually or add to a whitelist with explicit justification.
+1. `ruff check scripts/ tests/` — lint + complexity (mccabe, max 10). Preview auto-fixes with `ruff check scripts/ tests/ --fix --diff`, apply with `ruff check scripts/ tests/ --fix`.
+2. `ruff format scripts/ tests/` — formatter. Preview with `ruff format scripts/ tests/ --diff`.
+3. `vulture scripts/` — dead-code detection. Report-only; fix flagged items manually or add to a whitelist with explicit justification. (`tests/` is excluded — unittest discovery treats top-level test methods as entry points and vulture cannot see those callers.)
+4. `python -m unittest discover tests` — unit tests for `phase1_ingest` helpers.
 
-Do not commit until all three report clean.
+Do not commit until all four report clean.
 
 ## General Rules
 

@@ -23,6 +23,11 @@ of a single wiki page into a schema-conformant Obsidian Vault note.
   ranges into `min`/`max` fields).
 - Every cross-entity reference in prose MUST be an Obsidian [[wiki_link]] using
   the target's snake_case id. Mirror every link in the `depends_on:` array.
+- `depends_on` MUST always be a YAML array, even when there is exactly one
+  dependency. Prefer block sequence form:
+  depends_on:
+    - stone_tower
+  Use `depends_on: []` only when there are no `[[wiki_link]]` references.
 
 [PER-KIND FRONTMATTER SCHEMA]
 Use these field names VERBATIM — do not invent variant or prefixed names.

@@ -10,6 +10,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -25,6 +26,14 @@ try:
     import jsonschema
 except Exception:  # pragma: no cover - dependency is optional at import time
     jsonschema = None
+
+try:
+    from referencing import Registry, Resource
+    from referencing.jsonschema import DRAFT202012
+except Exception:  # pragma: no cover - dependency follows modern jsonschema
+    Registry = None
+    Resource = None
+    DRAFT202012 = None
 
 
 def repo_root() -> Path:
@@ -107,6 +116,93 @@ def page_wikitext(api: str, title: str, user_agent: str, retries: int) -> tuple[
     return str(text), str(rev.get("revid", "unknown"))
 
 
+def _remove_wikilinks_by_prefix(text: str, prefixes: tuple[str, ...]) -> str:
+    lower = text.casefold()
+    out: list[str] = []
+    i = 0
+    length = len(text)
+    while i < length:
+        if i + 2 <= length and text[i : i + 2] == "[[":
+            prefix_match = False
+            for prefix in prefixes:
+                start = i + 2
+                end = start + len(prefix)
+                if end <= length and lower[start:end] == prefix:
+                    prefix_match = True
+                    break
+            if prefix_match:
+                depth = 1
+                j = i + 2
+                while j < length and depth > 0:
+                    if j + 2 <= length and text[j : j + 2] == "[[":
+                        depth += 1
+                        j += 2
+                        continue
+                    if j + 2 <= length and text[j : j + 2] == "]]":
+                        depth -= 1
+                        j += 2
+                        continue
+                    j += 1
+                i = j
+                continue
+        out.append(text[i])
+        i += 1
+    return "".join(out)
+
+
+def _is_image_listing_line(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return True
+    lowered = stripped.casefold()
+    return (
+        lowered.startswith("[[file:")
+        or lowered.startswith("[[image:")
+        or lowered.startswith("file:")
+        or lowered.startswith("image:")
+    )
+
+
+def trim_wikitext(text: str) -> str:
+    trimmed = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    trimmed = _remove_wikilinks_by_prefix(trimmed, ("category:", "file:", "image:"))
+
+    template_keywords = (
+        "nav",
+        "navbar",
+        "navigation",
+        "footer",
+        "stub",
+        "cleanup",
+        "spoiler",
+        "toc",
+        "clear",
+        "wikia",
+        "fandom",
+    )
+    lines: list[str] = []
+    for line in trimmed.splitlines():
+        stripped = line.strip()
+        lowered = stripped.casefold()
+        is_template_line = lowered.startswith("{{") and lowered.endswith("}}")
+        if is_template_line and any(keyword in lowered for keyword in template_keywords):
+            continue
+        lines.append(line)
+    trimmed = "\n".join(lines)
+
+    gallery_pattern = re.compile(r"<gallery\b[^>]*>(.*?)</gallery>", re.I | re.S)
+
+    def _replace_gallery(match: re.Match[str]) -> str:
+        body = match.group(1)
+        if all(_is_image_listing_line(line) for line in body.splitlines()):
+            return ""
+        return match.group(0)
+
+    trimmed = gallery_pattern.sub(_replace_gallery, trimmed)
+    trimmed = re.sub(r"\n[ \t]*\n(?:[ \t]*\n)+", "\n\n", trimmed)
+    return trimmed.strip()
+
+
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
     return slug or "untitled"
@@ -114,6 +210,61 @@ def slugify(value: str) -> str:
 
 def page_url(base_url: str, title: str) -> str:
     return base_url.rstrip("/") + "/" + urllib.parse.quote(title.replace(" ", "_"))
+
+
+def source_key(url: str) -> str:
+    parsed = urllib.parse.urlsplit(url.strip())
+    path = urllib.parse.unquote(parsed.path).replace(" ", "_").rstrip("/")
+    return urllib.parse.urlunsplit(
+        (
+            parsed.scheme.casefold(),
+            parsed.netloc.casefold(),
+            path,
+            "",
+            "",
+        )
+    )
+
+
+def completed_source_index(root: Path) -> dict[str, list[tuple[str, Path]]]:
+    vault = root / "vault"
+    out: dict[str, list[tuple[str, Path]]] = {}
+    if not vault.exists():
+        return out
+    for path in vault.rglob("*.md"):
+        try:
+            relative = path.relative_to(vault)
+        except ValueError:
+            continue
+        if relative.parts and relative.parts[0] == "_quarantine":
+            continue
+        data, errors = frontmatter(path.read_text(encoding="utf-8"))
+        if errors:
+            continue
+        source = data.get("source_url")
+        if isinstance(source, str) and source:
+            note_kind = data.get("type")
+            if not isinstance(note_kind, str) or not note_kind:
+                note_kind = path.parent.name
+            out.setdefault(source_key(source), []).append((note_kind, path))
+    return out
+
+
+def completed_source_for_kind(
+    index: dict[str, list[tuple[str, Path]]], url: str, kind: str
+) -> Path | None:
+    for note_kind, path in index.get(source_key(url), []):
+        if note_kind == kind:
+            return path
+    return None
+
+
+def completed_sources_for_other_kinds(
+    index: dict[str, list[tuple[str, Path]]], url: str, kind: str
+) -> list[tuple[str, Path]]:
+    return [
+        (note_kind, path) for note_kind, path in index.get(source_key(url), []) if note_kind != kind
+    ]
 
 
 def raw_kind_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any]:
@@ -131,9 +282,7 @@ def raw_kind_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any]:
     return schema if isinstance(schema, dict) else {}
 
 
-def compile_prompt(
-    template: str, kind: str, source: str, game_config: dict[str, Any]
-) -> str:
+def compile_prompt(template: str, kind: str, source: str, game_config: dict[str, Any]) -> str:
     schema = raw_kind_schema(game_config, kind)
     schema_json = json.dumps(schema, indent=2, ensure_ascii=False) if schema else "{}"
     prompt = template.replace("{{type_hint}}", kind)
@@ -156,13 +305,31 @@ def run_llm(prompt: str, mode: str, model: str) -> str:
     if mode == "claude":
         cmd = ["claude", "-p", "--model", model]
     elif mode == "codex":
-        cmd = ["codex", "exec", "--model", model, "-"]
+        codex_cmd = "codex.cmd" if os.name == "nt" else "codex"
+        cmd = [codex_cmd, "exec", "--model", model, "-"]
     else:
         raise ValueError(f"unsupported [compile] llm_mode: {mode}")
-    proc = subprocess.run(cmd, input=prompt, text=True, capture_output=True)
+    proc = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+    )
+    try:
+        stdout, stderr = proc.communicate(prompt)
+    except KeyboardInterrupt:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+        raise
     if proc.returncode != 0:
-        raise RuntimeError(proc.stderr.strip() or f"{cmd[0]} exited {proc.returncode}")
-    return proc.stdout
+        raise RuntimeError(stderr.strip() or f"{cmd[0]} exited {proc.returncode}")
+    return stdout
 
 
 def cached_or_compile(
@@ -189,7 +356,21 @@ def strip_llm_chatter(markdown: str) -> str:
     return markdown
 
 
+def repair_frontmatter_delimiter(markdown: str) -> str:
+    if re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", markdown, re.S):
+        return markdown
+    if not markdown.startswith("---"):
+        return markdown
+
+    heading = re.search(r"\n(#{1,6}\s+)", markdown)
+    if heading is None:
+        return markdown
+    insert_at = heading.start() + 1
+    return markdown[:insert_at] + "---\n" + markdown[insert_at:]
+
+
 def frontmatter(markdown: str) -> tuple[dict[str, Any], list[str]]:
+    markdown = repair_frontmatter_delimiter(markdown)
     match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", markdown, re.S)
     if not match:
         return {}, ["missing YAML frontmatter"]
@@ -208,11 +389,49 @@ def parse_scalar(raw: str) -> Any:
         try:
             return json.loads(raw.replace("'", '"'))
         except Exception:
+            if raw.startswith("[") and raw.endswith("]"):
+                return parse_flow_sequence(raw)
             return raw
     try:
         return int(raw) if re.fullmatch(r"-?\d+", raw) else float(raw)
     except ValueError:
         return raw
+
+
+def parse_flow_sequence(raw: str) -> list[Any]:
+    body = raw[1:-1].strip()
+    if not body:
+        return []
+
+    items: list[str] = []
+    current: list[str] = []
+    quote = ""
+    escaped = False
+    for char in body:
+        if escaped:
+            current.append(char)
+            escaped = False
+            continue
+        if char == "\\" and quote == '"':
+            current.append(char)
+            escaped = True
+            continue
+        if quote:
+            current.append(char)
+            if char == quote:
+                quote = ""
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            current.append(char)
+            continue
+        if char == ",":
+            items.append("".join(current).strip())
+            current = []
+            continue
+        current.append(char)
+    items.append("".join(current).strip())
+    return [parse_scalar(item) for item in items if item]
 
 
 def parse_yaml_map(text: str) -> dict[str, Any]:
@@ -310,14 +529,34 @@ def validate_jsonschema(
 ) -> list[str]:
     if jsonschema is None:
         return validate_basic(data, schemas)
-    resolver = jsonschema.RefResolver(
-        base_uri=(root / "schemas").as_uri() + "/", referrer=schemas[0]
-    )
+    registry = schema_registry(root)
     errors: list[str] = []
     for schema in schemas:
-        validator = jsonschema.Draft202012Validator(schema, resolver=resolver)
+        validator = (
+            jsonschema.Draft202012Validator(schema, registry=registry)
+            if registry is not None
+            else jsonschema.Draft202012Validator(schema)
+        )
         errors.extend(sorted(e.message for e in validator.iter_errors(data)))
     return errors
+
+
+def schema_registry(root: Path) -> Any | None:
+    if Registry is None or Resource is None or DRAFT202012 is None:
+        return None
+
+    registry = Registry()
+    schema_dir = root / "schemas"
+    if not schema_dir.exists():
+        return registry
+
+    for path in schema_dir.glob("*.schema.json"):
+        schema = read_json(path)
+        uri = str(schema.get("$id") or path.as_uri())
+        resource = Resource.from_contents(schema, default_specification=DRAFT202012)
+        registry = registry.with_resource(uri, resource)
+        registry = registry.with_resource(path.as_uri(), resource)
+    return registry
 
 
 def validation_errors(
@@ -376,7 +615,34 @@ def configured_dry_run_count(cat: dict[str, Any]) -> int:
     return count
 
 
+def print_entry_start(item_no: int) -> None:
+    print()
+    print(f"========== ITEM {item_no:03d} ==========")
+
+
+def print_entry_end(item_no: int) -> None:
+    print(f"---------- END ITEM {item_no:03d} ----------")
+
+
+def print_status(status: str, message: str, item_no: int | None = None) -> None:
+    prefix = f"{item_no:03d} {status:<10}" if item_no is not None else f"{status:<10}"
+    print(f"{prefix} {message}")
+
+
+def print_detail(label: str, value: object) -> None:
+    print(f"  {label:<10} {value}")
+
+
+def relative_to_root(path: Path, root: Path) -> str:
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
+
 def print_dry_run(api: str, cats: list[dict[str, Any]], user_agent: str, retries: int) -> int:
+    print()
+    print_status("DRY RUN", "category member counts")
     use_api = True
     for cat in cats:
         count, source = (
@@ -386,18 +652,47 @@ def print_dry_run(api: str, cats: list[dict[str, Any]], user_agent: str, retries
         )
         use_api = source == "api"
         suffix = "" if source == "api" else " (configured)"
-        print(f"{cat['name']} ({cat['kind']}): {count} pages{suffix}")
+        print_detail(cat["name"], f"{count} pages [{cat['kind']}]{suffix}")
     return 0
 
 
-def process_page(ctx: dict[str, Any], cat: dict[str, Any], member: dict[str, Any]) -> bool:
+def print_next_page(cat: dict[str, Any], title: str, source_url: str, item_no: int) -> None:
+    print_entry_start(item_no)
+    print_status("NEXT", title, item_no)
+    print_detail("category", cat["name"])
+    print_detail("kind", cat["kind"])
+    print_detail("source", source_url)
+    if sys.stdin.isatty():
+        print_detail("cancel", "Ctrl+C skips this page and continues")
+
+
+def process_page(
+    ctx: dict[str, Any], cat: dict[str, Any], member: dict[str, Any], item_no: int
+) -> bool:
     title = str(member.get("title", ""))
+    source_url = page_url(ctx["base_url"], title)
+    print_next_page(cat, title, source_url, item_no)
+
+    source_idx = ctx["source_index"]
+    existing = completed_source_for_kind(source_idx, source_url, cat["kind"])
+    if existing is not None and not ctx["force"]:
+        print_status("SKIP", title, item_no)
+        print_detail("reason", "already completed for this kind")
+        print_detail("path", relative_to_root(existing, ctx["root"]))
+        print_entry_end(item_no)
+        return False
+    related = completed_sources_for_other_kinds(source_idx, source_url, cat["kind"])
+    for note_kind, path in related:
+        print_detail("related", f"{note_kind} -> {relative_to_root(path, ctx['root'])}")
+
     text, rev = page_wikitext(ctx["api"], title, ctx["ua"], ctx["retries"])
-    source = text + f"\n\nSOURCE_URL: {page_url(ctx['base_url'], title)}\nSOURCE_REVISION: {rev}\n"
+    trimmed_text = trim_wikitext(text)
+    source = trimmed_text + f"\n\nSOURCE_URL: {source_url}\nSOURCE_REVISION: {rev}\n"
     prompt = compile_prompt(ctx["system_prompt"], cat["kind"], source, ctx["game_config"])
     key = cache_key(prompt, ctx["model"])
     markdown, status = cached_or_compile(ctx["cache_dir"], key, prompt, ctx["mode"], ctx["model"])
     markdown = strip_llm_chatter(markdown)
+    markdown = repair_frontmatter_delimiter(markdown)
     fm, errors = frontmatter(markdown)
     schema_errors, has_schema = validation_errors(
         ctx["root"], fm, cat["kind"], ctx["kinds"], ctx["game_config"]
@@ -406,26 +701,48 @@ def process_page(ctx: dict[str, Any], cat: dict[str, Any], member: dict[str, Any
     errors.extend(schema_errors)
     slug = slugify(str(fm.get("id") or title))
     path = write_result(ctx["root"], cat["kind"], slug, markdown, errors)
-    final = "quarantined" if errors else status
-    print(f"[{final}] {cat['name']} / {title} -> {path.relative_to(ctx['root'])}")
+    if not errors:
+        source_idx.setdefault(source_key(source_url), []).append((cat["kind"], path))
+    final = "QUARANTINE" if errors else "DONE"
+    print_status(final, title, item_no)
+    print_detail("result", "validation errors" if errors else status)
+    print_detail("path", relative_to_root(path, ctx["root"]))
+    print_detail("wikitext", f"{len(text)} chars -> {len(trimmed_text)} chars")
+    if errors:
+        for error in errors:
+            print_detail("error", error)
+    print_entry_end(item_no)
     return bool(errors)
 
 
 def ingest(ctx: dict[str, Any], cats: list[dict[str, Any]], limit: int | None) -> int:
     quarantined = 0
+    item_no = 0
     delay = int(ctx["delay_ms"]) / 1000
     for cat in cats:
         members = category_members(ctx["api"], cat["name"], ctx["ua"], ctx["retries"])
         selected = members if limit is None else members[:limit]
         for member in selected:
+            item_no += 1
             try:
-                quarantined += int(process_page(ctx, cat, member))
+                quarantined += int(process_page(ctx, cat, member, item_no))
+            except KeyboardInterrupt:
+                title = str(member.get("title", "unknown"))
+                print_status("SKIP", title, item_no)
+                print_detail("reason", "user canceled current page")
+                print_detail("source", page_url(ctx["base_url"], title))
+                print_entry_end(item_no)
             except Exception as exc:
                 title = str(member.get("title", "unknown"))
                 slug = slugify(title)
                 markdown = f"---\nid: {slug}\nname: {title}\ntype: {cat['kind']}\n---\n"
-                write_result(ctx["root"], cat["kind"], slug, markdown, [str(exc)])
-                print(f"[quarantined] {cat['name']} / {title} -> vault/_quarantine/{slug}.md")
+                path = write_result(ctx["root"], cat["kind"], slug, markdown, [str(exc)])
+                print_status("QUARANTINE", title, item_no)
+                print_detail("result", "exception")
+                print_detail("path", relative_to_root(path, ctx["root"]))
+                print_detail("source", page_url(ctx["base_url"], title))
+                print_detail("error", str(exc))
+                print_entry_end(item_no)
                 quarantined += 1
             time.sleep(delay)
     return quarantined
@@ -448,9 +765,11 @@ def build_context(
         "model": compile_cfg.get("model", "default"),
         "system_prompt": prompt_path.read_text(encoding="utf-8"),
         "cache_dir": root / config.get("cache", {}).get("dir", ".phase1_cache"),
+        "force": False,
         "kinds": set(game_config.get("kinds", {}).keys()),
         "game_config": game_config,
         "missing_kinds": set(),
+        "source_index": completed_source_index(root),
         "started_at": dt.datetime.now(dt.UTC).isoformat(),
     }
 
@@ -463,12 +782,18 @@ def main(argv: list[str] | None = None) -> int:
         "--dry-run", action="store_true", help="Only enumerate category member counts."
     )
     parser.add_argument("--limit", type=int, help="Ingest at most N pages per category.")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Reprocess pages even when their source_url already exists in the vault.",
+    )
     args = parser.parse_args(argv)
     root = repo_root()
     config = load_config(root)
     game_config = read_json(root / "game-config.json")
     cats = category_plan(game_config)
     ctx = build_context(root, config, game_config)
+    ctx["force"] = args.force
     if args.dry_run:
         return print_dry_run(ctx["api"], cats, ctx["ua"], ctx["retries"])
     quarantined = ingest(ctx, cats, args.limit)
