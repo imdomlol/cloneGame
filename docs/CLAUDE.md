@@ -131,7 +131,7 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 
 - Files must be smaller than 400 lines excluding comments. Once 400 is exceeded, initiate a refactor.
 - Functions must be smaller than 40 lines excluding comments and the catch/finally blocks of try/catch sections. If a function exceeds that, refactor it.
-- **Known outlier:** `scripts/phase1_ingest.py` is currently ~811 lines and exceeds the 400-line rule. A split is pending; do not let this file motivate a drive-by refactor, but also do not pile more code into it without first carving out a module (candidates: `trim_wikitext`, frontmatter parsing, validation, cache I/O).
+- `scripts/phase1_ingest.py` is the Phase 1 orchestrator (`process_page`, `ingest`, `build_context`, `main`, dry-run + print helpers). Helpers live in sibling modules: `wikitext.py` (trimming), `frontmatter.py` (YAML parsing), `validation.py` (schema gate), `compile_cache.py` (prompt render + SHA cache + LLM dispatch), `wiki_api.py` (MediaWiki retry/pagination), `vault_index.py` (paths, source-key index, migration). Inter-script imports use bare `from <module> import ...` plus a `sys.path` bootstrap so both direct execution and unittest discovery work.
 - `scripts/phase0_analyze.py` is ~398 lines, right at the line. Treat any net-add as a refactor trigger.
 
 ### Comments and Documentation

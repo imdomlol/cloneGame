@@ -3,18 +3,20 @@ import warnings
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from scripts.phase1_ingest import (
+from scripts.frontmatter import (
+    frontmatter,
+    repair_frontmatter_delimiter,
+    replace_frontmatter_type,
+)
+from scripts.validation import validate_jsonschema
+from scripts.vault_index import (
     completed_source_for_kind,
     completed_source_index,
     completed_sources_for_other_kinds,
-    frontmatter,
     migrate_existing_note,
-    repair_frontmatter_delimiter,
-    replace_frontmatter_type,
     source_key,
-    trim_wikitext,
-    validate_jsonschema,
 )
+from scripts.wikitext import trim_wikitext
 
 
 class TrimWikitextTests(unittest.TestCase):
@@ -205,7 +207,9 @@ class SourceIndexTests(unittest.TestCase):
             data, fm_errors = frontmatter(migrated.read_text(encoding="utf-8"))
             self.assertEqual(fm_errors, [])
             self.assertEqual(data["type"], "infected_unit")
-            self.assertEqual(completed_source_for_kind(index, source_url, "infected_unit"), migrated)
+            self.assertEqual(
+                completed_source_for_kind(index, source_url, "infected_unit"), migrated
+            )
 
 
 class ValidationTests(unittest.TestCase):
