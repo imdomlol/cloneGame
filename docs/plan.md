@@ -230,18 +230,7 @@ generates code that honors the determinism rules in
 
 ## Decision log
 
-| Decision | When | Why |
-| --- | --- | --- |
-| Headless LLM CLI (`claude -p` / `codex exec`) instead of SDK | Phase 0 / Phase 1 | Avoids an SDK dependency tree and reuses the user's existing auth. `run_llm` is the single chokepoint to swap if needed. |
-| Cache key = SHA-256 of `(wikitext + system prompt + model id)` | Phase 1 ingest | Catches all three inputs that change compile output. Unchanged source pages can be re-ingested with no LLM cost; prompt edits or model swaps invalidate cleanly. |
-| Custom hand-rolled YAML frontmatter parser | Phase 1 ingest | The compile prompt produces a constrained YAML subset; a small parser avoids a `pyyaml` dependency. If the compile prompt drifts, switch to `pyyaml` rather than growing the parser. |
-| `human_approved` gate in `game-config.json` | Phase 0 | Cheap insurance against an LLM-proposed taxonomy slipping into production ingest. Phase 1 warns when the flag is `false`. |
-| **Per-kind schemas as data in `game-config.json`, not hand-coded files** | 2026-05-19 | Original design coupled schemas to code, requiring manual authoring per game. Goal is to reverse-engineer arbitrary games — anything game-specific must live in `game-config.json`. Phase 0 v2 LLM proposes; human approves via existing diff gate. |
-| **Engine selection as LLM proposal + human approval, not hard-coded** | 2026-05-19 | Different games need different engines (RTS with 30k entities ≠ turn-based card game). Engine choice cascades into Phase 2 codegen, so it belongs alongside taxonomy in `game-config.json`, gated by the same `human_approved` flag. |
-| **Bevy + lockstep + fixed-sim/interpolated-render for They Are Billions** | 2026-05-19 | Chosen over the higher-scored Godot 4 because the proposer scored from titles-only samples and missed the multiplayer goal. 30k entities on the wire requires lockstep, which requires bit-identical sim; Bevy's ECS + Rust + native `FixedUpdate` schedule give that natively. Smooth feel comes from running the deterministic sim at 20–30Hz and decoupling the render to interpolate between sim states at vsync rate. Determinism rules captured in CLAUDE.md > "Target engine". |
-| **Compile prompt now includes the per-kind frontmatter schema** | 2026-05-19 | Phase 0 and Phase 1 LLMs weren't sharing the contract — the compile LLM reinvented field names per page (e.g. `cost_gold_build` vs the schema's `cost_gold`). Injecting the schema directly into the compile prompt closes the loop. Cache key now hashes the rendered prompt (not the bare system prompt) so schema edits invalidate caches automatically. |
-| **Per-kind `required` is dropped from validation; remains in the compile prompt as guidance** | 2026-05-19 | Two LLMs proposing/extracting independently will disagree on field names even with shared wikitext. Enforcing `required` at validation time quarantines correct pages. Solution: keep `required` in the schema so the compile LLM treats listed fields as priority targets, but don't validate against it. The universal schema's `required` list (id, name, type, source_url, source_revision, extracted_at, confidence) remains the only presence gate; per-kind validation enforces TYPES only. |
-| **Phase 0 human-approval gate removed; auto-promotes** | 2026-05-19 | The proposed config grew past 1k lines once per-kind `frontmatter_schema` and `engine_candidates` were added — line-by-line review is infeasible and real failures surface during Phase 1 validation anyway. Phase 0 now writes `game-config.json` directly with `human_approved: true`. The proposed-config file is still written so `git diff` can be used for post-hoc inspection or revert. |
+Migrated to the Obsidian vault: `cloneGame/MEMORY.md`. Add new entries there (format: What was decided / Why / What was rejected and why). This file keeps only phase status and open questions.
 
 ---
 

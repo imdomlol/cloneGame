@@ -2,11 +2,48 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication Preferences
+
+1. No filler openings. No "Great question", "Certainly", "Of course". Start with the answer.
+2. No em dashes. Use commas, parentheses, or periods instead.
+3. Straight to the point, efficient, concise.
+4. Structured format. Use sections, headers, bullets when they help.
+5. Match length to complexity. Short questions get short answers.
+6. No restatement of the question, no closing recap sentence.
+7. Flag uncertainty explicitly. Never invent facts, stats, dates, or technical specifics. If unsure, say so before answering.
+8. Do not over-explain things dom already knows. Do not skip context dom needs.
+
+## The Most Important Rules
+
+1. **Ask, don't assume.** If something is unclear, ask before writing a single line. Never make silent assumptions about intent, architecture, or requirements. If a file is referenced, read it first — never claim things about code you haven't opened.
+2. **Simplest solution first.** Always implement the simplest thing that could work. Do not add abstractions or flexibility that weren't explicitly requested.
+3. **Don't touch unrelated code.** If a file or function is not directly part of the current task, do not modify it, even if you think it could be improved. If you notice something worth fixing elsewhere, mention it at the end. Don't touch it.
+4. **Flag uncertainty explicitly.** If you are not confident about an approach or technical detail, say so before proceeding. Confidence without certainty causes more damage than admitting a gap.
+
+## About Dom
+
+Student developer. Goes by dom.
+Background: Python, some APIs, some C++, some JavaScript, has built a couple websites, uses multiple LLMs in CLI, has worked with multiple databases.
+Learning stage: most things. Treat as a developing student, not a beginner, not an expert.
+
+## Current Project
+
+Goal: build a game-agnostic wiki-to-code pipeline. Given any public Fandom-style wiki, the pipeline produces a structured Obsidian vault and (Phase 2, not yet built) generates a playable clone of that game. Individual games (e.g. They Are Billions) are used as reference deployments, but no part of the repo should be hard-coded to one game.
+
+- Repo root: `C:\Users\dominic\Documents\GitHub\cloneGame`
+- Obsidian project folder (design notes, MEMORY.md, ERRORS.md): `cloneGame/` in the vault, reachable via the Obsidian MCP server. **This is not the same as the repo's `vault/` directory** — that one is Phase 1's generated output (gitignored, consumed by Phase 2).
+
+## Tech Context
+
+Comfortable with: Python, basic API work, C++ basics, JavaScript, simple web stacks, LLM CLIs, basic database use.
+Still learning (relevant to this repo): Rust + Bevy (Phase 2 target), vector indexing (Chroma) and retrieval design, MediaWiki API quirks, prompt engineering for headless CLIs, JSON-Schema / per-kind contract design.
+Avoid: overly complex architectures, premature abstraction, enterprise patterns, heavy frameworks where a simple script fits.
+
 ## What this repo is
 
-A wiki-to-code pipeline that reverse-engineers a video game from a public Fandom wiki. Target game is **They Are Billions** (`they-are-billions.fandom.com`). The repo is structured as three sequential phases — Phase 0 and Phase 1 are implemented in Python; **Phase 2 (codegen) is not yet implemented**, so the repo currently contains no game source code, just the data-extraction pipeline that will feed it.
+A wiki-to-code pipeline structured as three sequential phases. Phase 0 and Phase 1 are implemented in Python; **Phase 2 (codegen) is not yet implemented**, so the repo currently contains no game source code, just the data-extraction pipeline that will feed it. The pipeline must work for any wiki — a specific game serves as the reference but never as a hard-coded target.
 
-`DEPLOYMENT_GUIDE.md` is the architecture spec. `plan.md` tracks implementation status, the active blocker, and the decision log. Read both before making non-trivial changes.
+`docs/DEPLOYMENT_GUIDE.md` is the architecture spec. `docs/plan.md` tracks per-phase implementation status and open questions. The decision log lives in the Obsidian vault at `cloneGame/MEMORY.md` — read it at the start of every session.
 
 ## Phase architecture
 
@@ -16,28 +53,28 @@ Phase 1  game-config.json + wiki pages ──► vault/<kind>/<slug>.md (Obsidia
 Phase 2  vault/ ──► repomix XML ──► Chroma index ──► codegen LLM ──► game code
 ```
 
-- **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review — note this file is gitignored (`*.proposed.json` in `.gitignore`), so the diff is only meaningful between local runs, not across commits.
-- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, **trims it** (HTML comments, `[[Category:]]` tags, `[[File:]]`/`[[Image:]]` links, image-only `<gallery>` blocks, repeated blank lines — see `trim_wikitext` in `phase1_ingest.py`) to save tokens while keeping infoboxes/stat tables/formulas/wikilinks intact, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types (presence of per-kind fields is NOT enforced — only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the trim function, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly. Production config in `phase1.config.toml` currently pins `llm_mode = "codex"` + `model = "gpt-5.4-mini"`.
-- **Phase 2** is greenfield. Target engine is **Bevy (Rust)** with **deterministic lockstep** networking — see "Target engine" section below for the binding determinism rules. Do not invent Phase 2 code without explicit user direction.
+- **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review (this file is gitignored, so the diff is only meaningful between local runs, not across commits).
+- **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, **trims it** (HTML comments, `[[Category:]]` tags, `[[File:]]`/`[[Image:]]` links, image-only `<gallery>` blocks, repeated blank lines, see `trim_wikitext` in `phase1_ingest.py`) to save tokens while keeping infoboxes/stat tables/formulas/wikilinks intact, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types. Presence of per-kind fields is NOT enforced (only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the trim function, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly. Production config in `phase1.config.toml` currently pins `llm_mode = "codex"` + `model = "gpt-5.4-mini"`.
+- **Phase 2** is greenfield. The engine for any given run comes from `chosen_engine` in that game's `game-config.json`. The reference deployment chose **Bevy (Rust)** with **deterministic lockstep** — see "Reference deployment engine" below for the binding determinism rules that apply when that engine is selected. Do not invent Phase 2 code without explicit user direction.
 
-## Target engine (chosen 2026-05-19): Bevy + lockstep
+## Reference deployment engine (chosen 2026-05-19): Bevy + lockstep
 
-Phase 2 codegen targets **Bevy (Rust)** with **deterministic lockstep networking**. This is the load-bearing decision — every Phase 2 generated sim-path system must honor the rules below or multiplayer silently desyncs. The chosen-engine record is in `game-config.json -> chosen_engine`.
+This section binds Phase 2 codegen **only when `chosen_engine = Bevy + lockstep`**. A different `chosen_engine` would replace this guidance. Engine choice is per-game data, not a repo-wide constant — see MEMORY.md.
 
 **Architecture:**
 - **Sim tick** runs deterministic at 20–30Hz inside Bevy's `FixedUpdate` schedule.
 - **Render tick** is decoupled (`Update` schedule, vsync/native rate) and interpolates between the last two sim states so visible motion stays smooth even though the sim is slower.
-- **Networking** is lockstep: only player inputs cross the wire. Each client runs the same sim from the same seed + input stream and converges on identical entity state tick-for-tick. State replication is forbidden — bandwidth doesn't survive at this entity count.
+- **Networking** is lockstep: only player inputs cross the wire. Each client runs the same sim from the same seed + input stream and converges on identical entity state tick-for-tick. State replication is forbidden (bandwidth doesn't survive at this entity count).
 
-**Determinism rules (binding on every sim-path file Phase 2 generates):**
+**Determinism rules (binding on every sim-path file Phase 2 generates under this engine):**
 
-1. **Fixed-point math for sim state.** Positions, velocities, damage, RNG seeds — anything that affects what the next tick computes — must use `fixed` / `sfixed` crates, not `f32`/`f64`. Floats are fine for render-only state (camera, particle visual offsets, UI animation).
+1. **Fixed-point math for sim state.** Positions, velocities, damage, RNG seeds (anything that affects what the next tick computes) must use `fixed` / `sfixed` crates, not `f32`/`f64`. Floats are fine for render-only state (camera, particle visual offsets, UI animation).
 2. **No transcendentals in the sim path.** `sin`, `cos`, `sqrt`, `atan2` on floats vary across CPUs and compiler versions. Use fixed-point approximations or precomputed lookup tables.
 3. **Seeded RNG everywhere.** Replace `rand::thread_rng()` with a per-tick `ChaCha8Rng` seeded from `(game_seed, tick_number)`. Every random draw in the sim path uses it. Render-side cosmetic randomness can use thread_rng.
-4. **Deterministic system order.** Bevy's scheduler parallelizes by default — concurrent systems run in non-deterministic order. Force order on sim systems with `.chain()` or explicit `before()`/`after()` constraints.
+4. **Deterministic system order.** Bevy's scheduler parallelizes by default (concurrent systems run in non-deterministic order). Force order on sim systems with `.chain()` or explicit `before()`/`after()` constraints.
 5. **No `HashMap` iteration in sim code.** Rust's default `HashMap` randomizes its hash seed per-process; iteration order differs across runs. Use `BTreeMap`, sorted `Vec`, or `IndexMap` with a fixed `BuildHasher`.
 
-**Validation:** every sim tick should compute a checksum of the canonical state (entity transforms + key game state). Periodically broadcast the hash; first mismatch across clients = desync detected → log the offending tick and the diverging entity set. Build this in from Phase 2 day one — desync bugs surface immediately, not three weeks into integration testing.
+**Validation:** every sim tick should compute a checksum of the canonical state (entity transforms + key game state). Periodically broadcast the hash; first mismatch across clients = desync detected, log the offending tick and the diverging entity set. Build this in from Phase 2 day one (desync bugs surface immediately, not three weeks into integration testing).
 
 ## Common commands
 
@@ -52,32 +89,35 @@ python scripts/phase0.py --llm-mode codex --model <model-id>
 Phase 1 (wiki ingest, requires `claude`/`codex` CLI authenticated + `game-config.json` with `human_approved: true`):
 ```powershell
 python scripts/phase1_ingest.py --dry-run           # enumerate category page counts only
-python scripts/phase1_ingest.py --limit 1           # one page per category — smoke test
+python scripts/phase1_ingest.py --limit 1           # one page per category, smoke test
 python scripts/phase1_ingest.py                     # full ingest
 pip install jsonschema                              # optional; enables full Draft 2020-12 validation instead of the required-fields fallback
 ```
 
-Tests (unit tests for `phase1_ingest` helpers — `trim_wikitext`, frontmatter parsing, validation, completed-source indexing):
+Tests (unit tests for `phase1_ingest` helpers: `trim_wikitext`, frontmatter parsing, validation, completed-source indexing):
 ```powershell
 python -m unittest discover tests             # run everything under tests/
 python -m unittest tests.test_phase1_ingest   # one module
 ```
 
-There is **no build step and no CI** — `ruff`/`vulture` (see "Pre-Commit Checks" below) and the `unittest` suite are the full local gate. Pipeline validation happens inline during Phase 1 ingest: a non-zero exit code from `phase1_ingest.py` means files were quarantined. Inspect `vault/_quarantine/*.md` (each has a `validation_errors:` block at the top) and either fix the compile prompt or extend `kinds` in `game-config.json`.
+There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" below) and the `unittest` suite are the full local gate. Pipeline validation happens inline during Phase 1 ingest: a non-zero exit code from `phase1_ingest.py` means files were quarantined. Inspect `vault/_quarantine/*.md` (each has a `validation_errors:` block at the top) and either fix the compile prompt or extend `kinds` in `game-config.json`.
 
 ## Key files for navigation
 
-- `DEPLOYMENT_GUIDE.md` — full architectural spec.
-- `plan.md` — phase-by-phase implementation status (`[x] [~] [ ] [!]`), decision log, and open questions.
-- `game-config.json` — Phase 0 output / Phase 1 input. `kinds` defines the taxonomy; `categories` defines what Phase 1 fetches; `human_approved` gates production runs.
+- `docs/DEPLOYMENT_GUIDE.md` — full architectural spec.
+- `docs/plan.md` — phase-by-phase implementation status (`[x] [~] [ ] [!]`) and open questions.
+- `cloneGame/MEMORY.md` (Obsidian vault) — decision log. Read at session start; never contradict without flagging.
+- `cloneGame/ERRORS.md` (Obsidian vault) — failed-approach log (per Default Behaviors #20). Check before suggesting approaches to similar tasks.
+- `game-config.json` — Phase 0 output / Phase 1 input. `kinds` defines the taxonomy; `categories` defines what Phase 1 fetches; `chosen_engine` drives Phase 2; `human_approved` gates production runs.
 - `phase1.config.toml` — Phase 1 runtime config (wiki API endpoint, retry/throttle, LLM mode + model, cache dir).
 - `prompts/wiki-compile-system.md` — system prompt for the Phase 1 compile LLM. Edits to this invalidate the SHA-256 cache.
 - `schemas/_universal.schema.json` — required-on-every-file frontmatter fields. Per-kind frontmatter contracts live as data in `game-config.json -> kinds.<kind>.frontmatter_schema`, not as files.
-- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{required: [...], properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. `required` is read by the compile LLM (as field-name guidance) but NOT enforced by Phase 1 validation; per-kind validation only enforces property types on fields that happen to be present. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
+- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{required: [...], properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. `required` is read by the compile LLM as field-name guidance but NOT enforced by Phase 1 validation; per-kind validation only enforces property types on fields that happen to be present. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
 
 ## Conventions & gotchas
 
 - **Outputs are gitignored**: `vault/`, `build/`, `.phase1_cache/`. Don't commit them; don't write source code under those paths.
+- **The repo `vault/` is not the Obsidian design-notes vault.** `vault/` in this repo is Phase 1's generated, gitignored output consumed by Phase 2. Design notes / MEMORY.md / ERRORS.md live in the Obsidian vault under `cloneGame/`, reachable via the Obsidian MCP.
 - **LLM access is via headless CLI, not the Anthropic/OpenAI SDK.** Both Phase 0 and Phase 1 shell out to `claude -p` or `codex exec`. If you need a different provider, route through `_run_llm_command` in `phase0_analyze.py` or `run_llm` in `phase1_ingest.py` rather than introducing a new SDK dependency. Cache keys include the model id, so model swaps invalidate cached compiles automatically.
 - **Frontmatter parsing is hand-rolled** in `phase1_ingest.py` (`parse_yaml_map` / `parse_block`). It handles the subset of YAML the compile prompt produces; don't assume full YAML compatibility. If frontmatter is getting mis-parsed, fix the compile prompt before reaching for a full YAML library.
 - **Wikilink invariant**: every `[[wiki_link]]` in a vault file body must be mirrored in `depends_on:` in the frontmatter. The compile system prompt enforces this; Phase 2's graph expansion will rely on it.
@@ -90,20 +130,8 @@ There is **no build step and no CI** — `ruff`/`vulture` (see "Pre-Commit Check
 
 - Files must be smaller than 400 lines excluding comments. Once 400 is exceeded, initiate a refactor.
 - Functions must be smaller than 40 lines excluding comments and the catch/finally blocks of try/catch sections. If a function exceeds that, refactor it.
-- **Known outlier:** `scripts/phase1_ingest.py` is currently ~811 lines and exceeds the 400-line rule. A split is pending; do not let this file motivate a drive-by refactor — but also do not pile more code into it without first carving out a module (candidates: `trim_wikitext`, frontmatter parsing, validation, cache I/O).
-- `scripts/phase0_analyze.py` is ~398 lines — right at the line. Treat any net-add as a refactor trigger.
-
-### Clean Code Rules
-
-- Meaningful Names: Name variables and functions to reveal their purpose, not just their value.
-- One Function, One Responsibility: Functions should do one thing.
-- Avoid Magic Numbers: Replace hard-code values with named constants to give them meaning.
-- Use Descriptive Booleans: Boolean names should state a condition, not just its value.
-- Keep Code DRY: Duplicate code means duplicate bugs. Try and reuse logic where it makes sense.
-- Avoid Deep Nesting: Flatten your code flow to improve clarity and reduce cognitive load.
-- Comment Why, Not What: Explain the intention behind your code, not the obvious mechanics.
-- Limit Function Arguments: Too many parameters confuse. Group related data into objects.
-- Code Should Be Self-Explanatory: Well-written code needs fewer comments because it reads like a story.
+- **Known outlier:** `scripts/phase1_ingest.py` is currently ~811 lines and exceeds the 400-line rule. A split is pending; do not let this file motivate a drive-by refactor, but also do not pile more code into it without first carving out a module (candidates: `trim_wikitext`, frontmatter parsing, validation, cache I/O).
+- `scripts/phase0_analyze.py` is ~398 lines, right at the line. Treat any net-add as a refactor trigger.
 
 ### Comments and Documentation
 
@@ -123,9 +151,31 @@ This repo is Python-only. Use the Python tools installable via `pip install -r r
 
 Do not commit until all four report clean.
 
-## General Rules
+## Default Behaviors
 
-- First think through the problem, read the codebase for relevant files.
-- Make every task and code change you do as simple as possible. We want to avoid making any massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
-- Never speculate about code you have not opened. If the user references a specific file, you MUST read the file before answering. Make sure to investigate and read relevant files BEFORE answering questions about the codebase. Never make any claims about code before investigating unless you are certain of the correct answer - give grounded and hallucination-free answers.
-
+1. Before significant or open-ended tasks, show 2 or 3 approaches and wait for dom to pick. Skip this for narrow, well-specified tasks.
+2. Treat dom as a developing student. Explain trade-offs, do not lecture on basics already in dom's stack.
+3. Prefer simple, well-supported tools over cutting-edge or complex ones.
+4. Build small working pieces first. Avoid large upfront architecture.
+5. For this repo specifically, favor:
+   - Headless LLM CLI (`claude -p` / `codex exec`) over SDK dependencies.
+   - Per-game data in `game-config.json` over hard-coded Python branches.
+   - Hand-rolled small parsers over heavyweight libraries while the prompt-side contract stays constrained (switch to the library when the contract drifts, not before).
+   - Cache-key correctness over speed — a stale compile cache hides bugs.
+   - Quarantine on validation failure over silent skips; let `vault/_quarantine/` be the visible signal.
+   - Pipeline must remain game-agnostic — never hard-code field names, category names, or engine choices that should live in `game-config.json`.
+6. When writing code or docs on dom's behalf, match the writing style above. No em dashes. Structured. Concise.
+7. Use the Obsidian MCP when relevant context lives in the vault. Do not duplicate vault notes into the repo.
+8. Never create documentation files unless dom asks.
+9. No unsolicited commentary, recaps, or feature suggestions beyond the task.
+10. Before making any change that significantly alters content dom has already created (rewriting sections, removing paragraphs, restructuring flow, changing tone): stop. Describe exactly what you're about to change and why. Wait for confirmation before proceeding.
+11. Before deleting any file, overwriting existing code, dropping database records, or removing dependencies: stop. List exactly what will be affected. Ask for explicit confirmation. Only proceed after dom says yes in the current message. "You mentioned this earlier" is not confirmation.
+12. The following require explicit in-session confirmation, no exceptions: deploying or pushing to any environment, running migrations or schema changes, sending any external API call, executing any command with irreversible side effects. Dom must say yes in the current message.
+13. After any coding task, end with: Files changed (list every file touched) / What was modified (one line per file) / Files intentionally not touched / Follow-up needed.
+14. Never send, post, publish, share, or schedule anything on dom's behalf without explicit confirmation in the current message. This includes emails, calendar invites, document shares, or any action outside this conversation. Dom must say yes in the current message.
+15. For architecture decisions, performance tradeoffs, debugging complex issues, non-trivial features, or long-term technical decisions: use extended thinking mode and the sequential-thinking MCP server. Work through the problem step by step, show reasoning, surface tradeoffs dom hasn't considered, flag assumptions that might not hold at scale, identify where you're uncertain, then implement or recommend.
+16. Maintain `MEMORY.md` in `cloneGame/` in the Obsidian vault. After any significant decision, add an entry: What was decided / Why / What was rejected and why. Read MEMORY.md at the start of every session. Never contradict a logged decision without flagging it first.
+17. When dom says "session end", "wrapping up", or "let's stop here": write a session summary to MEMORY.md. Include: Worked on / Completed / In progress / Decisions made / Next session priorities.
+18. Maintain `ERRORS.md` in `cloneGame/` in the Obsidian vault. When an approach takes more than 2 attempts to work, log it: What didn't work / What worked instead / Note for next time. Check ERRORS.md before suggesting approaches to similar tasks.
+19. If the Obsidian project folder does not exist, create one (path: `cloneGame/`). If you cannot reach the Obsidian server, create a temporary vault file at the repo root for dom to manually move later. Any markdown that does not need to be in the GitHub repo should live in the Obsidian vault (CLAUDE.md, README.md, and `docs/` stay in repo).
+20. Keep `docs/` and the Obsidian project folder current as the project progresses. When project state changes (Phase 0/1/2 milestones reached, decisions made, schemas updated, model swapped, new sub-systems added): update the relevant doc in `docs/` and replace TBD placeholders with actual values. Stale design docs are worse than missing ones. This complements rules 16 and 18, which still apply for MEMORY.md and ERRORS.md.
