@@ -242,7 +242,7 @@ def _build_schema_prompt(
         "Use the taxonomy, category assignments, and sample page text. Create only"
         " game-specific sub-fields. Universal fields are handled elsewhere. Every input kind"
         " key must appear exactly once. Return ONLY raw JSON shaped as "
-        '{"<kind>":{"required":["field"],"properties":{"field":{"type":"string"}}}}\n\n'
+        '{"<kind>":{"properties":{"field":{"type":"string"}}}}\n\n'
         f"Kinds JSON:\n{json.dumps(kinds, ensure_ascii=False)}\n\n"
         f"Categories JSON:\n{category_json}\n\n"
         f"Sample pages by category JSON:\n{sample_json}"
@@ -258,14 +258,10 @@ def _assert_string_list(value: Any, label: str) -> list[str]:
 def _validate_schema_entry(kind: str, schema: Any) -> dict[str, Any]:
     if not isinstance(schema, dict):
         raise ValueError(f'Schema for kind "{kind}" must be an object.')
-    required = _assert_string_list(schema.get("required"), f'{kind}.required')
     properties = schema.get("properties")
     if not isinstance(properties, dict):
         raise ValueError(f'{kind}.properties must be an object.')
-    for field in required:
-        if field not in properties:
-            raise ValueError(f'{kind}.required field "{field}" is missing from properties.')
-    return {"required": required, "properties": properties}
+    return {"properties": properties}
 
 
 def _validate_schema_output(result: dict[str, Any], kinds: dict[str, Any]) -> dict[str, dict]:

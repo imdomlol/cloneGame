@@ -268,10 +268,8 @@ def completed_sources_for_other_kinds(
 
 
 def raw_kind_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any]:
-    # Per-kind frontmatter schema as authored in game-config.json, including
-    # `required` if present. Used in the compile prompt so the LLM sees the
-    # full contract. Validation goes through kind_frontmatter_schema, which
-    # strips `required` (see plan.md decision log).
+    # Per-kind frontmatter schema as authored in game-config.json. Used both
+    # in the compile prompt and (via kind_frontmatter_schema) for validation.
     kinds = game_config.get("kinds", {})
     if not isinstance(kinds, dict):
         return {}
@@ -367,6 +365,26 @@ def repair_frontmatter_delimiter(markdown: str) -> str:
         return markdown
     insert_at = heading.start() + 1
     return markdown[:insert_at] + "---\n" + markdown[insert_at:]
+
+
+def replace_frontmatter_type(markdown: str, kind: str) -> str:
+    markdown = repair_frontmatter_delimiter(markdown)
+    match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", markdown, re.S)
+    if not match:
+        return markdown
+
+    body = match.group(1)
+    lines = body.splitlines()
+    replaced = False
+    for idx, line in enumerate(lines):
+        if re.match(r"^type\s*:", line):
+            lines[idx] = f"type: {json.dumps(kind)}"
+            replaced = True
+            break
+    if not replaced:
+        lines.append(f"type: {json.dumps(kind)}")
+
+    return "---\n" + "\n".join(lines) + "\n---\n" + markdown[match.end() :]
 
 
 def frontmatter(markdown: str) -> tuple[dict[str, Any], list[str]]:
@@ -502,10 +520,9 @@ def universal_schema(root: Path, kinds: set[str]) -> dict[str, Any]:
 
 
 def kind_frontmatter_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any] | None:
-    # Per-kind schema for VALIDATION. Strips `required` so per-kind fields are
-    # optional — universal schema's required list is the only presence gate;
-    # per-kind validation only enforces TYPE on fields that happen to be
-    # present. See plan.md decision log.
+    # Per-kind schema for VALIDATION. Only enforces TYPE on fields that happen
+    # to be present; the universal schema's `required` list is the only
+    # presence gate.
     schema = raw_kind_schema(game_config, kind)
     properties = schema.get("properties") if isinstance(schema, dict) else None
     if not isinstance(properties, dict) or not properties:
@@ -586,6 +603,23 @@ def write_result(root: Path, kind: str, slug: str, markdown: str, errors: list[s
     path = base / f"{slug}.md"
     path.write_text(prepend_errors(markdown, errors) if errors else markdown, encoding="utf-8")
     return path
+
+
+def migrate_existing_note(
+    root: Path,
+    source_idx: dict[str, list[tuple[str, Path]]],
+    source_url: str,
+    kind: str,
+    existing_path: Path,
+) -> tuple[Path, list[str]]:
+    markdown = existing_path.read_text(encoding="utf-8")
+    markdown = replace_frontmatter_type(markdown, kind)
+    fm, errors = frontmatter(markdown)
+    slug = slugify(str(fm.get("id") or existing_path.stem))
+    path = write_result(root, kind, slug, markdown, errors)
+    if not errors:
+        source_idx.setdefault(source_key(source_url), []).append((kind, path))
+    return path, errors
 
 
 def category_plan(game_config: dict[str, Any]) -> list[dict[str, Any]]:
@@ -684,6 +718,26 @@ def process_page(
     related = completed_sources_for_other_kinds(source_idx, source_url, cat["kind"])
     for note_kind, path in related:
         print_detail("related", f"{note_kind} -> {relative_to_root(path, ctx['root'])}")
+    if related and not ctx["force"]:
+        note_kind, related_path = related[0]
+        migrated_path, errors = migrate_existing_note(
+            ctx["root"], source_idx, source_url, cat["kind"], related_path
+        )
+        if errors:
+            print_status("QUARANTINE", title, item_no)
+            print_detail("result", "migration validation errors")
+            print_detail("from", f"{note_kind} -> {relative_to_root(related_path, ctx['root'])}")
+            print_detail("path", relative_to_root(migrated_path, ctx["root"]))
+            for error in errors:
+                print_detail("error", error)
+            print_entry_end(item_no)
+            return True
+        print_status("MIGRATE", title, item_no)
+        print_detail("reason", "reused completed source from another kind")
+        print_detail("from", f"{note_kind} -> {relative_to_root(related_path, ctx['root'])}")
+        print_detail("path", relative_to_root(migrated_path, ctx["root"]))
+        print_entry_end(item_no)
+        return False
 
     text, rev = page_wikitext(ctx["api"], title, ctx["ua"], ctx["retries"])
     trimmed_text = trim_wikitext(text)

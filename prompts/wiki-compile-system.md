@@ -31,9 +31,8 @@ of a single wiki page into a schema-conformant Obsidian Vault note.
 
 [PER-KIND FRONTMATTER SCHEMA]
 Use these field names VERBATIM — do not invent variant or prefixed names.
-- Fields in `required` are priority targets: populate them whenever the wiki
-  provides the data. If the wiki genuinely lacks data for a required field,
-  set it to 0 (numbers), "" (strings), or [] (arrays) rather than omitting.
+- Populate every property the wiki provides data for. If the wiki lacks data
+  for a property, omit it rather than emitting a placeholder.
 - Do NOT split a schema field into variants. If the schema has `cost_gold`,
   use `cost_gold`, not `cost_gold_build` / `cost_gold_upgrade` / `gold_cost`.
   When the wiki distinguishes build vs upgrade cost, use the BUILD/BASE value

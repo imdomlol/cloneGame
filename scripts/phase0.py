@@ -85,26 +85,71 @@ def _propose_schemas_and_engines(
     mapped_categories: list[dict[str, Any]],
     sample_pages: dict[str, list[str]],
     kwargs: dict[str, Any],
+    schema_kinds: dict[str, Any] | None = None,
+    schema_categories: list[dict[str, Any]] | None = None,
 ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
-    print("[Phase 0] Proposing per-kind frontmatter schemas...")
-    schemas = analyze_module.propose_frontmatter_schemas(
-        kinds, mapped_categories, sample_pages, **kwargs
-    )
+    kinds_for_schema = kinds if schema_kinds is None else schema_kinds
+    categories_for_schema = mapped_categories if schema_categories is None else schema_categories
+    if kinds_for_schema:
+        print("[Phase 0] Proposing per-kind frontmatter schemas...")
+        schemas = analyze_module.propose_frontmatter_schemas(
+            kinds_for_schema, categories_for_schema, sample_pages, **kwargs
+        )
+    else:
+        print("[Phase 0] Reusing existing per-kind frontmatter schemas.")
+        schemas = {}
     print("[Phase 0] Proposing target-engine candidates...")
     engines = analyze_module.propose_engine_candidates(kinds, mapped_categories, **kwargs)
     return schemas, engines
 
 
+def _kinds_missing_frontmatter_schema(
+    current_config: dict[str, Any], kinds: dict[str, Any]
+) -> dict[str, Any]:
+    current_kinds = current_config.get("kinds", {})
+    if not isinstance(current_kinds, dict):
+        current_kinds = {}
+    missing: dict[str, Any] = {}
+    for kind, kind_data in kinds.items():
+        current_kind_data = current_kinds.get(kind)
+        current_schema = (
+            current_kind_data.get("frontmatter_schema")
+            if isinstance(current_kind_data, dict)
+            else None
+        )
+        if not isinstance(current_schema, dict) or not current_schema:
+            missing[kind] = kind_data
+    return missing
+
+
+def _categories_for_kinds(
+    categories: list[dict[str, Any]], kinds: dict[str, Any]
+) -> list[dict[str, Any]]:
+    return [cat for cat in categories if cat.get("kind") in kinds]
+
+
 def _merge_proposals(
+    current_config: dict[str, Any],
     kinds: dict[str, Any],
     schemas: dict[str, dict[str, Any]],
     engines: list[dict[str, Any]],
     mapped_categories: list[dict[str, Any]],
 ) -> dict[str, Any]:
     enriched_kinds: dict[str, Any] = {}
+    current_kinds = current_config.get("kinds", {})
+    if not isinstance(current_kinds, dict):
+        current_kinds = {}
     for kind_key, kind_data in kinds.items():
+        previous_kind_data = current_kinds.get(kind_key)
+        previous_schema = (
+            previous_kind_data.get("frontmatter_schema")
+            if isinstance(previous_kind_data, dict)
+            else None
+        )
         entry = dict(kind_data)
-        if kind_key in schemas:
+        if isinstance(previous_schema, dict) and previous_schema:
+            entry["frontmatter_schema"] = previous_schema
+        elif kind_key in schemas:
             entry["frontmatter_schema"] = schemas[kind_key]
         enriched_kinds[kind_key] = entry
     return {
@@ -157,11 +202,19 @@ def main(argv: list[str]) -> int:
 
     print("[Phase 0] Fetching wikitext samples for schema proposal...")
     sample_pages = _sample_pages_by_category(phase0_fetch, wiki_url, categories)
+    schema_kinds = _kinds_missing_frontmatter_schema(config, kinds)
+    schema_categories = _categories_for_kinds(mapped_categories, schema_kinds)
     schemas, engines = _propose_schemas_and_engines(
-        phase0_analyze, kinds, mapped_categories, sample_pages, analyze_kwargs
+        phase0_analyze,
+        kinds,
+        mapped_categories,
+        sample_pages,
+        analyze_kwargs,
+        schema_kinds,
+        schema_categories,
     )
     print(f"Proposed schemas for {len(schemas)} kinds, {len(engines)} engine candidates.")
-    proposal = _merge_proposals(kinds, schemas, engines, mapped_categories)
+    proposal = _merge_proposals(config, kinds, schemas, engines, mapped_categories)
 
     if args.dry_run:
         print(json.dumps(proposal, indent=2, ensure_ascii=False))

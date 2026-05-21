@@ -8,7 +8,9 @@ from scripts.phase1_ingest import (
     completed_source_index,
     completed_sources_for_other_kinds,
     frontmatter,
+    migrate_existing_note,
     repair_frontmatter_delimiter,
+    replace_frontmatter_type,
     source_key,
     trim_wikitext,
     validate_jsonschema,
@@ -87,6 +89,25 @@ class FrontmatterTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(data["depends_on"], ["peaceful_lowlands", "infected_executive"])
 
+    def test_replace_frontmatter_type_updates_existing_type(self) -> None:
+        markdown = "---\nid: infected\nname: Infected\ntype: infected\n---\nBody\n"
+
+        updated = replace_frontmatter_type(markdown, "infected_unit")
+        data, errors = frontmatter(updated)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(data["type"], "infected_unit")
+        self.assertIn("Body", updated)
+
+    def test_replace_frontmatter_type_adds_missing_type(self) -> None:
+        markdown = "---\nid: infected\nname: Infected\n---\nBody\n"
+
+        updated = replace_frontmatter_type(markdown, "infected_unit")
+        data, errors = frontmatter(updated)
+
+        self.assertEqual(errors, [])
+        self.assertEqual(data["type"], "infected_unit")
+
 
 class SourceIndexTests(unittest.TestCase):
     def test_source_key_normalizes_encoding_case_and_trailing_slash(self) -> None:
@@ -154,6 +175,37 @@ class SourceIndexTests(unittest.TestCase):
                 completed_sources_for_other_kinds(index, source_url, "research"),
                 [("mechanic", completed)],
             )
+
+    def test_migrate_existing_note_copies_note_to_new_kind_with_updated_type(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            infected_dir = root / "vault" / "infected"
+            infected_dir.mkdir(parents=True)
+            completed = infected_dir / "infected.md"
+            source_url = "https://they-are-billions.fandom.com/wiki/Infected"
+            completed.write_text(
+                "---\n"
+                "id: infected\n"
+                "name: Infected\n"
+                "type: infected\n"
+                f"source_url: {source_url}\n"
+                "---\n"
+                "Body\n",
+                encoding="utf-8",
+            )
+            index = completed_source_index(root)
+
+            migrated, errors = migrate_existing_note(
+                root, index, source_url, "infected_unit", completed
+            )
+
+            self.assertEqual(errors, [])
+            self.assertEqual(migrated, root / "vault" / "infected_unit" / "infected.md")
+            self.assertTrue(completed.exists())
+            data, fm_errors = frontmatter(migrated.read_text(encoding="utf-8"))
+            self.assertEqual(fm_errors, [])
+            self.assertEqual(data["type"], "infected_unit")
+            self.assertEqual(completed_source_for_kind(index, source_url, "infected_unit"), migrated)
 
 
 class ValidationTests(unittest.TestCase):

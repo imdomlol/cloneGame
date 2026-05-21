@@ -157,23 +157,7 @@ Universal fields (required on every file, enforced by
 | `tags` | string[] | optional |
 | `depends_on` | string[] | MUST mirror every `[[wiki_link]]` in the body |
 
-Per-kind required fields (extend the universal schema via `allOf`):
-
-| `type`     | Required sub-fields                                                |
-| ---------- | ------------------------------------------------------------------ |
-| `item`     | `stats`, `requirements`, `tags`                                    |
-| `skill`    | `cost`, `cooldown`, `effects`, `scaling`                           |
-| `enemy`    | `stats`, `loot_table`, `ai_profile`, `resistances`                 |
-| `mechanic` | `formula`, `inputs`, `outputs`, `edge_cases`                       |
-| `quest`    | `prerequisites`, `objectives`, `rewards`, `flags_set`              |
-| `system`   | `controlled_entities`, `state_transitions`                         |
-| `location` | `map_layout`, `objectives`, `difficulty`, `enemy_spawns`           |
-| `npc`      | `role`, `relationships`, `lore`, `affiliations`                    |
-| `building` | _per-kind schema not yet written — universal-only validation_      |
-| `unit`     | _per-kind schema not yet written — universal-only validation_      |
-| `organization` | _per-kind schema not yet written — universal-only validation_  |
-
-Closing the last three is tracked in `plan.md`.
+Per-kind properties live in `game-config.json -> kinds.<kind>.frontmatter_schema.properties`. They are **type-only**: validation enforces declared types on fields that happen to be present, but no per-kind field is required. The universal schema's `required` list is the only presence gate. Per-kind `required: [...]` arrays were removed because they were never enforced and only fed the compile LLM stale "priority" hints.
 
 ### 2.5 Body contract
 

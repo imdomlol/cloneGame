@@ -43,7 +43,7 @@ Avoid: overly complex architectures, premature abstraction, enterprise patterns,
 
 A wiki-to-code pipeline structured as three sequential phases. Phase 0 and Phase 1 are implemented in Python; **Phase 2 (codegen) is not yet implemented**, so the repo currently contains no game source code, just the data-extraction pipeline that will feed it. The pipeline must work for any wiki — a specific game serves as the reference but never as a hard-coded target.
 
-`docs/DEPLOYMENT_GUIDE.md` is the architecture spec. `docs/plan.md` tracks per-phase implementation status and open questions. The decision log lives in the Obsidian vault at `cloneGame/MEMORY.md` — read it at the start of every session.
+`docs/DEPLOYMENT_GUIDE.md` is the architecture spec. Per-phase implementation status and open questions live in the Obsidian vault at `cloneGame/plan.md`; active near-term work lives at `cloneGame/todo.md`. The decision log lives in the Obsidian vault at `cloneGame/MEMORY.md` — read it at the start of every session.
 
 ## Phase architecture
 
@@ -105,14 +105,15 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 ## Key files for navigation
 
 - `docs/DEPLOYMENT_GUIDE.md` — full architectural spec.
-- `docs/plan.md` — phase-by-phase implementation status (`[x] [~] [ ] [!]`) and open questions.
+- `cloneGame/plan.md` (Obsidian vault) — phase-by-phase implementation status (`[x] [~] [ ] [!]`) and open questions.
+- `cloneGame/todo.md` (Obsidian vault) — active near-term TODOs distilled from `plan.md`.
 - `cloneGame/MEMORY.md` (Obsidian vault) — decision log. Read at session start; never contradict without flagging.
 - `cloneGame/ERRORS.md` (Obsidian vault) — failed-approach log (per Default Behaviors #20). Check before suggesting approaches to similar tasks.
 - `game-config.json` — Phase 0 output / Phase 1 input. `kinds` defines the taxonomy; `categories` defines what Phase 1 fetches; `chosen_engine` drives Phase 2; `human_approved` gates production runs.
 - `phase1.config.toml` — Phase 1 runtime config (wiki API endpoint, retry/throttle, LLM mode + model, cache dir).
 - `prompts/wiki-compile-system.md` — system prompt for the Phase 1 compile LLM. Edits to this invalidate the SHA-256 cache.
 - `schemas/_universal.schema.json` — required-on-every-file frontmatter fields. Per-kind frontmatter contracts live as data in `game-config.json -> kinds.<kind>.frontmatter_schema`, not as files.
-- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{required: [...], properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. `required` is read by the compile LLM as field-name guidance but NOT enforced by Phase 1 validation; per-kind validation only enforces property types on fields that happen to be present. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
+- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. Per-kind validation only enforces property types on fields that happen to be present — presence is gated solely by `schemas/_universal.schema.json`'s `required` list. Do not add a per-kind `required` array; it would be ignored. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
 
 ## Conventions & gotchas
 
