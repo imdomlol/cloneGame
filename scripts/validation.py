@@ -30,6 +30,49 @@ def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _plural_variants_token(token: str) -> list[str]:
+    """English-ish plural/singular variants of a single word."""
+    variants: list[str] = []
+    if token.endswith("ies") and len(token) > 3:
+        variants.append(token[:-3] + "y")
+    if token.endswith("es") and len(token) > 2:
+        variants.append(token[:-2])
+    if token.endswith("s") and len(token) > 1:
+        variants.append(token[:-1])
+    if token.endswith("y") and len(token) > 1:
+        variants.append(token[:-1] + "ies")
+    if token.endswith(("s", "x", "z")) or token.endswith(("ch", "sh")):
+        variants.append(token + "es")
+    variants.append(token + "s")
+    return variants
+
+
+def _kind_variants(value: str) -> list[str]:
+    """Plural/singular variants of a snake_case kind, varying only the last segment."""
+    prefix, sep, last = value.rpartition("_")
+    return [
+        (prefix + sep + variant) if sep else variant for variant in _plural_variants_token(last)
+    ]
+
+
+def canonical_kind(value: str, kinds: set[str]) -> str | None:
+    """Map a (possibly plural-mismatched) type value to a configured kind name.
+
+    Tries exact match first, then simple English plural/singular swaps on the
+    last snake_case segment (e.g. `game_mechanic` -> `game_mechanics`,
+    `mayors` -> `mayor`). Returns None if no variant matches — caller should
+    surface that as a normal validation error so the user can fix the config.
+    """
+    if not value:
+        return None
+    if value in kinds:
+        return value
+    for variant in _kind_variants(value):
+        if variant in kinds:
+            return variant
+    return None
+
+
 def raw_kind_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any]:
     """Return the per-kind frontmatter schema as authored in game-config.json.
 

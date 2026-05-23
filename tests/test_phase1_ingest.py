@@ -8,7 +8,7 @@ from scripts.frontmatter import (
     repair_frontmatter_delimiter,
     replace_frontmatter_type,
 )
-from scripts.validation import validate_jsonschema
+from scripts.validation import canonical_kind, validate_jsonschema
 from scripts.vault_index import (
     completed_source_for_kind,
     completed_source_index,
@@ -228,6 +228,48 @@ class ValidationTests(unittest.TestCase):
                 errors = validate_jsonschema({"id": "technology_tree"}, [schema], root)
 
         self.assertEqual(errors, [])
+
+
+class CanonicalKindTests(unittest.TestCase):
+    KINDS = frozenset(
+        {
+            "game_mechanics",
+            "mayors",
+            "units",
+            "infected_runners",
+            "research",
+            "infected_special",
+        }
+    )
+
+    def test_exact_match_returned_unchanged(self) -> None:
+        self.assertEqual(canonical_kind("mayors", set(self.KINDS)), "mayors")
+
+    def test_singular_resolved_to_plural_kind(self) -> None:
+        # The regression: LLM emitted `game_mechanic`, config has `game_mechanics`.
+        self.assertEqual(canonical_kind("game_mechanic", set(self.KINDS)), "game_mechanics")
+        self.assertEqual(canonical_kind("mayor", set(self.KINDS)), "mayors")
+        self.assertEqual(canonical_kind("unit", set(self.KINDS)), "units")
+        self.assertEqual(canonical_kind("infected_runner", set(self.KINDS)), "infected_runners")
+
+    def test_plural_resolved_to_singular_kind(self) -> None:
+        singular_kinds = {"unit", "mayor", "game_mechanic"}
+        self.assertEqual(canonical_kind("mayors", singular_kinds), "mayor")
+        self.assertEqual(canonical_kind("game_mechanics", singular_kinds), "game_mechanic")
+
+    def test_no_match_returns_none(self) -> None:
+        self.assertIsNone(canonical_kind("totally_unrelated", set(self.KINDS)))
+        self.assertIsNone(canonical_kind("", set(self.KINDS)))
+
+    def test_uncountable_unchanged_segment_left_alone(self) -> None:
+        # "research" is its own plural; no variant should mis-match.
+        self.assertEqual(canonical_kind("research", set(self.KINDS)), "research")
+
+    def test_only_last_segment_varies(self) -> None:
+        # `infected_runner` -> `infected_runners`, not `infecteds_runner` etc.
+        self.assertEqual(canonical_kind("infected_runner", set(self.KINDS)), "infected_runners")
+        # `infected_special` already matches as-is despite ending in non-`s`.
+        self.assertEqual(canonical_kind("infected_special", set(self.KINDS)), "infected_special")
 
 
 if __name__ == "__main__":

@@ -39,8 +39,12 @@ from compile_cache import (  # noqa: E402
     compile_prompt,
     strip_llm_chatter,
 )
-from frontmatter import frontmatter, repair_frontmatter_delimiter  # noqa: E402
-from validation import raw_kind_schema, validation_errors  # noqa: E402
+from frontmatter import (  # noqa: E402
+    frontmatter,
+    repair_frontmatter_delimiter,
+    replace_frontmatter_type,
+)
+from validation import canonical_kind, raw_kind_schema, validation_errors  # noqa: E402
 from vault_index import (  # noqa: E402
     completed_source_for_kind,
     completed_source_index,
@@ -201,6 +205,12 @@ def _compile_and_validate(
     markdown = strip_llm_chatter(markdown)
     markdown = repair_frontmatter_delimiter(markdown)
     fm, errors = frontmatter(markdown)
+    declared_type = fm.get("type")
+    if isinstance(declared_type, str):
+        canonical = canonical_kind(declared_type, ctx["kinds"])
+        if canonical is not None and canonical != declared_type:
+            fm["type"] = canonical
+            markdown = replace_frontmatter_type(markdown, canonical)
     schema_errors, has_schema = validation_errors(
         ctx["root"], fm, cat["kind"], ctx["kinds"], ctx["game_config"]
     )
