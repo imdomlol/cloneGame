@@ -61,6 +61,10 @@ desktop.ini
 .idea/
 .vscode/
 
+# Rust build artifacts (game/target/, etc.). Cargo.lock IS committed for the
+# game binary so the regression anchor is reproducible.
+target/
+
 # Node/tooling artifacts if frontend tooling is added later
 node_modules/
 npm-debug.log*
