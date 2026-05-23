@@ -8,118 +8,100 @@
   "phase0_notes": "Kinds below are the deployment-guide §1.3 taxonomy seeded as a baseline. A future Phase 0 taxonomy-discovery LLM should propose a game-specific refinement of this list, and a human must flip `human_approved` to true before Phase 1 ingest runs in production.",
   "defaultKind": "concept",
   "kinds": {
-    "building": {
-      "minWikilinks": 1,
-      "description": "A structure the player constructs to expand their colony, produce resources, or defend against infection.",
+    "buildings": {
+      "minWikilinks": 2,
+      "description": "Structures that provide population, resources, defense, or gameplay functions.",
       "frontmatter_schema": {
         "properties": {
           "hp": {
-            "type": "integer",
-            "description": "Health points"
+            "type": "string"
           },
-          "size": {
-            "type": "string",
-            "description": "Footprint (e.g. 2x2)"
-          },
-          "resource_cost": {
-            "type": "object",
-            "description": "Initial construction cost (gold, wood, stone, iron, oil)"
-          },
-          "energy_cost": {
-            "type": "object",
-            "description": "Energy maintenance per cycle"
-          },
-          "energy_production": {
-            "type": "integer"
-          },
-          "food_production": {
-            "type": "integer"
-          },
-          "gold_production": {
-            "type": "integer"
-          },
-          "wood_production": {
-            "type": "integer"
-          },
-          "build_time": {
-            "type": "string",
-            "description": "Time in seconds"
-          },
-          "research_tier": {
-            "type": "string",
-            "description": "Research building required to unlock"
+          "defenses_life": {
+            "type": "string"
           },
           "watch_range": {
-            "type": "integer"
+            "type": "string"
           },
-          "worker_capacity": {
-            "type": "integer"
+          "energy_cost": {
+            "type": "string"
+          },
+          "energy_maintenance": {
+            "type": "string"
+          },
+          "wood_cost": {
+            "type": "string"
+          },
+          "stone_cost": {
+            "type": "string"
+          },
+          "iron_cost": {
+            "type": "string"
+          },
+          "oil_cost": {
+            "type": "string"
+          },
+          "gold_cost": {
+            "type": "string"
+          },
+          "gold_maintenance": {
+            "type": "string"
+          },
+          "food_production": {
+            "type": "string"
           },
           "colonist_capacity": {
-            "type": "integer"
+            "type": "string"
+          },
+          "worker_capacity": {
+            "type": "string"
+          },
+          "build_time": {
+            "type": "string"
+          },
+          "research_tier": {
+            "type": "string"
+          },
+          "building_size": {
+            "type": "string"
+          },
+          "special_effects": {
+            "type": "string"
           }
         }
       }
     },
-    "campaign_map": {
+    "campaign_maps": {
       "minWikilinks": 1,
-      "description": "A single-player campaign level with a specific story objective and map layout.",
+      "description": "Single-player story campaign levels with narrative progression and environmental challenges.",
       "frontmatter_schema": {
         "properties": {
           "mission_level": {
-            "type": "integer",
-            "description": "Difficulty tier (1-4)"
+            "type": "string"
           },
-          "empire_points": {
-            "type": "integer"
+          "empire_points_reward": {
+            "type": "string"
           },
-          "research_points": {
-            "type": "integer"
+          "research_points_reward": {
+            "type": "string"
           },
           "victory_conditions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string"
           },
           "special_features": {
             "type": "string"
           },
-          "swarm_threats": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Special infected or threats blocking progression"
-          }
-        }
-      }
-    },
-    "survival_map": {
-      "minWikilinks": 0,
-      "description": "A map where players survive endless waves of infected for as long as possible.",
-      "frontmatter_schema": {
-        "properties": {
-          "map_theme": {
+          "swarm_type": {
             "type": "string"
           },
-          "difficulty": {
-            "type": "integer"
-          },
-          "game_modifiers": {
-            "type": "object",
-            "description": "Doom villages, treasure count, game modifiers"
-          },
-          "max_score_factor": {
-            "type": "string",
-            "description": "Percentage multiplier for scoring"
+          "adjacent_missions": {
+            "type": "string"
           }
         }
       }
     },
     "infected": {
-      "minWikilinks": 1,
-      "description": "An enemy unit type that attacks the player's colony in waves.",
+      "minWikilinks": 2,
+      "description": "Undead enemy types encountered in base defense scenarios and campaign modes.",
       "frontmatter_schema": {
         "properties": {
           "health_points": {
@@ -151,248 +133,320 @@
           },
           "experience_reward": {
             "type": "number"
+          }
+        }
+      }
+    },
+    "game_mechanics": {
+      "minWikilinks": 1,
+      "description": "Core gameplay systems including resource generation, swarms, time mechanics, and noise management.",
+      "frontmatter_schema": {
+        "properties": {
+          "mechanic_type": {
+            "type": "string"
+          },
+          "mechanic_description": {
+            "type": "string"
+          },
+          "damage_value": {
+            "type": "string"
+          },
+          "aoe_range": {
+            "type": "string"
+          },
+          "related_units": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "units": {
+      "minWikilinks": 2,
+      "description": "Player-controlled soldier and hero units deployed for base defense and offensive operations.",
+      "frontmatter_schema": {
+        "properties": {
+          "hp": {
+            "type": "string"
+          },
+          "movement_speed": {
+            "type": "string"
+          },
+          "attack_range": {
+            "type": "string"
+          },
+          "attack_speed": {
+            "type": "string"
+          },
+          "attack_damage": {
+            "type": "string"
+          },
+          "watch_range": {
+            "type": "string"
+          },
+          "armor_reduction": {
+            "type": "string"
+          },
+          "attack_type": {
+            "type": "string"
+          },
+          "unit_role": {
+            "type": "string"
+          },
+          "weapon_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "campaign_content": {
+      "minWikilinks": 2,
+      "description": "Campaign-related features including story progression, character narratives, and technology advancement.",
+      "frontmatter_schema": {
+        "properties": {
+          "campaign_name": {
+            "type": "string"
+          },
+          "chapter_number": {
+            "type": "string"
+          },
+          "featured_character": {
+            "type": "string"
+          },
+          "progression_type": {
+            "type": "string"
+          },
+          "unlock_requirement": {
+            "type": "string"
+          },
+          "perk_structure": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "wonders": {
+      "minWikilinks": 1,
+      "description": "Legendary late-game structures providing unique strategic bonuses and alternate victory conditions.",
+      "frontmatter_schema": {
+        "properties": {
+          "hp": {
+            "type": "string"
+          },
+          "defenses_life": {
+            "type": "string"
+          },
+          "watch_range": {
+            "type": "string"
+          },
+          "research_tier": {
+            "type": "string"
+          },
+          "building_size": {
+            "type": "string"
+          },
+          "build_time": {
+            "type": "string"
+          },
+          "energy_cost": {
+            "type": "string"
+          },
+          "energy_maintenance": {
+            "type": "string"
+          },
+          "wood_cost": {
+            "type": "string"
+          },
+          "stone_cost": {
+            "type": "string"
+          },
+          "iron_cost": {
+            "type": "string"
+          },
+          "oil_cost": {
+            "type": "string"
+          },
+          "gold_cost": {
+            "type": "string"
+          },
+          "gold_maintenance": {
+            "type": "string"
+          },
+          "worker_count": {
+            "type": "string"
+          },
+          "special_effects": {
+            "type": "string"
+          },
+          "victory_points_reward": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "characters": {
+      "minWikilinks": 1,
+      "description": "Named protagonists and commanders featured in the game's narrative.",
+      "frontmatter_schema": {
+        "properties": {
+          "hp": {
+            "type": "string"
+          },
+          "movement_speed": {
+            "type": "string"
+          },
+          "attack_range": {
+            "type": "string"
+          },
+          "attack_speed": {
+            "type": "string"
+          },
+          "attack_damage": {
+            "type": "string"
+          },
+          "watch_range": {
+            "type": "string"
+          },
+          "armor_reduction": {
+            "type": "string"
+          },
+          "weapon_name": {
+            "type": "string"
+          },
+          "campaign_role": {
+            "type": "string"
+          },
+          "special_ability": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "infected_runners": {
+      "minWikilinks": 1,
+      "description": "Fast-moving infected variants that close distance rapidly and attack with high speed.",
+      "frontmatter_schema": {
+        "properties": {
+          "hp": {
+            "type": "string"
+          },
+          "movement_speed": {
+            "type": "string"
+          },
+          "attack_range": {
+            "type": "string"
+          },
+          "attack_speed": {
+            "type": "string"
+          },
+          "attack_damage": {
+            "type": "string"
+          },
+          "watch_range": {
+            "type": "string"
+          },
+          "armor_reduction": {
+            "type": "string"
+          },
+          "noise_generation": {
+            "type": "string"
+          },
+          "attack_type": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "infected_walkers": {
+      "minWikilinks": 1,
+      "description": "Slow-moving infected variants that advance persistently toward player defenses.",
+      "frontmatter_schema": {
+        "properties": {
+          "hp": {
+            "type": "string"
+          },
+          "movement_speed": {
+            "type": "string"
+          },
+          "attack_range": {
+            "type": "string"
+          },
+          "attack_speed": {
+            "type": "string"
+          },
+          "attack_damage": {
+            "type": "string"
+          },
+          "watch_range": {
+            "type": "string"
+          },
+          "armor_reduction": {
+            "type": "string"
+          },
+          "noise_generation": {
+            "type": "string"
+          },
+          "attack_type": {
+            "type": "string"
           }
         }
       }
     },
     "infected_special": {
       "minWikilinks": 1,
-      "description": "An elite or boss-tier infected variant with unique abilities or enhanced stats.",
-      "frontmatter_schema": {
-        "properties": {
-          "health_points": {
-            "type": "number"
-          },
-          "movement_speed": {
-            "type": "number"
-          },
-          "attack_range": {
-            "type": "number"
-          },
-          "attack_speed": {
-            "type": "number"
-          },
-          "attack_damage": {
-            "type": "number"
-          },
-          "watch_range": {
-            "type": "number"
-          },
-          "armor": {
-            "type": "string"
-          },
-          "noise_generation": {
-            "type": "number"
-          },
-          "attack_type": {
-            "type": "string"
-          },
-          "experience_reward": {
-            "type": "number"
-          },
-          "special_ability": {
-            "type": "string"
-          },
-          "area_of_effect": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
-    "infected_runner": {
-      "minWikilinks": 0,
-      "description": "A fast-moving infected type that quickly closes distance to targets.",
-      "frontmatter_schema": {
-        "properties": {
-          "health_points": {
-            "type": "number"
-          },
-          "movement_speed": {
-            "type": "number"
-          },
-          "attack_range": {
-            "type": "number"
-          },
-          "attack_speed": {
-            "type": "number"
-          },
-          "attack_damage": {
-            "type": "number"
-          },
-          "watch_range": {
-            "type": "number"
-          },
-          "armor": {
-            "type": "string"
-          },
-          "noise_generation": {
-            "type": "number"
-          },
-          "attack_type": {
-            "type": "string"
-          },
-          "experience_reward": {
-            "type": "number"
-          }
-        }
-      }
-    },
-    "infected_walker": {
-      "minWikilinks": 0,
-      "description": "A slower-moving infected type that typically forms the bulk of enemy waves.",
-      "frontmatter_schema": {
-        "properties": {
-          "health_points": {
-            "type": "number"
-          },
-          "movement_speed": {
-            "type": "number"
-          },
-          "attack_range": {
-            "type": "number"
-          },
-          "attack_speed": {
-            "type": "number"
-          },
-          "attack_damage": {
-            "type": "number"
-          },
-          "watch_range": {
-            "type": "number"
-          },
-          "armor": {
-            "type": "string"
-          },
-          "noise_generation": {
-            "type": "number"
-          },
-          "attack_type": {
-            "type": "string"
-          },
-          "experience_reward": {
-            "type": "number"
-          }
-        }
-      }
-    },
-    "unit": {
-      "minWikilinks": 1,
-      "description": "A playable hero or special unit the player commands to defend their colony.",
+      "description": "Elite infected variants with unique abilities, enhanced health, or specialized combat roles.",
       "frontmatter_schema": {
         "properties": {
           "hp": {
-            "type": "integer"
+            "type": "string"
           },
           "movement_speed": {
-            "type": "number"
+            "type": "string"
           },
           "attack_range": {
-            "type": "number"
+            "type": "string"
           },
           "attack_speed": {
-            "type": "number"
+            "type": "string"
           },
           "attack_damage": {
-            "type": "integer"
+            "type": "string"
           },
-          "armor": {
-            "type": "string",
-            "description": "Damage reduction percentage or flat value"
-          }
-        }
-      }
-    },
-    "character": {
-      "minWikilinks": 0,
-      "description": "A named campaign protagonist or notable NPC with a role in the story.",
-      "frontmatter_schema": {
-        "properties": {
-          "hp": {
-            "type": "integer"
+          "watch_range": {
+            "type": "string"
           },
-          "movement_speed": {
-            "type": "number"
+          "armor_reduction": {
+            "type": "string"
           },
-          "attack_range": {
-            "type": "number"
+          "aoe": {
+            "type": "string"
           },
-          "attack_speed": {
-            "type": "number"
+          "noise_generation": {
+            "type": "string"
           },
-          "attack_damage": {
-            "type": "integer"
-          },
-          "armor": {
+          "attack_type": {
             "type": "string"
           },
           "special_ability": {
             "type": "string"
-          },
-          "campaign_role": {
-            "type": "string",
-            "description": "Story function (e.g. agent, leader)"
           }
         }
       }
     },
-    "wonder": {
+    "organizations": {
       "minWikilinks": 1,
-      "description": "A powerful super-structure that provides significant bonuses or unlocks special abilities.",
+      "description": "Factions and groups that define political and military alignments in the game world.",
       "frontmatter_schema": {
         "properties": {
-          "hp": {
-            "type": "integer"
-          },
-          "size": {
+          "organization_type": {
             "type": "string"
           },
-          "research_tier": {
+          "leader_name": {
             "type": "string"
           },
-          "resource_cost": {
-            "type": "object"
-          },
-          "maintenance_cost": {
-            "type": "object"
-          },
-          "worker_requirement": {
-            "type": "integer"
-          },
-          "special_effect": {
-            "type": "string",
-            "description": "Unique permanent bonus provided"
-          },
-          "victory_points": {
-            "type": "integer"
-          }
-        }
-      }
-    },
-    "organization": {
-      "minWikilinks": 1,
-      "description": "A faction or group that plays a role in the campaign narrative.",
-      "frontmatter_schema": {
-        "properties": {
-          "faction_type": {
-            "type": "string",
-            "enum": [
-              "empire",
-              "faction",
-              "rebellion"
-            ]
-          },
-          "leader": {
+          "founding_context": {
             "type": "string"
           },
-          "alignment": {
-            "type": "string",
-            "enum": [
-              "human",
-              "infected",
-              "neutral"
-            ]
-          },
-          "headquarters": {
+          "faction_alignment": {
             "type": "string"
           }
         }
@@ -400,36 +454,120 @@
     },
     "research": {
       "minWikilinks": 1,
-      "description": "A technology or research upgrade that unlocks buildings, units, or gameplay abilities.",
+      "description": "Technology and research progression system that unlocks new units and building capabilities.",
       "frontmatter_schema": {
         "properties": {
-          "cost_gold": {
-            "type": "number"
-          },
-          "research_time_seconds": {
-            "type": "number"
-          },
-          "research_building": {
+          "research_type": {
             "type": "string"
           },
-          "unlocks": {
+          "research_tier": {
+            "type": "string"
+          },
+          "gold_cost": {
+            "type": "string"
+          },
+          "research_time": {
+            "type": "string"
+          },
+          "unlocked_buildings": {
+            "type": "string"
+          },
+          "unlocked_units": {
             "type": "string"
           }
         }
       }
     },
-    "location": {
+    "updates": {
       "minWikilinks": 0,
-      "description": "A named geographic location or landmark featured in the game world.",
+      "description": "Patch notes and game version updates documenting balance changes and new content.",
+      "frontmatter_schema": {
+        "properties": {
+          "release_date": {
+            "type": "string"
+          },
+          "version_number": {
+            "type": "string"
+          },
+          "changelog": {
+            "type": "string"
+          },
+          "update_type": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "locations": {
+      "minWikilinks": 1,
+      "description": "Named geographic locations that serve as campaign settings and story backdrops.",
       "frontmatter_schema": {
         "properties": {
           "region": {
             "type": "string"
           },
-          "geography_type": {
+          "strategic_importance": {
             "type": "string"
           },
-          "strategic_importance": {
+          "location_type": {
+            "type": "string"
+          },
+          "description_context": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mayors": {
+      "minWikilinks": 0,
+      "description": "Enemy commanders and adversarial mayor figures encountered in campaign scenarios.",
+      "frontmatter_schema": {
+        "properties": {
+          "selection_level": {
+            "type": "string"
+          },
+          "bonus_type": {
+            "type": "string"
+          },
+          "bonus_target": {
+            "type": "string"
+          },
+          "bonus_value": {
+            "type": "string"
+          },
+          "mayor_type_category": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "survival_maps": {
+      "minWikilinks": 1,
+      "description": "Endless-mode maps designed for survival gameplay and competitive high-score runs.",
+      "frontmatter_schema": {
+        "properties": {
+          "map_theme": {
+            "type": "string"
+          },
+          "difficulty_tier": {
+            "type": "string"
+          },
+          "terrain_composition": {
+            "type": "string"
+          },
+          "special_modifiers": {
+            "type": "string"
+          },
+          "doom_village_count": {
+            "type": "string"
+          },
+          "treasure_pile_count": {
+            "type": "string"
+          },
+          "max_score_multiplier": {
+            "type": "string"
+          },
+          "soundtrack": {
             "type": "string"
           }
         }
@@ -440,23 +578,38 @@
   "categories": [
     {
       "name": "Buildings",
-      "kind": "building",
-      "member_count": 43
+      "kind": "buildings",
+      "member_count": 42
     },
     {
       "name": "Campaign Maps",
-      "kind": "campaign_map",
+      "kind": "campaign_maps",
       "member_count": 24
-    },
-    {
-      "name": "Survival Maps",
-      "kind": "survival_map",
-      "member_count": 1
     },
     {
       "name": "Infected",
       "kind": "infected",
-      "member_count": 17
+      "member_count": 14
+    },
+    {
+      "name": "Mechanics",
+      "kind": "game_mechanics",
+      "member_count": 9
+    },
+    {
+      "name": "Units",
+      "kind": "units",
+      "member_count": 9
+    },
+    {
+      "name": "Campaign",
+      "kind": "campaign_content",
+      "member_count": 8
+    },
+    {
+      "name": "Wonders",
+      "kind": "wonders",
+      "member_count": 6
     },
     {
       "name": "Special Infected",
@@ -464,33 +617,23 @@
       "member_count": 5
     },
     {
+      "name": "Characters",
+      "kind": "characters",
+      "member_count": 3
+    },
+    {
       "name": "Runners",
-      "kind": "infected_runner",
+      "kind": "infected_runners",
       "member_count": 3
     },
     {
       "name": "Walkers",
-      "kind": "infected_walker",
+      "kind": "infected_walkers",
       "member_count": 3
-    },
-    {
-      "name": "Units",
-      "kind": "unit",
-      "member_count": 9
-    },
-    {
-      "name": "Characters",
-      "kind": "character",
-      "member_count": 3
-    },
-    {
-      "name": "Wonders",
-      "kind": "wonder",
-      "member_count": 6
     },
     {
       "name": "Organizations",
-      "kind": "organization",
+      "kind": "organizations",
       "member_count": 2
     },
     {
@@ -499,86 +642,113 @@
       "member_count": 2
     },
     {
+      "name": "Updates",
+      "kind": "updates",
+      "member_count": 2
+    },
+    {
       "name": "Locations",
-      "kind": "location",
+      "kind": "locations",
+      "member_count": 1
+    },
+    {
+      "name": "Mayors",
+      "kind": "mayors",
+      "member_count": 1
+    },
+    {
+      "name": "Survival Maps",
+      "kind": "survival_maps",
       "member_count": 1
     }
   ],
   "engine_candidates": [
     {
       "name": "Godot",
-      "language": "GDScript (Python-like)",
+      "language": "GDScript",
       "pros": [
-        "Deterministic 2D tower-defense ideal; free and open-source",
-        "GDScript philosophy aligns with Python data-ingest pipeline",
-        "Native wave-spawning and unit pathfinding support",
-        "Data-driven; frontmatter→scene graph mapping is natural",
-        "Single-player focus avoids multiplayer complexity"
+        "2D-first design perfectly suited for tower defense",
+        "Free and open-source with no licensing concerns",
+        "Strongly deterministic physics and behavior (critical for balance tuning)",
+        "Python-like GDScript lowers entry barrier",
+        "Excellent built-in narrative/cutscene tooling for campaign content",
+        "Active indie game community with tower defense expertise"
       ],
       "cons": [
-        "Smaller ecosystem than Unity; fewer pre-built tower-defense assets",
-        "C++ backend less familiar to typical game modders"
+        "Smaller asset store compared to Unity (fewer pre-built tower defense templates)",
+        "Younger engine with fewer established enterprise patterns",
+        "Smaller networking ecosystem for future multiplayer expansion"
       ],
-      "fit_score": 0.87,
+      "fit_score": 0.82,
       "links": [
-        "https://godotengine.org",
-        "https://docs.godotengine.org/en/stable/getting_started/introduction/index.html"
+        "https://godotengine.org/",
+        "https://docs.godotengine.org/en/stable/community/index.html"
       ]
     },
     {
       "name": "Unity",
       "language": "C#",
       "pros": [
-        "Industry standard; large tower-defense template ecosystem",
-        "Robust UI (building menus, research trees) and animation systems",
-        "Deterministic tick-based simulation; proven wave mechanics",
-        "Asset store for infected rigs, building meshes, audio"
+        "Massive asset store with pre-built tower defense systems and templates",
+        "Industry-standard UI system handles resource management and campaign menus well",
+        "Netcode for GameObjects and Mirror enable future multiplayer/online features",
+        "Extensive documentation and tutorial coverage for tower defense patterns",
+        "Proven track record in commercial tower defense titles"
       ],
       "cons": [
-        "Licensing friction above revenue threshold (>$1M ARR)",
-        "Editor overhead; more learning curve than Godot for this scope"
+        "Licensing and pricing controversy may impact long-term viability",
+        "Engine is heavyweight for 2D tower defense scope",
+        "Larger binary footprint than purpose-built 2D engines",
+        "C# learning curve steeper than scripting languages"
       ],
-      "fit_score": 0.81,
+      "fit_score": 0.78,
       "links": [
-        "https://unity.com",
-        "https://docs.unity3d.com/Manual/index.html"
+        "https://unity.com/",
+        "https://docs.unity3d.com/2023.2/Documentation/Manual/index.html"
       ]
     },
     {
-      "name": "Phaser 3",
-      "language": "TypeScript/JavaScript",
+      "name": "Defold",
+      "language": "Lua",
       "pros": [
-        "Web-native deployment; rapid iteration from wiki data → playable",
-        "Strong 2D (isometric tower defense fits naturally)",
-        "Lightweight; deterministic event scheduling for waves",
-        "Declarative JSON config integrates cleanly with game-config.json"
+        "Purpose-built for 2D; no bloat from 3D features",
+        "Strongly deterministic for balance tuning and competitive play",
+        "Lightweight engine with excellent performance on campaign maps with swarms",
+        "Lua scripting enables rapid iteration on game mechanics and AI",
+        "Proven in production tower defense and strategy games",
+        "Cloud-based tooling reduces setup burden"
       ],
       "cons": [
-        "Performance ceiling on large infected counts (28+ simultaneous)",
-        "Mobile performance unpredictable; no native mobile SDKs"
+        "Smaller third-party community and fewer pre-built systems",
+        "Fewer narrative/campaign template resources than mainstream engines",
+        "Documentation less comprehensive than Unity/Unreal"
       ],
-      "fit_score": 0.74,
+      "fit_score": 0.75,
       "links": [
-        "https://phaser.io",
-        "https://newdocs.phaser.io/docs/3.60.0"
+        "https://defold.com/",
+        "https://defold.com/manuals/introduction/"
       ]
     },
     {
-      "name": "Monogame",
-      "language": "C#",
+      "name": "Phaser",
+      "language": "JavaScript/TypeScript",
       "pros": [
-        "Lightweight XNA-style framework; low overhead for tower defense",
-        "Deterministic 2D simulation; cross-platform (Windows/macOS/Linux)",
-        "Data-driven architecture; good for code-generated game logic"
+        "Web-first deployment for immediate player accessibility",
+        "Fast prototyping cycle with hot reload",
+        "TypeScript support enables type safety for complex game logic",
+        "Mature asset pipeline for tower defense visuals",
+        "Lower barrier to entry for web developers"
       ],
       "cons": [
-        "Minimal built-in UI; research trees and menus require custom code",
-        "Smaller community; fewer pathfinding plugins vs. Unity"
+        "Web-only deployment limits platform reach (no native mobile)",
+        "Networking complexity greater than purpose-built engines",
+        "Campaign progression UX more manual to implement",
+        "Determinism harder to guarantee across browsers"
       ],
-      "fit_score": 0.7,
+      "fit_score": 0.65,
       "links": [
-        "https://www.monogame.net",
-        "https://docs.monogame.net"
+        "https://phaser.io/",
+        "https://phaser.io/documentation"
       ]
     }
   ],
@@ -590,5 +760,28 @@
     "networking_model": "deterministic lockstep",
     "architecture": "fixed-tick sim (20-30Hz) decoupled from interpolated render tick; only inputs cross the wire",
     "notes": "Determinism rules are binding on all Phase 2 sim-path code. See CLAUDE.md > 'Target engine' for the full rule set."
-  }
+  },
+  "dropped_categories": [
+    {
+      "name": "Browse",
+      "member_count": 6,
+      "sample_members": [
+        "City layouts",
+        "Guides",
+        "High Scores",
+        "Score",
+        "They Are Billions",
+        "They Are Billions Wiki"
+      ],
+      "drop_reason": "Wiki-administrative portal/index category with navigation pages"
+    },
+    {
+      "name": "New Empire",
+      "member_count": 1,
+      "sample_members": [
+        "Quintus Crane"
+      ],
+      "drop_reason": "Strict subset of Characters (Quintus Crane member belongs to both)"
+    }
+  ]
 }
