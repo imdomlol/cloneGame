@@ -49,6 +49,7 @@ def write_proposal(
     merged = dict(current)
     merged["kinds"] = analysis["kinds"]
     merged["categories"] = analysis["categories"]
+    merged["dropped_categories"] = analysis.get("dropped_categories", [])
     merged["seedPages"] = []
     merged["human_approved"] = True
     if "engine_candidates" in analysis:
@@ -61,13 +62,21 @@ def write_proposal(
 
     kinds_count = len(merged.get("kinds", {}))
     cats_count = len(merged.get("categories", []))
+    dropped_count = len(merged.get("dropped_categories", []))
     engines_count = len(merged.get("engine_candidates", []))
     fields_count = _count_schema_fields(merged.get("kinds", {}))
     print(
         f"[Phase 0] Wrote {config_path} (auto-promoted): "
         f"{kinds_count} kinds, {cats_count} categories, "
+        f"{dropped_count} dropped categories, "
         f"{fields_count} schema fields, {engines_count} engine candidates."
     )
+    if dropped_count:
+        print(
+            f"  To re-include any dropped category: move its entry from "
+            f"`dropped_categories` to `categories` in {config_path}, add "
+            f'`"kind": "<name>"`, and define that kind under `kinds`.'
+        )
     print(
         f"Inspect diff with `git diff -- {config_path}` if needed; "
         f"{proposed_path} mirrors the same content for offline review.\n"

@@ -97,22 +97,47 @@ def _llm_call(prompt: str, mode: str = DEFAULT_MODE, model: str | None = None) -
     raise ValueError(f"Unsupported LLM mode: {mode!r}. Expected one of: {expected}.")
 
 
-def _build_prompt(categories: list[dict[str, Any]]) -> str:
+def _build_prompt(
+    categories: list[dict[str, Any]],
+    *,
+    missing_names: list[str] | None = None,
+) -> str:
     trimmed = [
-        dict(name=cat.get("name"), member_count=cat.get("member_count"),
-             sample_members=cat.get("members") or [])
+        dict(
+            name=cat.get("name"),
+            member_count=cat.get("member_count"),
+            sample_members=cat.get("members") or [],
+        )
         for cat in categories
     ]
+    coverage_clause = ""
+    if missing_names:
+        coverage_clause = (
+            "Previous attempt omitted these category names — every one MUST appear"
+            " in this attempt's output, either with a kind or with a drop_reason:\n"
+            f"{json.dumps(missing_names, ensure_ascii=False)}\n"
+        )
     return (
         "You are given a MediaWiki category list for the game 'They Are Billions'.\n"
-        "Discard meta/community/maintenance categories. Derive fine-grained kinds from the"
-        " category structure alone; do not collapse distinct entity types into a catch-all.\n"
+        "Derive fine-grained kinds from the category structure alone; do not collapse"
+        " distinct entity types into a catch-all.\n"
         "Each kind needs a snake_case key, minWikilinks int 0..3, and a one-sentence"
         " gameplay-role description.\n"
-        "Emit surviving input categories with verbatim names mapped to defined kinds.\n"
-        "Return ONLY raw JSON shaped as: "
+        "EVERY input category MUST appear exactly once in the output. Default to"
+        " mapping each category to a kind — even small categories or ones whose only"
+        " content page shares the category's name. A drop_reason is allowed ONLY for:\n"
+        "  (a) wiki-administrative portal/index categories whose members are project"
+        " navigation pages (e.g. 'Browse', 'Wiki', 'Main Page'), OR\n"
+        "  (b) a category whose entire member list is fully contained in another"
+        " mapped category (strict subset, not partial overlap).\n"
+        "Heterogeneity, small size, single-page overlap with another category, and"
+        " 'the category only contains its own index page' are NOT valid drop reasons —"
+        " map them to a kind (creating a new kind if needed) instead.\n"
+        + coverage_clause
+        + "Return ONLY raw JSON shaped as: "
         '{"kinds":{"<kind>":{"minWikilinks":1,"description":"..."}},'
-        '"categories":[{"name":"Exact Category Name","kind":"<kind>"}]}.\n'
+        '"categories":[{"name":"Exact Category Name","kind":"<kind>"},'
+        '{"name":"Exact Category Name","drop_reason":"..."}]}.\n'
         "Input categories JSON:\n"
         f"{json.dumps(trimmed, ensure_ascii=False)}"
     )
@@ -185,36 +210,90 @@ def _normalize_kinds(raw_kinds: dict[str, Any]) -> tuple[dict[str, dict[str, Any
 def _normalize_category_entry(
     entry: dict[str, Any],
     name_to_count: dict[str, int],
+    name_to_members: dict[str, list[str]],
     normalized_kinds: dict[str, dict[str, Any]],
     kind_key_map: dict[str, str],
 ) -> dict[str, Any]:
+    """Returns a mapped entry (has 'kind') or a dropped entry (has 'drop_reason')."""
     name = entry.get("name")
     if not isinstance(name, str) or name not in name_to_count:
         raise ValueError(f"Category name must be verbatim from input. Bad name: {name!r}")
+
+    drop_reason = entry.get("drop_reason")
+    if isinstance(drop_reason, str) and drop_reason.strip():
+        return {
+            "name": name,
+            "member_count": name_to_count[name],
+            "sample_members": list(name_to_members.get(name, [])),
+            "drop_reason": drop_reason.strip(),
+        }
+
     kind = entry.get("kind")
-    kind_str = str(kind) if kind is not None else ""
-    kind_norm = kind_key_map.get(kind_str, _snake_case(kind_str))
+    if not isinstance(kind, str) or not kind.strip():
+        raise ValueError(f"Category {name!r} must have either 'kind' or 'drop_reason'.")
+    kind_norm = kind_key_map.get(kind, _snake_case(kind))
     if kind_norm not in normalized_kinds:
         raise ValueError(f"Category {name!r} maps to unknown kind: {kind_norm!r}")
     return {"name": name, "kind": kind_norm, "member_count": name_to_count[name]}
 
 
+def _build_name_to_members(categories: list[dict[str, Any]]) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    for cat in categories:
+        name = cat.get("name")
+        members = cat.get("members") or []
+        if isinstance(name, str) and isinstance(members, list):
+            out[name] = [str(m) for m in members if isinstance(m, str)]
+    return out
+
+
+class IncompleteCoverageError(ValueError):
+    """LLM omitted some input categories from its output — caller should re-prompt."""
+
+    def __init__(self, missing: list[str]) -> None:
+        super().__init__(f"LLM omitted {len(missing)} input categories: {missing}")
+        self.missing = missing
+
+
 def _validate_output(result: dict[str, Any], categories: list[dict[str, Any]]) -> dict[str, Any]:
     _assert_output_shape(result)
     name_to_count = _build_name_to_count(categories)
+    name_to_members = _build_name_to_members(categories)
     normalized_kinds, kind_key_map = _normalize_kinds(result["kinds"])
-    normalized_categories = [
-        _normalize_category_entry(entry, name_to_count, normalized_kinds, kind_key_map)
-        for entry in result["categories"]
-        if isinstance(entry, dict)
-    ]
-    return {"kinds": normalized_kinds, "categories": normalized_categories}
+
+    mapped: list[dict[str, Any]] = []
+    dropped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for entry in result["categories"]:
+        if not isinstance(entry, dict):
+            continue
+        normalized = _normalize_category_entry(
+            entry, name_to_count, name_to_members, normalized_kinds, kind_key_map
+        )
+        name = normalized["name"]
+        if name in seen:
+            raise ValueError(f"Category {name!r} appears more than once in LLM output.")
+        seen.add(name)
+        (dropped if "drop_reason" in normalized else mapped).append(normalized)
+
+    missing = sorted(set(name_to_count) - seen)
+    if missing:
+        raise IncompleteCoverageError(missing)
+
+    return {
+        "kinds": normalized_kinds,
+        "categories": mapped,
+        "dropped_categories": dropped,
+    }
 
 
 def _trim_categories_for_proposals(categories: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
-        dict(name=cat.get("name"), kind=cat.get("kind"),
-             member_count=_coerce_member_count(cat.get("member_count")))
+        dict(
+            name=cat.get("name"),
+            kind=cat.get("kind"),
+            member_count=_coerce_member_count(cat.get("member_count")),
+        )
         for cat in categories
     ]
 
@@ -260,7 +339,7 @@ def _validate_schema_entry(kind: str, schema: Any) -> dict[str, Any]:
         raise ValueError(f'Schema for kind "{kind}" must be an object.')
     properties = schema.get("properties")
     if not isinstance(properties, dict):
-        raise ValueError(f'{kind}.properties must be an object.')
+        raise ValueError(f"{kind}.properties must be an object.")
     return {"properties": properties}
 
 
@@ -369,7 +448,12 @@ def analyze_taxonomy(
 ) -> dict:
     prompt = _build_prompt(categories)
     raw = _parse_json_with_retry(prompt, mode, model)
-    return _validate_output(raw, categories)
+    try:
+        return _validate_output(raw, categories)
+    except IncompleteCoverageError as exc:
+        prompt = _build_prompt(categories, missing_names=exc.missing)
+        raw = _parse_json_with_retry(prompt, mode, model)
+        return _validate_output(raw, categories)
 
 
 def _main() -> int:

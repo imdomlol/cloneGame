@@ -134,6 +134,7 @@ def _merge_proposals(
     schemas: dict[str, dict[str, Any]],
     engines: list[dict[str, Any]],
     mapped_categories: list[dict[str, Any]],
+    dropped_categories: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     enriched_kinds: dict[str, Any] = {}
     current_kinds = current_config.get("kinds", {})
@@ -155,6 +156,7 @@ def _merge_proposals(
     return {
         "kinds": enriched_kinds,
         "categories": mapped_categories,
+        "dropped_categories": dropped_categories or [],
         "engine_candidates": engines,
     }
 
@@ -193,12 +195,23 @@ def main(argv: list[str]) -> int:
     analysis = phase0_analyze.analyze_taxonomy(categories, **analyze_kwargs)
     kinds = analysis.get("kinds") if isinstance(analysis, dict) else None
     mapped_categories = analysis.get("categories") if isinstance(analysis, dict) else None
+    dropped_categories = (
+        analysis.get("dropped_categories") if isinstance(analysis, dict) else None
+    ) or []
     if not isinstance(kinds, dict) or not isinstance(mapped_categories, list):
         raise SystemExit(
             "phase0_analyze.analyze_taxonomy() must return a dict with "
             "'kinds' (object) and 'categories' (array)."
         )
-    print(f"Discovered {len(kinds)} kinds, {len(mapped_categories)} mapped categories.")
+    print(
+        f"Discovered {len(kinds)} kinds, {len(mapped_categories)} mapped categories, "
+        f"{len(dropped_categories)} dropped categories."
+    )
+    if dropped_categories:
+        print(
+            "  Dropped (review in game-config.json -> dropped_categories): "
+            + ", ".join(c.get("name", "?") for c in dropped_categories)
+        )
 
     print("[Phase 0] Fetching wikitext samples for schema proposal...")
     sample_pages = _sample_pages_by_category(phase0_fetch, wiki_url, categories)
@@ -214,7 +227,9 @@ def main(argv: list[str]) -> int:
         schema_categories,
     )
     print(f"Proposed schemas for {len(schemas)} kinds, {len(engines)} engine candidates.")
-    proposal = _merge_proposals(config, kinds, schemas, engines, mapped_categories)
+    proposal = _merge_proposals(
+        config, kinds, schemas, engines, mapped_categories, dropped_categories
+    )
 
     if args.dry_run:
         print(json.dumps(proposal, indent=2, ensure_ascii=False))

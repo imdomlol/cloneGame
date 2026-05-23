@@ -117,7 +117,7 @@ def _query_all_categories(
         "list": "allcategories",
         "aclimit": "max",
         "acminsize": str(int(min_members)),
-        "acprop": "size",
+        "acprop": "size|hidden",
         "format": "json",
     }
 
@@ -157,34 +157,41 @@ def _query_category_members(
     category_name: str,
     *,
     user_agent: str | None,
-    limit: int = 10,
+    limit: int | str = "max",
 ) -> list[str]:
+    """Mainspace-only members; `User blog:`, `Template:`, `File:` pages are excluded."""
     params: dict[str, object] = {
         "action": "query",
         "list": "categorymembers",
         "cmtitle": f"Category:{category_name}",
-        "cmlimit": str(int(limit)),
+        "cmlimit": str(limit),
         "cmtype": "page",
+        "cmnamespace": "0",
         "format": "json",
     }
-    url = _build_url(api_endpoint, params)
-    data = _http_get_json(url, user_agent=user_agent)
-
-    query = data.get("query")
-    if not isinstance(query, dict):
-        return []
-
-    cms = query.get("categorymembers")
-    if not isinstance(cms, list):
-        return []
-
     titles: list[str] = []
-    for item in cms:
-        if not isinstance(item, dict):
+    while True:
+        url = _build_url(api_endpoint, params)
+        data = _http_get_json(url, user_agent=user_agent)
+
+        query = data.get("query")
+        if isinstance(query, dict):
+            cms = query.get("categorymembers")
+            if isinstance(cms, list):
+                for item in cms:
+                    if not isinstance(item, dict):
+                        continue
+                    title = item.get("title")
+                    if isinstance(title, str) and title:
+                        titles.append(title)
+
+        cont = data.get("continue")
+        if isinstance(cont, dict) and cont:
+            for k, v in cont.items():
+                params[k] = v
             continue
-        title = item.get("title")
-        if isinstance(title, str) and title:
-            titles.append(title)
+        break
+
     return titles
 
 
@@ -291,31 +298,29 @@ def fetch_taxonomy(wiki_base_url: str, min_members: int = 3) -> list[dict]:
             continue
         if _is_maintenance_category(name):
             continue
+        # __HIDDENCAT__ marker; presence (empty string) means hidden.
+        if "hidden" in cat:
+            continue
 
-        size = cat.get("size")
-        try:
-            member_count = int(size)
-        except Exception:
-            member_count = 0
+        filtered.append({"name": name, "member_count": 0, "members": []})
 
-        filtered.append(
-            {
-                "name": name,
-                "member_count": member_count,
-                "members": [],
-            }
-        )
-
+    enriched: list[dict] = []
     for item in filtered:
-        item["members"] = _query_category_members(
+        # Mainspace-only enumeration drops categories whose "size" was inflated by
+        # User blog:, Template:, File: pages but have no real content pages.
+        mainspace_members = _query_category_members(
             api_endpoint,
             item["name"],
             user_agent=user_agent,
-            limit=10,
         )
+        if not mainspace_members:
+            continue
+        item["member_count"] = len(mainspace_members)
+        item["members"] = mainspace_members[:10]
+        enriched.append(item)
 
-    filtered.sort(key=lambda d: int(d.get("member_count", 0)), reverse=True)
-    return filtered
+    enriched.sort(key=lambda d: int(d.get("member_count", 0)), reverse=True)
+    return enriched
 
 
 def _load_default_wiki_base_url(repo_root: Path) -> str:
