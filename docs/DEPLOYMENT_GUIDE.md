@@ -207,10 +207,12 @@ provider means adding a branch there, not introducing a new SDK dependency.
 
 ---
 
-## 3. Phase 2 — Vault → Code (planned)
+## 3. Phase 2 — Vault → Code (scaffolded)
 
-**Not implemented.** Blocked on the target engine decision (see `plan.md`).
-This section is design intent, not a code description.
+**Scaffolded as of 2026-05-22.** All five modules ship with unit tests; the
+first live Anthropic codegen turn is gated on explicit user confirmation
+per `CLAUDE.md > Default Behaviors #12`. Engine choice landed earlier
+(Bevy + lockstep — see `plan.md` and `cloneGame/MEMORY.md`).
 
 ### 3.1 Component map
 
@@ -247,30 +249,45 @@ XML style is mandatory. `markdown` and `plain` styles strip the
 
 ### 3.3 Indexer
 
-`phase2/indexer.py` (to be written) parses the XML, splits each file into
+`phase2/indexer.py` parses the XML, splits each file into
 frontmatter / Description / Behavioral Mechanics / References, and upserts
 two Chroma collections:
 
 - `vault_prose` — embeds the Description (semantic recall)
 - `vault_mechanics` — embeds the Behavioral Mechanics block (exact-logic recall)
 
-Plus a sidecar `graph.json` mapping each `id` to its outbound `[[wikilink]]`
-ids, sourced from `depends_on:` in frontmatter.
+Plus a sidecar `build/graph.json` mapping each `id` to its outbound
+`[[wikilink]]` ids, sourced from `depends_on:` in frontmatter.
+
+Embeddings use a local sentence-transformers model
+(`BAAI/bge-small-en-v1.5`, 384-dim) loaded via Chroma's
+`SentenceTransformerEmbeddingFunction`, so retrieval reuses the same model
+at query time. Run with `--dry-run` to skip the Chroma upsert and only
+write `graph.json`.
 
 ### 3.4 Retrieval
 
-`phase2/retrieval.py` (to be written) runs Layer 3 of the 4-layer filter:
+`phase2/retrieval.py` runs Layer 3 of the 4-layer filter:
 
-1. Vector seeds — top-k from each collection, deduped by path.
-2. Graph expansion — 1-hop along `graph.json` from each seed.
+1. Vector seeds — top-k from each collection, merged by distance and
+   deduped by id (`merge_vector_results`).
+2. Graph expansion — 1-hop along `build/graph.json` from each seed,
+   seeds-first (`graph_expand`).
 3. Token-cap pack — emit `<file path="...">…</file>` blocks until 2,000
-   tokens, prioritising direct vector hits over graph-expanded files.
+   tokens, prioritising direct vector hits over graph-expanded files
+   (`pack_files`).
 
-The 2,000-token cap is asserted, not advisory.
+The 2,000-token cap is asserted, not advisory: a post-pack
+`assert token_counter(packed) <= cap_tokens` defends against per-block
+vs joined-string drift in the tokenizer. Token counts use tiktoken
+`cl100k_base` as the local approximation since Anthropic does not ship
+a public Claude tokenizer.
 
 ### 3.5 Codegen call
 
-`phase2/codegen.py` (to be written) wraps the Anthropic SDK:
+`phase2/codegen.py` wraps the Anthropic SDK. The engine baseline (Layer 1,
+rendered ahead of time by `phase2/baseline.py` into `build/engine_baseline.md`)
+goes in the `system` block with `cache_control: ephemeral`:
 
 ```python
 client.messages.create(
@@ -296,12 +313,21 @@ client.messages.create(
 ```
 
 Prompt-cache hit on the engine baseline is the main cost mechanism — see §4.
+Per-turn usage is logged via `log_usage(response.usage)`; the helper warns
+when `cache_read / (cache_read + cache_creation + input)` drops below 80%,
+which signals the baseline has drifted or the 5-minute ephemeral TTL expired
+between turns. Generated output is post-checked by `validate_source_header`,
+which rejects responses missing a `// Sources: vault/...` header or citing
+paths outside the retrieval bundle.
 
 ### 3.6 System mapping document
 
-`build/system_map.yaml` (to be written) is Layer 4: a rolling summary of
-what's been generated so far. Regenerated after every codegen turn by a
-cheap Haiku summariser, replacing raw multi-turn history. Tracks:
+`build/system_map.yaml` is Layer 4: a rolling summary of what's been
+generated so far, managed by `phase2/system_map.py`. Default compaction
+is deterministic (oldest `implemented` entries collapse into a single
+`{summary, count}` line via `cap_tokens`); an optional
+`summarise_with_haiku` path swaps in a Haiku-driven rewrite for richer
+summarisation. Tracks:
 
 ```yaml
 implemented:
@@ -390,14 +416,26 @@ projects.
 - [ ] `python scripts/phase1_ingest.py` returns exit code 0, or `_quarantine/`
       contents reviewed and prompt/schema iterated
 
-### 5.3 Phase 2 (not yet operational)
+### 5.3 Phase 2 (scaffolded; first live turn pending)
 
-- [ ] Target engine chosen (active blocker — see `plan.md`)
-- [ ] `npm install -g repomix`
-- [ ] `pip install chromadb tiktoken anthropic`
-- [ ] `prompts/engine_baseline.md` written and < 2,500 tokens
-- [ ] `phase2/indexer.py`, `phase2/retrieval.py`, `phase2/codegen.py` implemented
-- [ ] Retrieval cap asserted at 2,000 tokens
-- [ ] System map capped at 1,000 tokens (summarise-on-overflow)
-- [ ] Engine-baseline cache hit-rate logged; alert if < 80%
-- [ ] Every generated source file links back to its vault source path
+- [x] Target engine chosen (Bevy + lockstep, 2026-05-19; see `plan.md`)
+- [x] `npm install -g repomix` (2026-05-21)
+- [x] `pip install -r requirements-phase2.txt` covers chromadb,
+      sentence-transformers, tiktoken, anthropic, pyyaml (2026-05-22)
+- [x] `prompts/engine_baseline.template.md` + `prompts/engine_determinism/<engine>.md`
+      render via `phase2/baseline.py` to `build/engine_baseline.md`
+      (2,104 / 2,500 tokens for Bevy + lockstep)
+- [x] `phase2/indexer.py`, `phase2/retrieval.py`, `phase2/baseline.py`,
+      `phase2/codegen.py`, `phase2/system_map.py` all shipped with unit tests
+- [x] Retrieval cap asserted at 2,000 tokens
+      (`phase2.retrieval.pack_files`)
+- [x] System map capped at 1,000 tokens
+      (`phase2.system_map.cap_tokens`; `summarise_with_haiku` available)
+- [x] Engine-baseline cache hit-rate logged; warn if < 80%
+      (`phase2.codegen.log_usage`; validates only after a real turn ships)
+- [x] Every generated source file should start with `// Sources: vault/...`
+      (output rule in `prompts/engine_baseline.template.md`; post-check in
+      `phase2.codegen.validate_source_header`)
+- [ ] Spend the first live Anthropic turn (gated on in-session user yes
+      per `CLAUDE.md > Default Behaviors #12`)
+- [ ] Wire a small driver that loops codegen turns + updates `system_map.yaml`

@@ -1,0 +1,5 @@
+chromadb>=0.5
+sentence-transformers>=2.7
+tiktoken>=0.7
+anthropic>=0.40
+pyyaml>=6

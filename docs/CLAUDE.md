@@ -28,7 +28,7 @@ Learning stage: most things. Treat as a developing student, not a beginner, not 
 
 ## Current Project
 
-Goal: build a game-agnostic wiki-to-code pipeline. Given any public Fandom-style wiki, the pipeline produces a structured Obsidian vault and (Phase 2, not yet built) generates a playable clone of that game. Individual games (e.g. They Are Billions) are used as reference deployments, but no part of the repo should be hard-coded to one game.
+Goal: build a game-agnostic wiki-to-code pipeline. Given any public Fandom-style wiki, the pipeline produces a structured Obsidian vault and then generates a playable clone of that game. Phase 2 is scaffolded (indexer + retrieval + engine baseline + codegen + system_map all land 2026-05-22; no live turn spent yet) but no game source code has been produced. Individual games (e.g. They Are Billions) are used as reference deployments, but no part of the repo should be hard-coded to one game.
 
 - Repo root: `C:\Users\dominic\Documents\GitHub\cloneGame`
 - Obsidian project folder (design notes, MEMORY.md, ERRORS.md): `cloneGame/` in the vault, reachable via the Obsidian MCP server. **This is not the same as the repo's `vault/` directory** — that one is Phase 1's generated output (gitignored, consumed by Phase 2).
@@ -41,7 +41,7 @@ Avoid: overly complex architectures, premature abstraction, enterprise patterns,
 
 ## What this repo is
 
-A wiki-to-code pipeline structured as three sequential phases. Phase 0 and Phase 1 are implemented in Python; **Phase 2 (codegen) is not yet implemented**, so the repo currently contains no game source code, just the data-extraction pipeline that will feed it. The pipeline must work for any wiki — a specific game serves as the reference but never as a hard-coded target.
+A wiki-to-code pipeline structured as three sequential phases. Phase 0 and Phase 1 are implemented in Python. **Phase 2 (codegen) is scaffolded but has not yet been run against the live Anthropic API** (`phase2/{indexer,retrieval,baseline,codegen,system_map}.py` exist with unit tests; the first real turn is gated on dom's in-session yes per Default Behavior 12). The repo therefore contains no game source code yet, only the data-extraction pipeline and the codegen plumbing that will feed it. The pipeline must work for any wiki — a specific game serves as the reference but never as a hard-coded target.
 
 `docs/DEPLOYMENT_GUIDE.md` is the architecture spec. Per-phase implementation status and open questions live in the Obsidian vault at `cloneGame/plan.md`; active near-term work lives at `cloneGame/todo.md`. The decision log lives in the Obsidian vault at `cloneGame/MEMORY.md` — read it at the start of every session.
 
@@ -55,7 +55,7 @@ Phase 2  vault/ ──► repomix XML ──► Chroma index ──► codegen L
 
 - **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review (this file is gitignored, so the diff is only meaningful between local runs, not across commits).
 - **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, **trims it** (HTML comments, `[[Category:]]` tags, `[[File:]]`/`[[Image:]]` links, image-only `<gallery>` blocks, repeated blank lines, see `trim_wikitext` in `phase1_ingest.py`) to save tokens while keeping infoboxes/stat tables/formulas/wikilinks intact, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types. Presence of per-kind fields is NOT enforced (only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the trim function, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly. Production config in `phase1.config.toml` currently pins `llm_mode = "codex"` + `model = "gpt-5.4-mini"`.
-- **Phase 2** is greenfield. The engine for any given run comes from `chosen_engine` in that game's `game-config.json`. The reference deployment chose **Bevy (Rust)** with **deterministic lockstep** — see "Reference deployment engine" below for the binding determinism rules that apply when that engine is selected. Do not invent Phase 2 code without explicit user direction.
+- **Phase 2** is scaffolded but un-spent. The engine for any given run comes from `chosen_engine` in that game's `game-config.json`. The reference deployment chose **Bevy (Rust)** with **deterministic lockstep** — see "Reference deployment engine" below for the binding determinism rules that apply when that engine is selected. The pipeline lives in `phase2/` (indexer → retrieval → baseline → codegen → system_map); per-engine determinism rules are data files under `prompts/engine_determinism/<engine>.md`, keyed by lowercased `chosen_engine.name`. The first real codegen turn against the Anthropic API is still gated on explicit user direction per Default Behavior 12.
 
 ## Reference deployment engine (chosen 2026-05-19): Bevy + lockstep
 
@@ -94,10 +94,20 @@ python scripts/phase1_ingest.py                     # full ingest
 pip install jsonschema                              # optional; enables full Draft 2020-12 validation instead of the required-fields fallback
 ```
 
-Tests (unit tests for `phase1_ingest` helpers: `trim_wikitext`, frontmatter parsing, validation, completed-source indexing):
+Phase 2 (vault → codegen, requires `pip install -r requirements-phase2.txt`):
+```powershell
+python phase2/indexer.py                            # rebuild Chroma + graph.json
+python phase2/baseline.py                           # render build/engine_baseline.md
+python phase2/system_map.py init                    # one-time state init
+python phase2/codegen.py --dry-run "implement X"    # assemble prompt, skip API
+python phase2/codegen.py "implement X"              # live Anthropic call
+```
+
+Tests (unit tests for Phase 1 + Phase 2 helpers; the Chroma-touching path in `phase2/indexer.py` is not exercised, only the pure-Python parsing/packing/state helpers):
 ```powershell
 python -m unittest discover tests             # run everything under tests/
 python -m unittest tests.test_phase1_ingest   # one module
+python -m unittest tests.test_phase2_retrieval
 ```
 
 There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" below) and the `unittest` suite are the full local gate. Pipeline validation happens inline during Phase 1 ingest: a non-zero exit code from `phase1_ingest.py` means files were quarantined. Inspect `vault/_quarantine/*.md` (each has a `validation_errors:` block at the top) and either fix the compile prompt or extend `kinds` in `game-config.json`.
@@ -133,6 +143,7 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 - Functions must be smaller than 40 lines excluding comments and the catch/finally blocks of try/catch sections. If a function exceeds that, refactor it.
 - `scripts/phase1_ingest.py` is the Phase 1 orchestrator (`process_page`, `ingest`, `build_context`, `main`, dry-run + print helpers). Helpers live in sibling modules: `wikitext.py` (trimming), `frontmatter.py` (YAML parsing), `validation.py` (schema gate), `compile_cache.py` (prompt render + SHA cache + LLM dispatch), `wiki_api.py` (MediaWiki retry/pagination), `vault_index.py` (paths, source-key index, migration). Inter-script imports use bare `from <module> import ...` plus a `sys.path` bootstrap so both direct execution and unittest discovery work.
 - `scripts/phase0_analyze.py` is ~398 lines, right at the line. Treat any net-add as a refactor trigger.
+- `phase2/` is the Phase 2 codegen pipeline. Modules: `indexer.py` (repomix XML → Chroma + graph.json), `retrieval.py` (vector merge + 1-hop graph, 2k-token cap), `baseline.py` (renders `prompts/engine_baseline.template.md` with per-engine rules from `prompts/engine_determinism/<engine>.md`, 2.5k-token cap), `codegen.py` (Anthropic SDK call with `cache_control: ephemeral` on baseline, cache-hit logging, `// Sources:` header validation), `system_map.py` (rolling `build/system_map.yaml`, 1k-token cap). Imports use the same bare `from <module> import ...` + `sys.path` bootstrap pattern as scripts/.
 
 ### Comments and Documentation
 
@@ -145,10 +156,10 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 
 This repo is Python-only. Use the Python tools installable via `pip install -r requirements-dev.txt`. Configuration lives in `pyproject.toml`.
 
-1. `ruff check scripts/ tests/` — lint + complexity (mccabe, max 10). Preview auto-fixes with `ruff check scripts/ tests/ --fix --diff`, apply with `ruff check scripts/ tests/ --fix`.
-2. `ruff format scripts/ tests/` — formatter. Preview with `ruff format scripts/ tests/ --diff`.
-3. `vulture scripts/` — dead-code detection. Report-only; fix flagged items manually or add to a whitelist with explicit justification. (`tests/` is excluded — unittest discovery treats top-level test methods as entry points and vulture cannot see those callers.)
-4. `python -m unittest discover tests` — unit tests for `phase1_ingest` helpers.
+1. `ruff check scripts/ tests/ phase2/` — lint + complexity (mccabe, max 10). Preview auto-fixes with `--fix --diff`, apply with `--fix`.
+2. `ruff format scripts/ tests/ phase2/` — formatter. Preview with `--diff`.
+3. `vulture scripts/ phase2/` — dead-code detection. Report-only; fix flagged items manually or add to a whitelist with explicit justification. (`tests/` is excluded — unittest discovery treats top-level test methods as entry points and vulture cannot see those callers.)
+4. `python -m unittest discover tests` — unit tests for Phase 1 + Phase 2 helpers.
 
 Do not commit until all four report clean.
 

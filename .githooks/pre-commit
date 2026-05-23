@@ -1,0 +1,10 @@
+#!/bin/sh
+# Refresh the local build/repomix-output.xml bundle when vault/ contents have
+# changed. Both vault/ and build/ are gitignored, so nothing is staged — this
+# just keeps the Phase 2 bundle in sync with the current vault on disk.
+# Excludes vault/_quarantine/**.
+
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+python "$REPO_ROOT/scripts/regenerate_repomix.py"

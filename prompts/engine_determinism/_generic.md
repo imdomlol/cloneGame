@@ -1,0 +1,2 @@
+1. The `chosen_engine.name` in `game-config.json` does not match a known engine profile in `prompts/engine_determinism/`. Falling back to a stub. Add a `<engine>.md` file in that directory (lowercase, dashes -> underscores) before relying on this baseline for codegen.
+2. While stubbed: use fixed-point math for any state that crosses a network or save boundary, seed all RNG explicitly, and pin iteration order on any container the sim reads.
