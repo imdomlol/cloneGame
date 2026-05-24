@@ -19,7 +19,24 @@ Binding on every sim-path file generated under this engine. Render-only state (c
 
 ## Output rules
 
-- Every generated source file begins with a header comment listing the vault paths it derives from: `// Sources: vault/<kind>/<id>.md, ...`. The codegen turn is rejected if the header is missing or lists a path not in the supplied retrieval bundle.
+### File output format (strict, machine-parsed)
+
+You have no file-writing tools. Do not ask for write permission. Emit each file as a delimited block and output NOTHING else: no preamble, no explanation, no markdown fences, no summary tables, no "~N lines" placeholders.
+
+```
+=== FILE: <path relative to crate root> ===
+<verbatim file contents, every line>
+=== END FILE ===
+```
+
+- Paths are relative to the crate root: `src/units/ranger.rs`, `Cargo.toml`. Never absolute, never prefixed with the crate directory name (no leading `game/`).
+- Put raw file content between the markers. Do NOT wrap it in ``` fences.
+- One block per file. Emit only the files this turn needs (new or changed).
+- The `=== END FILE ===` line closes each block. Output nothing after the final one.
+
+### Content rules
+
+- Every generated source file's first line is `// Sources: vault/<kind>/<id>.md, ...`. The turn is rejected if the header is missing or cites a path not in the supplied retrieval bundle.
 - YAML frontmatter numbers are absolute truth. Do not round, paraphrase, or "balance" them.
 - No placeholders, no shorthand, no external deps not already in the engine baseline.
 - Imperative `IF / THEN / ON / WHILE` bullets in `## Behavioral Mechanics` lex deterministically: one conditional per bullet. Do not merge bullets even if they share a condition.

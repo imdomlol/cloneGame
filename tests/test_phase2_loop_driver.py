@@ -18,39 +18,24 @@ from unittest.mock import patch
 
 from phase2 import loop_driver, system_map
 
-# Mirror the shape of build/turn1_soldier.md without copying its 18kB.
+# The codegen contract: each file delimited by === FILE: ... === / === END FILE ===.
 _FIXTURE_CODEGEN_OUTPUT = textwrap.dedent(
     """
-    Permissions are blocking writes. Here is the implementation.
-
-    ---
-
-    **`Cargo.toml`**
-    ```toml
+    === FILE: Cargo.toml ===
     [package]
     name = "clone-game"
     version = "0.1.0"
-    ```
+    === END FILE ===
 
-    ---
-
-    **`src/units/ranger.rs`** — Empire ranged infantry
-    ```rust
+    === FILE: src/units/ranger.rs ===
     // Sources: vault/unit/ranger.md
     pub struct Ranger;
-    ```
+    === END FILE ===
 
-    ---
-
-    **`src/units/mod.rs`**
-    ```rust
+    === FILE: src/units/mod.rs ===
     pub mod ranger;
     pub mod soldier;
-    ```
-
-    ---
-
-    Trailing prose the parser must ignore.
+    === END FILE ===
     """
 ).strip()
 
@@ -69,6 +54,15 @@ class ParseCodegenOutputTests(unittest.TestCase):
 
     def test_returns_empty_for_unstructured_output(self) -> None:
         self.assertEqual(loop_driver.parse_codegen_output("just prose, no blocks"), [])
+
+    def test_ignores_preamble_and_trailing_prose(self) -> None:
+        wrapped = (
+            "Here is the implementation:\n\n"
+            + _FIXTURE_CODEGEN_OUTPUT
+            + "\n\nLet me know if you need changes."
+        )
+        paths = [p for p, _ in loop_driver.parse_codegen_output(wrapped)]
+        self.assertEqual(paths, ["Cargo.toml", "src/units/ranger.rs", "src/units/mod.rs"])
 
 
 class DeriveNoteIdTests(unittest.TestCase):
@@ -168,6 +162,17 @@ class MergeIntoGameTests(unittest.TestCase):
             self.assertEqual(existing.read_text(encoding="utf-8"), "original lib\n")
             self.assertFalse((game / "src/units/new.rs").exists())
 
+    def test_strips_redundant_crate_dir_prefix(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            # Model sometimes prefixes the crate dir; must not nest game/game/.
+            parsed = [("game/src/units/ranger.rs", "pub struct Ranger;")]
+            written, _ = loop_driver.merge_into_game(parsed, game)
+            self.assertTrue((game / "src/units/ranger.rs").exists())
+            self.assertFalse((game / "game").exists())
+            self.assertEqual(len(written), 1)
+
 
 class AlreadyImplementedTests(unittest.TestCase):
     def test_match_on_id(self) -> None:
@@ -200,11 +205,10 @@ def _fake_generate_factory(text: str, ok: bool = True, offending: list[str] | No
 
 _VALID_TURN_OUTPUT = textwrap.dedent(
     """
-    **`src/units/ranger.rs`** — Empire ranged infantry
-    ```rust
+    === FILE: src/units/ranger.rs ===
     // Sources: vault/unit/ranger.md
     pub struct Ranger;
-    ```
+    === END FILE ===
     """
 ).strip()
 
@@ -342,10 +346,31 @@ class RunLoopTests(unittest.TestCase):
 
 class RunCargoBuildTests(unittest.TestCase):
     def test_missing_cargo_returns_failure_not_exception(self) -> None:
-        with patch("phase2.loop_driver.shutil.which", return_value=None):
+        # Patch the resolver so neither PATH nor ~/.cargo/bin is consulted.
+        with patch("phase2.loop_driver._resolve_cargo", return_value=None):
             ok, msg = loop_driver.run_cargo_build(Path("."))
         self.assertFalse(ok)
-        self.assertIn("cargo not on PATH", msg)
+        self.assertIn("cargo not found", msg)
+
+    def test_explicit_cargo_bin_skips_resolution(self) -> None:
+        captured: dict[str, Any] = {}
+
+        def _fake_run(cmd: list[str], **kwargs: Any) -> Any:
+            captured["cmd"] = cmd
+            captured["cwd"] = kwargs.get("cwd")
+
+            class _Result:
+                returncode = 0
+                stdout = ""
+                stderr = ""
+
+            return _Result()
+
+        custom = Path("/custom/cargo")
+        with patch("phase2.loop_driver.subprocess.run", _fake_run):
+            ok, _ = loop_driver.run_cargo_build(Path("game"), cargo_bin=custom)
+        self.assertTrue(ok)
+        self.assertEqual(captured["cmd"][0], str(custom))
 
 
 if __name__ == "__main__":

@@ -35,7 +35,12 @@ def cache_key(rendered_prompt: str, model: str) -> str:
 
 def run_llm(prompt: str, mode: str, model: str) -> str:
     if mode == "claude":
-        cmd = ["claude", "-p", "--model", model]
+        # --tools "" disables all built-in tools. Without it, `claude -p` behaves
+        # like an interactive agent: it tries to Write/Edit the output, gets
+        # blocked by the sandbox, and inconsistently falls back to either inline
+        # code or a plan-only summary ("grant permissions and I'll write..."). A
+        # pure text transform must not have tools, so the model just emits text.
+        cmd = ["claude", "-p", "--model", model, "--tools", ""]
     elif mode == "codex":
         codex_cmd = "codex.cmd" if os.name == "nt" else "codex"
         cmd = [codex_cmd, "exec", "--model", model, "-"]

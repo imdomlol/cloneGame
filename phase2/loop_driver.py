@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import re
 import shutil
 import subprocess
@@ -59,8 +60,8 @@ DEFAULT_GAME_DIR = _REPO_ROOT / "game"
 DEFAULT_ERROR_BUDGET = 3
 
 _FILE_BLOCK_RE = re.compile(
-    r"\*\*`(?P<path>[^`]+)`\*\*[^\n]*\n+```[a-zA-Z]*\n(?P<content>.*?)\n```",
-    re.DOTALL,
+    r"^=== FILE:[ \t]*(?P<path>.+?)[ \t]*===[ \t]*$\n(?P<content>.*?)\n=== END FILE ===",
+    re.DOTALL | re.MULTILINE,
 )
 
 # Files we never overwrite from LLM output. Dep pins live in the regression
@@ -74,14 +75,29 @@ _GOAL_LINE_SEPARATOR = "|"
 
 
 def parse_codegen_output(text: str) -> list[tuple[str, str]]:
-    """Extract ``(path, content)`` pairs from codegen markdown.
+    """Extract ``(path, content)`` pairs from codegen output.
 
-    The codegen LLM emits each generated file as a ``**`path`**`` heading
-    line followed by an optional descriptive suffix, then a fenced code block.
-    Returns the ordered list of (relative_path, file_content) tuples. Empty
-    list if no blocks parse — callers should treat that as a turn failure.
+    The codegen prompt (engine baseline "File output format") instructs the
+    model to wrap each file in ``=== FILE: <path> ===`` / ``=== END FILE ===``
+    markers with raw content between them. Returns the ordered list of
+    (relative_path, file_content) tuples. Empty list if no blocks parse —
+    callers treat that as a turn failure (the model ignored the contract).
     """
     return [(m.group("path"), m.group("content")) for m in _FILE_BLOCK_RE.finditer(text)]
+
+
+def _normalize_rel_path(raw: str, crate_dir_name: str) -> str:
+    """Strip stray leading slashes and a redundant crate-dir prefix.
+
+    The contract says paths are relative to the crate root, but the model
+    sometimes prefixes the crate directory (``game/src/...``). Strip it so the
+    file lands at ``game/src/...`` rather than ``game/game/src/...``.
+    """
+    rel = raw.strip().lstrip("/")
+    prefix = f"{crate_dir_name}/"
+    if rel.startswith(prefix):
+        rel = rel[len(prefix) :]
+    return rel
 
 
 def derive_note_id(goal: str) -> str:
@@ -98,11 +114,16 @@ def derive_note_id(goal: str) -> str:
 
 @dataclass
 class WrittenFile:
-    """One entry in a turn's merge trail; used to revert on cargo failure."""
+    """One entry in a turn's merge trail; used to revert on cargo failure.
+
+    ``prior_bytes`` holds the exact original file content (when it existed) so a
+    revert restores it byte-for-byte, including line endings. Decoding to text
+    and re-writing would flip CRLF/LF and leave the file dirty in git.
+    """
 
     path: Path
     existed_before: bool
-    prior_content: str | None
+    prior_bytes: bytes | None
 
 
 @dataclass
@@ -130,13 +151,14 @@ def merge_into_game(
     """
     written: list[WrittenFile] = []
     skipped: list[str] = []
-    for rel, content in parsed:
+    for raw_rel, content in parsed:
+        rel = _normalize_rel_path(raw_rel, game_dir.name)
         if rel in skiplist:
             skipped.append(rel)
             continue
         target = game_dir / rel
         existed = target.exists()
-        prior = target.read_text(encoding="utf-8") if existed else None
+        prior = target.read_bytes() if existed else None
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
         written.append(WrittenFile(target, existed, prior))
@@ -144,12 +166,32 @@ def merge_into_game(
 
 
 def revert_merge(written: list[WrittenFile]) -> None:
-    """Restore the prior on-disk state captured by ``merge_into_game``."""
+    """Restore the prior on-disk state captured by ``merge_into_game``.
+
+    Existing files are rewritten from their exact prior bytes; files created
+    this turn are deleted. Either way the tree returns to its pre-turn state.
+    """
     for entry in written:
-        if entry.existed_before and entry.prior_content is not None:
-            entry.path.write_text(entry.prior_content, encoding="utf-8")
+        if entry.existed_before and entry.prior_bytes is not None:
+            entry.path.write_bytes(entry.prior_bytes)
         else:
             entry.path.unlink(missing_ok=True)
+
+
+def _resolve_cargo() -> str | None:
+    """Find the cargo binary on PATH, else in the default rustup location.
+
+    rustup installs to ``~/.cargo/bin`` and adds it to the user PATH via the
+    registry, but a shell that started before the install (or a subprocess
+    inheriting a stale PATH) will not see it. Fall back to the well-known
+    location so the loop driver works without a shell restart.
+    """
+    found = shutil.which("cargo")
+    if found:
+        return found
+    name = "cargo.exe" if os.name == "nt" else "cargo"
+    candidate = Path.home() / ".cargo" / "bin" / name
+    return str(candidate) if candidate.exists() else None
 
 
 def run_cargo_build(
@@ -158,14 +200,14 @@ def run_cargo_build(
 ) -> tuple[bool, str]:
     """Run ``cargo build`` in ``game_dir``; return ``(success, combined_output)``.
 
-    Uses ``shutil.which("cargo")`` when ``cargo_bin`` is not supplied. If
-    cargo is not on PATH the call returns a falsey result with an
-    explanatory message rather than raising, so the loop driver can record
-    that as a normal turn failure.
+    Resolves cargo via ``_resolve_cargo`` (PATH, then ``~/.cargo/bin``) unless
+    ``cargo_bin`` is supplied. If cargo cannot be found the call returns a
+    falsey result with an explanatory message rather than raising, so the loop
+    driver records it as a normal turn failure.
     """
-    cargo = str(cargo_bin) if cargo_bin is not None else shutil.which("cargo")
+    cargo = str(cargo_bin) if cargo_bin is not None else _resolve_cargo()
     if cargo is None:
-        return False, "cargo not on PATH (rustup install required)"
+        return False, "cargo not found on PATH or in ~/.cargo/bin (rustup install required)"
     result = subprocess.run(
         [cargo, "build", "--quiet"],
         cwd=str(game_dir),
@@ -217,6 +259,18 @@ def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _dump_turn_output(note_id: str, text: str, out_dir: Path) -> None:
+    """Persist a turn's raw codegen output to ``out_dir/<note_id>.md``.
+
+    A breadcrumb for inspecting what the model produced, especially when a
+    turn fails source-header validation or cargo build (the failure branches
+    otherwise discard the text). ``out_dir`` is derived from the state path so
+    it lands under ``build/`` in production and under the tmp dir in tests.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / f"{note_id}.md").write_text(text, encoding="utf-8")
+
+
 def _process_goal(
     note_id: str,
     goal: str,
@@ -228,9 +282,11 @@ def _process_goal(
     baseline_path: Path,
     generate: Any,
     cargo_runner: Any,
+    turn_output_dir: Path,
 ) -> TurnResult:
     """Run one codegen turn end-to-end. Mutates ``state`` in place."""
     summary = generate(goal, llm_mode=llm_mode, model=model, baseline_path=baseline_path)
+    _dump_turn_output(note_id, summary["response_text"], turn_output_dir)
     if not summary["sources_header_ok"]:
         offending = summary["sources_header_offending"] or ["missing_sources_header"]
         system_map.record_pending(state, note_id, offending)
@@ -290,6 +346,7 @@ def run_loop(
 ) -> list[TurnResult]:
     """Drive ``goals`` through the codegen + cargo loop. Persists state once at end."""
     state = system_map.load_state(state_path)
+    turn_output_dir = state_path.parent / "turns"
     results: list[TurnResult] = []
     errors = 0
     for explicit_id, goal in goals:
@@ -307,6 +364,7 @@ def run_loop(
             baseline_path=baseline_path,
             generate=generate,
             cargo_runner=cargo_runner,
+            turn_output_dir=turn_output_dir,
         )
         results.append(result)
         if result.status == "pending":
