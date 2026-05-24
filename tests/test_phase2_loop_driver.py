@@ -316,6 +316,33 @@ class RunLoopTests(unittest.TestCase):
         self.assertEqual(len(results), 2)
         self.assertEqual([r.status for r in results], ["pending", "pending"])
 
+    def test_backend_exception_becomes_pending_not_crash(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            state_path = self._stub_state_path(tmp)
+
+            def _boom(_task: str, **_kw: Any) -> dict[str, Any]:
+                raise RuntimeError("claude exited 1")
+
+            results = loop_driver.run_loop(
+                [
+                    (None, "implement the a unit"),
+                    (None, "implement the b unit"),
+                ],
+                game_dir=game,
+                state_path=state_path,
+                baseline_path=Path(tmp) / "b.md",
+                generate=_boom,
+                cargo_runner=lambda _gd: (True, ""),
+                error_budget=5,
+            )
+
+            self.assertEqual([r.status for r in results], ["pending", "pending"])
+            self.assertIn("codegen_error", results[0].error or "")
+            state = system_map.load_state(state_path)
+            self.assertEqual({p["id"] for p in state["pending"]}, {"a", "b"})
+
     def test_invalid_source_header_records_pending_without_writing(self) -> None:
         with TemporaryDirectory() as tmp:
             game = Path(tmp) / "game"

@@ -406,7 +406,15 @@ def _process_goal(
     agg_name: str | None,
 ) -> TurnResult:
     """Run one codegen turn end-to-end. Mutates ``state`` in place."""
-    summary = generate(goal, llm_mode=llm_mode, model=model, baseline_path=baseline_path)
+    try:
+        summary = generate(goal, llm_mode=llm_mode, model=model, baseline_path=baseline_path)
+    except Exception as exc:
+        # The backend (claude -p / codex / SDK) can fail transiently — e.g.
+        # `claude -p` intermittently exits 1 on a large prompt. A hands-off loop
+        # must survive it: record pending (retried on the next run) and let the
+        # error budget decide when to stop, rather than crashing the whole run.
+        system_map.record_pending(state, note_id, ["codegen_error"])
+        return TurnResult(note_id, goal, status="pending", error=f"codegen_error: {exc}"[:240])
     _dump_turn_output(note_id, summary["response_text"], turn_output_dir)
     if not summary["sources_header_ok"]:
         offending = summary["sources_header_offending"] or ["missing_sources_header"]
