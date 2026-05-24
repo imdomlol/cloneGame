@@ -345,6 +345,30 @@ def load_goals(
     return []
 
 
+def derive_goals_from_vault(
+    vault_dir: Path,
+    kinds: list[str] | None = None,
+) -> list[tuple[str | None, str]]:
+    """Walk ``vault/<kind>/<slug>.md`` into ``(slug, goal)`` pairs.
+
+    The goal is ``"implement the <slug words> <kind>"``; the slug is used as the
+    explicit note_id so the loop's ``already_implemented`` skip works. Sorted by
+    path for deterministic ordering. Skips ``_quarantine`` and other ``_``-prefixed
+    directories. ``kinds`` optionally restricts to a set of kind-directory names
+    (the codegen-worthy ones for a given game, e.g. ``unit``, ``building``).
+    """
+    if not vault_dir.exists():
+        return []
+    goals: list[tuple[str | None, str]] = []
+    for md in sorted(vault_dir.glob("*/*.md")):
+        kind = md.parent.name
+        if kind.startswith("_") or (kinds and kind not in kinds):
+            continue
+        slug = md.stem
+        goals.append((slug, f"implement the {slug.replace('_', ' ')} {kind}"))
+    return goals
+
+
 def already_implemented(state: dict[str, Any], note_id: str) -> bool:
     """True if any ``implemented`` entry already has this note_id."""
     return any(impl.get("id") == note_id for impl in state.get("implemented", []))
@@ -442,17 +466,22 @@ def run_loop(
     generate: Any = codegen.generate,
     cargo_runner: Any = run_cargo_build,
     registration: dict[str, str] | None = None,
+    max_turns: int | None = None,
 ) -> list[TurnResult]:
     """Drive ``goals`` through the codegen + cargo loop. Persists state once at end.
 
     ``registration`` is the per-engine ``module_registration`` block (see
     ``load_module_registration``); when None, aggregator management is skipped.
+    ``max_turns`` caps how many goals are actually attempted this run; goals
+    skipped as already-implemented do not count against it, so ``--limit`` makes
+    real forward progress regardless of how much is already done.
     """
     state = system_map.load_state(state_path)
     turn_output_dir = state_path.parent / "turns"
     agg_name = aggregator_basename(registration)
     results: list[TurnResult] = []
     errors = 0
+    attempted = 0
     for explicit_id, goal in goals:
         note_id = explicit_id or derive_note_id(goal)
         if already_implemented(state, note_id):
@@ -473,10 +502,13 @@ def run_loop(
             agg_name=agg_name,
         )
         results.append(result)
+        attempted += 1
         if result.status == "pending":
             errors += 1
             if errors >= error_budget:
                 break
+        if max_turns is not None and attempted >= max_turns:
+            break
     state = system_map.cap_tokens(state)
     system_map.save_state(state_path, state)
     return results
@@ -519,6 +551,23 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--game-config", type=Path, default=DEFAULT_GAME_CONFIG)
     parser.add_argument("--state-path", type=Path, default=system_map.DEFAULT_PATH)
     parser.add_argument("--baseline", type=Path, default=codegen.DEFAULT_BASELINE_PATH)
+    parser.add_argument(
+        "--from-vault",
+        action="store_true",
+        help="auto-derive goals by walking vault/<kind>/*.md (ignores positional goals)",
+    )
+    parser.add_argument("--vault-dir", type=Path, default=_REPO_ROOT / "vault")
+    parser.add_argument(
+        "--kinds",
+        default=None,
+        help="with --from-vault, comma-separated kind dirs to include (default: all)",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="max goals to actually attempt this run (skipped ones do not count)",
+    )
     return parser.parse_args(argv)
 
 
@@ -527,10 +576,20 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    goals = load_goals(args.goals_file, args.goals)
-    if not goals:
-        print("error: no goals (pass positional args or --goals-file)", file=sys.stderr)
-        return 2
+    if args.from_vault:
+        kinds = [k.strip() for k in args.kinds.split(",") if k.strip()] if args.kinds else None
+        goals = derive_goals_from_vault(args.vault_dir, kinds)
+        if not goals:
+            print(f"error: no vault notes under {args.vault_dir}", file=sys.stderr)
+            return 2
+    else:
+        goals = load_goals(args.goals_file, args.goals)
+        if not goals:
+            print(
+                "error: no goals (pass positional args, --goals-file, or --from-vault)",
+                file=sys.stderr,
+            )
+            return 2
 
     results = run_loop(
         goals,
@@ -541,6 +600,7 @@ def main(argv: list[str] | None = None) -> int:
         model=args.model,
         error_budget=args.error_budget,
         registration=load_module_registration(args.game_config),
+        max_turns=args.limit,
     )
 
     counts: dict[str, int] = {}

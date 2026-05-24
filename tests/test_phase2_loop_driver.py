@@ -533,5 +533,71 @@ class CohesionTests(unittest.TestCase):
             self.assertFalse((game / "src" / "units" / "ranger.rs").exists())
 
 
+class DeriveGoalsFromVaultTests(unittest.TestCase):
+    def _seed_vault(self, tmp: str) -> Path:
+        vault = Path(tmp) / "vault"
+        (vault / "unit").mkdir(parents=True)
+        (vault / "building").mkdir(parents=True)
+        (vault / "_quarantine").mkdir(parents=True)
+        (vault / "unit" / "ranger.md").write_text("x", encoding="utf-8")
+        (vault / "unit" / "the_titan.md").write_text("x", encoding="utf-8")
+        (vault / "building" / "bank.md").write_text("x", encoding="utf-8")
+        (vault / "_quarantine" / "broken.md").write_text("x", encoding="utf-8")
+        return vault
+
+    def test_derives_sorted_pairs_skipping_quarantine(self) -> None:
+        with TemporaryDirectory() as tmp:
+            vault = self._seed_vault(tmp)
+            goals = loop_driver.derive_goals_from_vault(vault)
+        self.assertEqual(
+            goals,
+            [
+                ("bank", "implement the bank building"),
+                ("ranger", "implement the ranger unit"),
+                ("the_titan", "implement the the titan unit"),
+            ],
+        )
+
+    def test_kinds_filter(self) -> None:
+        with TemporaryDirectory() as tmp:
+            vault = self._seed_vault(tmp)
+            goals = loop_driver.derive_goals_from_vault(vault, kinds=["unit"])
+        self.assertEqual([g[0] for g in goals], ["ranger", "the_titan"])
+
+    def test_missing_vault_returns_empty(self) -> None:
+        self.assertEqual(loop_driver.derive_goals_from_vault(Path("/no/vault")), [])
+
+
+class MaxTurnsTests(unittest.TestCase):
+    def test_limit_counts_only_attempted_not_skipped(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            state_path = Path(tmp) / "system_map.yaml"
+            preexisting = system_map.empty_state()
+            preexisting["implemented"].append(
+                {"id": "soldier", "file": "", "hash": "", "verified_against": ""}
+            )
+            system_map.save_state(state_path, preexisting)
+
+            results = loop_driver.run_loop(
+                [
+                    ("soldier", "implement the soldier unit"),  # already done -> skipped
+                    ("ranger", "implement the ranger unit"),
+                    ("sniper", "implement the sniper unit"),
+                ],
+                game_dir=game,
+                state_path=state_path,
+                baseline_path=Path(tmp) / "b.md",
+                generate=_fake_generate_factory(_VALID_TURN_OUTPUT),
+                cargo_runner=lambda _gd: (True, ""),
+                max_turns=1,
+            )
+
+        statuses = [(r.note_id, r.status) for r in results]
+        # soldier skipped (free), ranger is the one attempted turn, sniper never reached.
+        self.assertEqual(statuses, [("soldier", "skipped"), ("ranger", "implemented")])
+
+
 if __name__ == "__main__":
     unittest.main()
