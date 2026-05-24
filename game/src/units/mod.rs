@@ -6,3 +6,4 @@ use bevy::prelude::Component;
 pub struct Infected;
 
 pub mod soldier;
+pub mod ranger;
