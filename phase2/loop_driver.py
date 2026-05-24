@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -57,6 +58,7 @@ import codegen  # noqa: E402
 import system_map  # noqa: E402
 
 DEFAULT_GAME_DIR = _REPO_ROOT / "game"
+DEFAULT_GAME_CONFIG = _REPO_ROOT / "game-config.json"
 DEFAULT_ERROR_BUDGET = 3
 
 _FILE_BLOCK_RE = re.compile(
@@ -98,6 +100,36 @@ def _normalize_rel_path(raw: str, crate_dir_name: str) -> str:
     if rel.startswith(prefix):
         rel = rel[len(prefix) :]
     return rel
+
+
+def load_module_registration(game_config_path: Path) -> dict[str, str] | None:
+    """Read ``chosen_engine.module_registration`` from game-config.json.
+
+    This block is per-engine data: ``{"aggregator": "{dir}/mod.rs",
+    "declaration": "pub mod {stem};"}`` for Bevy/Rust. The driver stays engine
+    neutral — it renders these templates rather than hard-coding any language
+    syntax. Returns None when the file or block is absent (then module
+    registration is skipped entirely, the opt-in path for engines that have no
+    aggregator-file concept).
+    """
+    if not game_config_path.exists():
+        return None
+    config = json.loads(game_config_path.read_text(encoding="utf-8"))
+    reg = (config.get("chosen_engine") or {}).get("module_registration")
+    if isinstance(reg, dict) and reg.get("aggregator") and reg.get("declaration"):
+        return reg
+    return None
+
+
+def aggregator_basename(registration: dict[str, str] | None) -> str | None:
+    """Derive the aggregator filename (e.g. ``mod.rs``) from the template.
+
+    Used to skip LLM-emitted aggregator files so the driver owns them instead.
+    """
+    if not registration:
+        return None
+    rendered = registration["aggregator"].format(dir="_", stem="_")
+    return Path(rendered).name
 
 
 def derive_note_id(goal: str) -> str:
@@ -142,18 +174,21 @@ def merge_into_game(
     parsed: list[tuple[str, str]],
     game_dir: Path,
     skiplist: frozenset[str] = _OVERWRITE_SKIPLIST,
+    aggregator_name: str | None = None,
 ) -> tuple[list[WrittenFile], list[str]]:
-    """Write ``parsed`` files into ``game_dir`` with backups for revert.
+    """Write ``parsed`` leaf files into ``game_dir`` with backups for revert.
 
-    Returns ``(written, skipped)``: ``written`` is the trail of files
-    touched on disk (for ``revert_merge``), ``skipped`` lists files left
-    untouched because they appear in ``skiplist``.
+    Returns ``(written, skipped)``: ``written`` is the trail of files touched
+    on disk (for ``revert_merge``), ``skipped`` lists files left untouched.
+    Skips files in ``skiplist`` (dep pins) and any file whose basename matches
+    ``aggregator_name`` (e.g. ``mod.rs``) — those are driver-owned and edited by
+    ``register_modules`` so the LLM cannot drop shared declarations in them.
     """
     written: list[WrittenFile] = []
     skipped: list[str] = []
     for raw_rel, content in parsed:
         rel = _normalize_rel_path(raw_rel, game_dir.name)
-        if rel in skiplist:
+        if rel in skiplist or (aggregator_name and Path(rel).name == aggregator_name):
             skipped.append(rel)
             continue
         target = game_dir / rel
@@ -163,6 +198,66 @@ def merge_into_game(
         target.write_text(content, encoding="utf-8")
         written.append(WrittenFile(target, existed, prior))
     return written, skipped
+
+
+def _ensure_declaration(aggregator_path: Path, declaration: str) -> None:
+    """Append ``declaration`` as its own line to the aggregator if not present.
+
+    Idempotent and byte-preserving: reads the existing bytes, matches the file's
+    newline style, and appends only when the exact line is absent. Editing
+    rather than regenerating is the whole point — shared declarations already in
+    the aggregator (marker types, sibling modules) are left untouched.
+    """
+    decl_bytes = declaration.encode("utf-8")
+    if aggregator_path.exists():
+        raw = aggregator_path.read_bytes()
+        newline = b"\r\n" if b"\r\n" in raw else b"\n"
+        if decl_bytes in raw.split(newline):
+            return
+        if raw and not raw.endswith(newline):
+            raw += newline
+        aggregator_path.write_bytes(raw + decl_bytes + newline)
+    else:
+        aggregator_path.parent.mkdir(parents=True, exist_ok=True)
+        aggregator_path.write_bytes(decl_bytes + b"\n")
+
+
+def register_modules(
+    leaf_files: list[Path],
+    game_dir: Path,
+    registration: dict[str, str] | None,
+) -> list[WrittenFile]:
+    """Declare each leaf module in its aggregator (e.g. ``pub mod ranger;``).
+
+    Driver-owned so the LLM never regenerates an aggregator and drops the
+    shared declarations a sibling depends on. The aggregator path and
+    declaration come from per-engine ``module_registration`` data, so this
+    holds no language literals. Returns a revert trail for every aggregator
+    touched (backed up once, before its first edit). No-op when ``registration``
+    is None.
+
+    Known limit: a leaf directly under the crate root (e.g. ``src/sim.rs``)
+    renders an aggregator the crate root may not use; that case fails loud via
+    cargo build rather than corrupting the tree. Unit-by-unit codegen puts
+    leaves in subdirectories, which this handles correctly.
+    """
+    if not registration:
+        return []
+    agg_tmpl = registration["aggregator"]
+    decl_tmpl = registration["declaration"]
+    touched: dict[Path, WrittenFile] = {}
+    for leaf in leaf_files:
+        rel = leaf.relative_to(game_dir)
+        fields = {"dir": rel.parent.as_posix(), "stem": leaf.stem}
+        agg_path = game_dir / agg_tmpl.format(**fields)
+        if agg_path == leaf:
+            continue
+        if agg_path not in touched:
+            existed = agg_path.exists()
+            prior = agg_path.read_bytes() if existed else None
+            touched[agg_path] = WrittenFile(agg_path, existed, prior)
+        _ensure_declaration(agg_path, decl_tmpl.format(**fields))
+    return list(touched.values())
 
 
 def revert_merge(written: list[WrittenFile]) -> None:
@@ -283,6 +378,8 @@ def _process_goal(
     generate: Any,
     cargo_runner: Any,
     turn_output_dir: Path,
+    registration: dict[str, str] | None,
+    agg_name: str | None,
 ) -> TurnResult:
     """Run one codegen turn end-to-end. Mutates ``state`` in place."""
     summary = generate(goal, llm_mode=llm_mode, model=model, baseline_path=baseline_path)
@@ -297,10 +394,11 @@ def _process_goal(
         system_map.record_pending(state, note_id, ["no_file_blocks_in_output"])
         return TurnResult(note_id, goal, status="pending", error="no_file_blocks")
 
-    written, skipped = merge_into_game(parsed, game_dir)
+    written, skipped = merge_into_game(parsed, game_dir, aggregator_name=agg_name)
+    registered = register_modules([w.path for w in written], game_dir, registration)
     ok, build_output = cargo_runner(game_dir)
     if not ok:
-        revert_merge(written)
+        revert_merge(written + registered)
         system_map.record_pending(state, note_id, ["cargo_build_failed"])
         return TurnResult(
             note_id,
@@ -343,10 +441,16 @@ def run_loop(
     error_budget: int = DEFAULT_ERROR_BUDGET,
     generate: Any = codegen.generate,
     cargo_runner: Any = run_cargo_build,
+    registration: dict[str, str] | None = None,
 ) -> list[TurnResult]:
-    """Drive ``goals`` through the codegen + cargo loop. Persists state once at end."""
+    """Drive ``goals`` through the codegen + cargo loop. Persists state once at end.
+
+    ``registration`` is the per-engine ``module_registration`` block (see
+    ``load_module_registration``); when None, aggregator management is skipped.
+    """
     state = system_map.load_state(state_path)
     turn_output_dir = state_path.parent / "turns"
+    agg_name = aggregator_basename(registration)
     results: list[TurnResult] = []
     errors = 0
     for explicit_id, goal in goals:
@@ -365,6 +469,8 @@ def run_loop(
             generate=generate,
             cargo_runner=cargo_runner,
             turn_output_dir=turn_output_dir,
+            registration=registration,
+            agg_name=agg_name,
         )
         results.append(result)
         if result.status == "pending":
@@ -410,6 +516,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--model", default=None)
     parser.add_argument("--game-dir", type=Path, default=DEFAULT_GAME_DIR)
+    parser.add_argument("--game-config", type=Path, default=DEFAULT_GAME_CONFIG)
     parser.add_argument("--state-path", type=Path, default=system_map.DEFAULT_PATH)
     parser.add_argument("--baseline", type=Path, default=codegen.DEFAULT_BASELINE_PATH)
     return parser.parse_args(argv)
@@ -433,6 +540,7 @@ def main(argv: list[str] | None = None) -> int:
         llm_mode=args.llm_mode,
         model=args.model,
         error_budget=args.error_budget,
+        registration=load_module_registration(args.game_config),
     )
 
     counts: dict[str, int] = {}

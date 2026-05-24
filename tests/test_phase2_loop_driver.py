@@ -373,5 +373,165 @@ class RunCargoBuildTests(unittest.TestCase):
         self.assertEqual(captured["cmd"][0], str(custom))
 
 
+_BEVY_REGISTRATION = {"aggregator": "{dir}/mod.rs", "declaration": "pub mod {stem};"}
+
+_LOSSY_MULTI_FILE = textwrap.dedent(
+    """
+    === FILE: src/units/ranger.rs ===
+    // Sources: vault/unit/ranger.md
+    pub struct Ranger;
+    === END FILE ===
+
+    === FILE: src/units/mod.rs ===
+    pub mod ranger;
+    === END FILE ===
+    """
+).strip()
+
+
+class LoadModuleRegistrationTests(unittest.TestCase):
+    def test_reads_block_from_config(self) -> None:
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text(
+                '{"chosen_engine": {"module_registration": '
+                '{"aggregator": "{dir}/mod.rs", "declaration": "pub mod {stem};"}}}',
+                encoding="utf-8",
+            )
+            reg = loop_driver.load_module_registration(cfg)
+        self.assertEqual(reg, _BEVY_REGISTRATION)
+
+    def test_absent_file_or_block_returns_none(self) -> None:
+        self.assertIsNone(loop_driver.load_module_registration(Path("/no/such/config.json")))
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text('{"chosen_engine": {"name": "Godot"}}', encoding="utf-8")
+            self.assertIsNone(loop_driver.load_module_registration(cfg))
+
+
+class AggregatorBasenameTests(unittest.TestCase):
+    def test_derives_filename(self) -> None:
+        self.assertEqual(loop_driver.aggregator_basename(_BEVY_REGISTRATION), "mod.rs")
+
+    def test_none_registration(self) -> None:
+        self.assertIsNone(loop_driver.aggregator_basename(None))
+
+
+class RegisterModulesTests(unittest.TestCase):
+    def _seed_units(self, game: Path) -> Path:
+        (game / "src" / "units").mkdir(parents=True)
+        mod = game / "src" / "units" / "mod.rs"
+        mod.write_text(
+            "#[derive(Component)]\npub struct Infected;\n\npub mod soldier;\n",
+            encoding="utf-8",
+        )
+        ranger = game / "src" / "units" / "ranger.rs"
+        ranger.write_text("pub struct Ranger;\n", encoding="utf-8")
+        return mod
+
+    def test_appends_declaration_preserving_shared_content(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            mod = self._seed_units(game)
+            trail = loop_driver.register_modules(
+                [game / "src" / "units" / "ranger.rs"], game, _BEVY_REGISTRATION
+            )
+            txt = mod.read_text(encoding="utf-8")
+            self.assertIn("pub struct Infected;", txt)
+            self.assertIn("pub mod soldier;", txt)
+            self.assertIn("pub mod ranger;", txt)
+            self.assertEqual(len(trail), 1)
+            self.assertTrue(trail[0].existed_before)
+
+    def test_idempotent(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            mod = self._seed_units(game)
+            leaf = [game / "src" / "units" / "ranger.rs"]
+            loop_driver.register_modules(leaf, game, _BEVY_REGISTRATION)
+            loop_driver.register_modules(leaf, game, _BEVY_REGISTRATION)
+            self.assertEqual(mod.read_text(encoding="utf-8").count("pub mod ranger;"), 1)
+
+    def test_revert_restores_aggregator(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            mod = self._seed_units(game)
+            original = mod.read_bytes()
+            trail = loop_driver.register_modules(
+                [game / "src" / "units" / "ranger.rs"], game, _BEVY_REGISTRATION
+            )
+            self.assertNotEqual(mod.read_bytes(), original)
+            loop_driver.revert_merge(trail)
+            self.assertEqual(mod.read_bytes(), original)
+
+    def test_none_registration_is_noop(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            self._seed_units(game)
+            trail = loop_driver.register_modules([game / "src" / "units" / "ranger.rs"], game, None)
+        self.assertEqual(trail, [])
+
+
+class MergeSkipsAggregatorTests(unittest.TestCase):
+    def test_emitted_aggregator_is_skipped(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            parsed = [
+                ("src/units/ranger.rs", "pub struct Ranger;"),
+                ("src/units/mod.rs", "pub mod ranger;"),  # driver-owned, must skip
+            ]
+            written, skipped = loop_driver.merge_into_game(parsed, game, aggregator_name="mod.rs")
+        written_rels = [str(w.path.relative_to(game)).replace("\\", "/") for w in written]
+        self.assertEqual(written_rels, ["src/units/ranger.rs"])
+        self.assertIn("src/units/mod.rs", skipped)
+
+
+class CohesionTests(unittest.TestCase):
+    def _seed(self, tmp: str) -> tuple[Path, Path, Path]:
+        game = Path(tmp) / "game"
+        (game / "src" / "units").mkdir(parents=True)
+        mod = game / "src" / "units" / "mod.rs"
+        mod.write_text("pub struct Infected;\n\npub mod soldier;\n", encoding="utf-8")
+        return game, mod, Path(tmp) / "system_map.yaml"
+
+    def test_aggregator_not_clobbered_shared_decl_preserved(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game, mod, state_path = self._seed(tmp)
+            results = loop_driver.run_loop(
+                [(None, "implement the ranger unit")],
+                game_dir=game,
+                state_path=state_path,
+                baseline_path=Path(tmp) / "b.md",
+                generate=_fake_generate_factory(_LOSSY_MULTI_FILE),
+                cargo_runner=lambda _gd: (True, ""),
+                registration=_BEVY_REGISTRATION,
+            )
+            txt = mod.read_text(encoding="utf-8")
+            self.assertEqual([r.status for r in results], ["implemented"])
+            self.assertIn("pub struct Infected;", txt)  # shared marker survived
+            self.assertIn("pub mod soldier;", txt)  # sibling survived
+            self.assertIn("pub mod ranger;", txt)  # new module registered
+            self.assertEqual(results[0].files_written, ["src/units/ranger.rs"])
+            self.assertIn("src/units/mod.rs", results[0].files_skipped)
+
+    def test_cargo_failure_restores_aggregator(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game, mod, state_path = self._seed(tmp)
+            original = mod.read_bytes()
+            results = loop_driver.run_loop(
+                [(None, "implement the ranger unit")],
+                game_dir=game,
+                state_path=state_path,
+                baseline_path=Path(tmp) / "b.md",
+                generate=_fake_generate_factory(_LOSSY_MULTI_FILE),
+                cargo_runner=lambda _gd: (False, "error"),
+                registration=_BEVY_REGISTRATION,
+            )
+            self.assertEqual([r.status for r in results], ["pending"])
+            self.assertEqual(mod.read_bytes(), original)  # aggregator restored
+            self.assertFalse((game / "src" / "units" / "ranger.rs").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

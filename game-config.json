@@ -759,7 +759,11 @@
     "selected_on": "2026-05-19",
     "networking_model": "deterministic lockstep",
     "architecture": "fixed-tick sim (20-30Hz) decoupled from interpolated render tick; only inputs cross the wire",
-    "notes": "Determinism rules are binding on all Phase 2 sim-path code. See CLAUDE.md > 'Target engine' for the full rule set."
+    "notes": "Determinism rules are binding on all Phase 2 sim-path code. See CLAUDE.md > 'Target engine' for the full rule set.",
+    "module_registration": {
+      "aggregator": "{dir}/mod.rs",
+      "declaration": "pub mod {stem};"
+    }
   },
   "dropped_categories": [
     {
