@@ -38,11 +38,12 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from frontmatter import frontmatter  # noqa: E402
+from model_config import default_embedding_model  # noqa: E402
 
 DEFAULT_REPOMIX = _REPO_ROOT / "build" / "repomix-output.xml"
 DEFAULT_CHROMA_DIR = _REPO_ROOT / "chroma"
 DEFAULT_GRAPH_PATH = _REPO_ROOT / "build" / "graph.json"
-DEFAULT_EMBED_MODEL = "BAAI/bge-small-en-v1.5"
+DEFAULT_EMBED_MODEL = default_embedding_model()
 
 _FILE_BLOCK_RE = re.compile(
     r'<file path="(?P<path>[^"]+)">\n(?P<body>.*?)\n</file>',

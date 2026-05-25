@@ -76,8 +76,14 @@ class DefaultModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             default_model("hypothetical")
 
-    def test_default_mode_is_claude_cli(self) -> None:
-        self.assertEqual(DEFAULT_LLM_MODE, LLM_MODE_CLAUDE)
+    def test_default_mode_tracks_pipeline_config(self) -> None:
+        # The codegen default is sourced from pipeline.config.toml (a CLI mode,
+        # no API key). It must be one of the CLI backends, never sdk (which would
+        # require ANTHROPIC_API_KEY).
+        from model_config import default_llm_mode
+
+        self.assertEqual(DEFAULT_LLM_MODE, default_llm_mode("phase2_codegen"))
+        self.assertIn(DEFAULT_LLM_MODE, (LLM_MODE_CLAUDE, LLM_MODE_CODEX))
 
 
 class ExtractAllowedPathsTests(unittest.TestCase):

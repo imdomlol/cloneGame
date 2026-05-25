@@ -48,19 +48,15 @@ if str(_REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "scripts"))
 
 from compile_cache import run_llm  # noqa: E402
+from model_config import default_llm_mode, model_defaults  # noqa: E402
 from retrieval import count_tokens, retrieve  # noqa: E402
 
 LLM_MODE_CLAUDE = "claude"
 LLM_MODE_CODEX = "codex"
 LLM_MODE_SDK = "sdk"
 LLM_MODES = (LLM_MODE_CLAUDE, LLM_MODE_CODEX, LLM_MODE_SDK)
-DEFAULT_LLM_MODE = LLM_MODE_CLAUDE
-
-_MODEL_DEFAULTS = {
-    LLM_MODE_CLAUDE: "claude-sonnet-4-6",
-    LLM_MODE_CODEX: "gpt-5.4-mini",
-    LLM_MODE_SDK: "claude-sonnet-4-6",
-}
+DEFAULT_LLM_MODE = default_llm_mode("phase2_codegen")
+_MODEL_DEFAULTS = model_defaults("phase2_codegen")
 
 DEFAULT_MAX_TOKENS = 4096
 DEFAULT_BASELINE_PATH = _REPO_ROOT / "build" / "engine_baseline.md"

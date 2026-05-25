@@ -24,6 +24,9 @@ def _read_json(path: str) -> dict[str, Any]:
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
+    _add_scripts_to_sys_path()
+    from model_config import default_llm_mode
+
     parser = argparse.ArgumentParser(description="Phase 0: Taxonomy discovery")
     parser.add_argument(
         "--wiki-url",
@@ -45,16 +48,13 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--model",
         default=None,
-        help=(
-            "Model for taxonomy analysis. Claude mode defaults to "
-            "claude-haiku-4-5-20251001; Codex mode uses Codex config unless set."
-        ),
+        help=("Model for taxonomy analysis. Defaults come from pipeline.config.toml."),
     )
     parser.add_argument(
         "--llm-mode",
         choices=("claude", "codex"),
-        default="claude",
-        help="LLM CLI to use for taxonomy analysis (default: claude)",
+        default=default_llm_mode("phase0"),
+        help="LLM CLI to use for taxonomy analysis (default: pipeline.config.toml)",
     )
     return parser.parse_args(argv)
 

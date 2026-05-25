@@ -7,13 +7,19 @@ import sys
 import tempfile
 from typing import Any
 
+try:
+    from .model_config import default_llm_mode, default_model
+except ImportError:  # pragma: no cover - direct script execution path
+    from model_config import default_llm_mode, default_model
+
 
 def _snake_case(text: str) -> str:
     text = re.sub(r"[^a-z0-9]+", "_", text.strip().lower())
     return re.sub(r"_+", "_", text).strip("_") or "kind"
 
 
-DEFAULT_MODE, DEFAULT_CLAUDE_MODEL = "claude", "claude-haiku-4-5-20251001"
+DEFAULT_MODE = default_llm_mode("phase0")
+DEFAULT_CLAUDE_MODEL = default_model("phase0", "claude")
 SUPPORTED_MODES = {"claude", "codex"}
 MAX_SCHEMA_SAMPLES_PER_CATEGORY, MAX_SCHEMA_SAMPLE_CHARS = 3, 1600
 MIN_ENGINE_CANDIDATES, MAX_ENGINE_CANDIDATES = 2, 4
@@ -89,10 +95,11 @@ def _codex_call(prompt: str, model: str | None) -> str:
 
 def _llm_call(prompt: str, mode: str = DEFAULT_MODE, model: str | None = None) -> str:
     normalized_mode = mode.strip().lower()
+    resolved_model = model or default_model("phase0", normalized_mode)
     if normalized_mode == "claude":
-        return _claude_call(prompt, model)
+        return _claude_call(prompt, resolved_model)
     if normalized_mode == "codex":
-        return _codex_call(prompt, model)
+        return _codex_call(prompt, resolved_model)
     expected = ", ".join(sorted(SUPPORTED_MODES))
     raise ValueError(f"Unsupported LLM mode: {mode!r}. Expected one of: {expected}.")
 

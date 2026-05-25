@@ -44,6 +44,7 @@ from frontmatter import (  # noqa: E402
     repair_frontmatter_delimiter,
     replace_frontmatter_type,
 )
+from model_config import resolve_llm  # noqa: E402
 from validation import canonical_kind, raw_kind_schema, validation_errors  # noqa: E402
 from vault_index import (  # noqa: E402
     completed_source_for_kind,
@@ -297,6 +298,11 @@ def build_context(
     compile_cfg = config.get("compile", {})
     ingest_cfg = config.get("ingest", {})
     prompt_path = root / str(compile_cfg.get("system_prompt_path"))
+    mode, model = resolve_llm(
+        "phase1",
+        mode=compile_cfg.get("llm_mode"),
+        model=compile_cfg.get("model"),
+    )
     return {
         "root": root,
         "api": config["wiki"]["api_endpoint"],
@@ -304,8 +310,8 @@ def build_context(
         "ua": ingest_cfg.get("user_agent", "cloneGame-phase1/0.1"),
         "retries": int(ingest_cfg.get("retry_count", 3)),
         "delay_ms": int(ingest_cfg.get("request_delay_ms", 250)),
-        "mode": compile_cfg.get("llm_mode", "claude"),
-        "model": compile_cfg.get("model", "default"),
+        "mode": mode,
+        "model": model,
         "system_prompt": prompt_path.read_text(encoding="utf-8"),
         "cache_dir": root / config.get("cache", {}).get("dir", ".phase1_cache"),
         "force": False,

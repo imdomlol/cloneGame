@@ -18,9 +18,7 @@ user_agent = "cloneGame-phase1/0.1 (research; contact: mutaphoenix@gmail.com)"
 [compile]
 # Path to the system prompt file used for wikitext -> vault markdown compilation.
 system_prompt_path = "prompts/wiki-compile-system.md"
-# Headless LLM CLI mode. claude -p is the default; codex is the alternate.
-llm_mode = "codex"
-model = "gpt-5.4-mini"
+# Headless LLM mode/model defaults now live in pipeline.config.toml.
 
 [cache]
 # Content-hash cache directory. Each entry stores the source revision hash so

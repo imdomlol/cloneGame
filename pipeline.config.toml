@@ -1,0 +1,32 @@
+# Global AI model defaults for the wiki-to-code pipeline.
+#
+# CLI flags still override these values for one-off runs. Edit this file when
+# you want to change the default model used by a stage.
+
+[phase0]
+llm_mode = "codex"
+
+[phase0.models]
+claude = "claude-haiku-4-5-20251001"
+codex = "gpt-5-mini"
+
+[phase1]
+llm_mode = "codex"
+
+[phase1.models]
+claude = "claude-haiku-4-5-20251001"
+codex = "gpt-5-mini"
+
+[phase2_codegen]
+llm_mode = "codex"
+
+[phase2_codegen.models]
+claude = "claude-sonnet-4-6"
+codex = "gpt-5.2-codex"
+sdk = "claude-sonnet-4-6"
+
+[phase2_retrieval]
+embedding_model = "BAAI/bge-small-en-v1.5"
+
+[phase2_system_map]
+compactor_model = "gpt-5-nano"

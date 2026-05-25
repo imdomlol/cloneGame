@@ -27,7 +27,10 @@ from typing import Any
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT / "phase2") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "phase2"))
+if str(_REPO_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "scripts"))
 
+from model_config import default_compactor_model  # noqa: E402
 from retrieval import count_tokens  # noqa: E402
 
 DEFAULT_PATH = _REPO_ROOT / "build" / "system_map.yaml"
@@ -156,7 +159,7 @@ def cap_tokens(
 def summarise_with_haiku(
     state: dict[str, Any],
     client: Any,
-    model: str = "claude-haiku-4-5-20251001",
+    model: str | None = None,
     max_tokens: int = 800,
 ) -> dict[str, Any]:
     """Optional LLM compactor used when deterministic ``cap_tokens`` is too lossy.
@@ -177,7 +180,7 @@ def summarise_with_haiku(
         f"{render_yaml(state)}"
     )
     response = client.messages.create(
-        model=model,
+        model=model or default_compactor_model(),
         max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
     )
