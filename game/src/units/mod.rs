@@ -7,3 +7,4 @@ pub struct Infected;
 
 pub mod soldier;
 pub mod ranger;
+pub mod caelus;
