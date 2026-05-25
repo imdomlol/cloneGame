@@ -42,8 +42,14 @@ def run_llm(prompt: str, mode: str, model: str) -> str:
         # pure text transform must not have tools, so the model just emits text.
         cmd = ["claude", "-p", "--model", model, "--tools", ""]
     elif mode == "codex":
+        # --sandbox read-only is critical: `codex exec` is an agent that defaults
+        # to workspace-write and will edit files in the repo directly during
+        # generation. That bypasses the loop driver's controlled merge + cargo
+        # gate + revert (it once wrote a unit's mod.rs + leaf straight to disk,
+        # causing a duplicate `pub mod` and an unrevertable dirty tree). Read-only
+        # forces codex to emit the answer as text only; the caller owns all writes.
         codex_cmd = "codex.cmd" if os.name == "nt" else "codex"
-        cmd = [codex_cmd, "exec", "--model", model, "-"]
+        cmd = [codex_cmd, "exec", "--sandbox", "read-only", "--model", model, "-"]
     else:
         raise ValueError(f"unsupported [compile] llm_mode: {mode}")
     proc = subprocess.Popen(
