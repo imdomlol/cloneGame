@@ -1,5 +1,37 @@
 use bevy::prelude::*;
 use fixed::types::I32F32;
+use rand_chacha::ChaCha8Rng;
+use rand_core::SeedableRng;
+
+/// SplitMix64 finalizer: cheap, portable 64-bit avalanche mix.
+const fn mix64(mut z: u64) -> u64 {
+    z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+/// Canonical seeded RNG for the deterministic sim path.
+///
+/// Every random draw in `FixedUpdate` sim code MUST obtain its generator from
+/// here — never `thread_rng()` or an ad-hoc `seed_from_u64`. The seed is a
+/// deterministic mix of three values every client agrees on:
+///
+/// - `game_seed`: shared at match start.
+/// - `tick`: the lockstep-synchronized tick number.
+/// - `salt`: a stable per-call-site constant (and, for per-entity draws, a
+///   replicated game entity id folded in). The salt decorrelates streams so
+///   two draw sites on the same tick do not produce identical sequences;
+///   without it, every system would roll the same numbers each tick.
+///
+/// Because the inputs and the mix are identical across clients, the stream is
+/// bit-identical everywhere — the requirement for lockstep. Do NOT salt with
+/// Bevy's raw `Entity` bits (index/generation are an engine allocation detail
+/// that can differ across clients); use a game-assigned stable id.
+pub fn tick_rng(game_seed: u64, tick: u64, salt: u64) -> ChaCha8Rng {
+    let seed = mix64(game_seed ^ mix64(tick ^ mix64(salt)));
+    ChaCha8Rng::seed_from_u64(seed)
+}
 
 /// Current simulation tick counter. Incremented each FixedUpdate step.
 #[derive(Resource, Default, Clone, Copy)]
