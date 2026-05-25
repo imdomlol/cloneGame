@@ -51,6 +51,41 @@ impl Default for SimHz {
     }
 }
 
+/// Running checksum of canonical sim state, for lockstep desync detection.
+///
+/// Each tick, every unit's `*_checksum` system folds its determinism-relevant
+/// component bits in via [`SimChecksumState::accumulate`]. Compare this hash
+/// across clients; the first divergence is a desync. `accumulate` is
+/// commutative, so it does not matter which unit's checksum system runs first —
+/// the result is identical across clients as long as the per-entity state is.
+///
+/// v1 is a running cumulative hash. Per-tick isolation (reset + per-tick
+/// history) and the network broadcast/compare land with the netcode; units must
+/// not implement any of that themselves.
+#[derive(Resource, Default, Clone, Copy)]
+pub struct SimChecksumState {
+    pub hash: u64,
+}
+
+impl SimChecksumState {
+    /// Fold one value into the checksum. Commutative (`wrapping_add` of a mixed
+    /// value): system and entity iteration order do not affect the result, so a
+    /// non-deterministic Bevy schedule order cannot cause a false desync.
+    pub fn accumulate(&mut self, value: u64) {
+        self.hash = self.hash.wrapping_add(mix64(value));
+    }
+}
+
+/// Registers the shared sim-checksum resource. Add once at app construction;
+/// unit plugins then fold their state into [`SimChecksumState`] each tick.
+pub struct SimChecksumPlugin;
+
+impl Plugin for SimChecksumPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SimChecksumState>();
+    }
+}
+
 /// World-space position in the fixed-tick sim. Fixed-point for cross-client determinism.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SimPosition {

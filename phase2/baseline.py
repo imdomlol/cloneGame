@@ -36,7 +36,12 @@ DEFAULT_TEMPLATE = _REPO_ROOT / "prompts" / "engine_baseline.template.md"
 DEFAULT_UNIVERSAL_SCHEMA = _REPO_ROOT / "schemas" / "_universal.schema.json"
 DEFAULT_OUTPUT = _REPO_ROOT / "build" / "engine_baseline.md"
 DETERMINISM_DIR = _REPO_ROOT / "prompts" / "engine_determinism"
-TOKEN_CAP = 2500
+# Sticky-cache budget for the engine baseline. Bumped 2500 -> 2800 (2026-05-25)
+# as the determinism rules grew to cover lockstep RNG + the desync checksum.
+# If this keeps climbing, the principled fix is to drop the auto-generated
+# per-kind frontmatter section (retrieval already supplies the specific unit's
+# frontmatter per turn) rather than raising the cap again.
+TOKEN_CAP = 2800
 
 _PLACEHOLDER_RE = re.compile(r"\{\{(?P<key>[a-z_]+)\}\}")
 

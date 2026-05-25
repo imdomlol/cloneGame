@@ -132,7 +132,9 @@ class CapAssertionTests(unittest.TestCase):
             assert_under_cap("word " * 50, cap_tokens=10)
 
     def test_default_cap_matches_documented_budget(self) -> None:
-        self.assertEqual(TOKEN_CAP, 2500)
+        # Bumped 2500 -> 2800 (2026-05-25) for the lockstep RNG + desync-checksum
+        # determinism rules. See baseline.py TOKEN_CAP comment.
+        self.assertEqual(TOKEN_CAP, 2800)
 
 
 if __name__ == "__main__":
