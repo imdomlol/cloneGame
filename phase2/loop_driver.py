@@ -46,6 +46,7 @@ import re
 import shutil
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -132,6 +133,19 @@ def aggregator_basename(registration: dict[str, str] | None) -> str | None:
     return Path(rendered).name
 
 
+def crate_root_basename(registration: dict[str, str] | None) -> str | None:
+    """Derive the crate-root filename (e.g. ``lib.rs``) from the registration.
+
+    The crate root is a driver-owned aggregator just like ``mod.rs`` — the LLM
+    must never emit it (it would clobber the hand-built ``lib.rs`` that wires
+    ``sim``, the checksum plugin, and every kind module). Returns None when the
+    engine config declares no ``crate_root`` (the opt-in field).
+    """
+    if not registration or not registration.get("crate_root"):
+        return None
+    return Path(registration["crate_root"]).name
+
+
 def derive_note_id(goal: str) -> str:
     """Pull a vault-style slug out of an ``implement the X ...`` goal.
 
@@ -175,20 +189,23 @@ def merge_into_game(
     game_dir: Path,
     skiplist: frozenset[str] = _OVERWRITE_SKIPLIST,
     aggregator_name: str | None = None,
+    crate_root_name: str | None = None,
 ) -> tuple[list[WrittenFile], list[str]]:
     """Write ``parsed`` leaf files into ``game_dir`` with backups for revert.
 
     Returns ``(written, skipped)``: ``written`` is the trail of files touched
     on disk (for ``revert_merge``), ``skipped`` lists files left untouched.
     Skips files in ``skiplist`` (dep pins) and any file whose basename matches
-    ``aggregator_name`` (e.g. ``mod.rs``) — those are driver-owned and edited by
-    ``register_modules`` so the LLM cannot drop shared declarations in them.
+    ``aggregator_name`` (e.g. ``mod.rs``) or ``crate_root_name`` (e.g. ``lib.rs``)
+    — those are driver-owned and edited by ``register_modules`` so the LLM
+    cannot drop shared declarations or clobber the crate root.
     """
+    owned = {n for n in (aggregator_name, crate_root_name) if n}
     written: list[WrittenFile] = []
     skipped: list[str] = []
     for raw_rel, content in parsed:
         rel = _normalize_rel_path(raw_rel, game_dir.name)
-        if rel in skiplist or (aggregator_name and Path(rel).name == aggregator_name):
+        if rel in skiplist or Path(rel).name in owned:
             skipped.append(rel)
             continue
         target = game_dir / rel
@@ -222,41 +239,72 @@ def _ensure_declaration(aggregator_path: Path, declaration: str) -> None:
         aggregator_path.write_bytes(decl_bytes + b"\n")
 
 
+def _registration_nodes(
+    leaf: Path, game_dir: Path, src_root: Path | None
+) -> list[tuple[Path, str]]:
+    """Yield ``(parent_dir, module_name)`` pairs to declare for one leaf.
+
+    The first pair declares the leaf file in its own directory. When a
+    ``src_root`` (the crate-root file's directory) is known, the chain
+    continues upward: each intermediate directory is declared in its parent,
+    stopping once a direct child of ``src_root`` has been recorded. Without a
+    ``src_root`` only the leaf's own directory is wired (the historical
+    behaviour, kept for engines that declare no ``crate_root``).
+    """
+    nodes: list[tuple[Path, str]] = [(leaf.parent, leaf.stem)]
+    if src_root is None:
+        return nodes
+    current = leaf.parent
+    while current != src_root and src_root in current.parents:
+        nodes.append((current.parent, current.name))
+        current = current.parent
+    return nodes
+
+
 def register_modules(
     leaf_files: list[Path],
     game_dir: Path,
     registration: dict[str, str] | None,
 ) -> list[WrittenFile]:
-    """Declare each leaf module in its aggregator (e.g. ``pub mod ranger;``).
+    """Declare each leaf module up the chain to the crate root.
 
     Driver-owned so the LLM never regenerates an aggregator and drops the
-    shared declarations a sibling depends on. The aggregator path and
-    declaration come from per-engine ``module_registration`` data, so this
-    holds no language literals. Returns a revert trail for every aggregator
-    touched (backed up once, before its first edit). No-op when ``registration``
-    is None.
+    shared declarations a sibling depends on. The aggregator path, declaration,
+    and (optional) crate-root file come from per-engine ``module_registration``
+    data, so this holds no language literals. Returns a revert trail for every
+    aggregator touched (backed up once, before its first edit). No-op when
+    ``registration`` is None.
 
-    Known limit: a leaf directly under the crate root (e.g. ``src/sim.rs``)
-    renders an aggregator the crate root may not use; that case fails loud via
-    cargo build rather than corrupting the tree. Unit-by-unit codegen puts
-    leaves in subdirectories, which this handles correctly.
+    With ``crate_root`` set, a leaf at ``src/buildings/wood_gate.rs`` wires
+    ``pub mod wood_gate;`` into ``src/buildings/mod.rs`` AND ``pub mod buildings;``
+    into ``src/lib.rs`` — so introducing a brand-new kind directory no longer
+    leaves the module orphaned (which cargo would not flag, giving a false-green
+    gate). Without ``crate_root`` only the leaf's own directory is wired, the
+    historical behaviour: a leaf directly under the crate root then renders an
+    aggregator the root may not use and fails loud via cargo.
     """
     if not registration:
         return []
     agg_tmpl = registration["aggregator"]
     decl_tmpl = registration["declaration"]
+    crate_root = registration.get("crate_root")
+    crate_root_path = game_dir / crate_root if crate_root else None
+    src_root = crate_root_path.parent if crate_root_path else None
     touched: dict[Path, WrittenFile] = {}
     for leaf in leaf_files:
-        rel = leaf.relative_to(game_dir)
-        fields = {"dir": rel.parent.as_posix(), "stem": leaf.stem}
-        agg_path = game_dir / agg_tmpl.format(**fields)
-        if agg_path == leaf:
-            continue
-        if agg_path not in touched:
-            existed = agg_path.exists()
-            prior = agg_path.read_bytes() if existed else None
-            touched[agg_path] = WrittenFile(agg_path, existed, prior)
-        _ensure_declaration(agg_path, decl_tmpl.format(**fields))
+        for parent_dir, module_name in _registration_nodes(leaf, game_dir, src_root):
+            fields = {"dir": parent_dir.relative_to(game_dir).as_posix(), "stem": module_name}
+            if src_root is not None and parent_dir == src_root:
+                agg_path = crate_root_path  # type: ignore[assignment]
+            else:
+                agg_path = game_dir / agg_tmpl.format(**fields)
+            if agg_path == leaf:
+                continue
+            if agg_path not in touched:
+                existed = agg_path.exists()
+                prior = agg_path.read_bytes() if existed else None
+                touched[agg_path] = WrittenFile(agg_path, existed, prior)
+            _ensure_declaration(agg_path, decl_tmpl.format(**fields))
     return list(touched.values())
 
 
@@ -345,17 +393,38 @@ def load_goals(
     return []
 
 
+def load_valid_kinds(game_config_path: Path) -> set[str] | None:
+    """Read the canonical kind names from ``game-config.json -> kinds``.
+
+    Used to filter a ``--from-vault`` walk to directories that are real kinds.
+    The vault can accumulate stale directories from a prior taxonomy (e.g. a
+    pre-rename singular ``unit/`` alongside the canonical ``units/``); walking
+    those would emit duplicate / stale goals. Returns None when the file or the
+    ``kinds`` block is absent (then no kind filtering is applied).
+    """
+    if not game_config_path.exists():
+        return None
+    config = json.loads(game_config_path.read_text(encoding="utf-8"))
+    kinds = config.get("kinds")
+    if isinstance(kinds, dict) and kinds:
+        return set(kinds.keys())
+    return None
+
+
 def derive_goals_from_vault(
     vault_dir: Path,
     kinds: list[str] | None = None,
+    valid_kinds: set[str] | None = None,
 ) -> list[tuple[str | None, str]]:
     """Walk ``vault/<kind>/<slug>.md`` into ``(slug, goal)`` pairs.
 
     The goal is ``"implement the <slug words> <kind>"``; the slug is used as the
     explicit note_id so the loop's ``already_implemented`` skip works. Sorted by
     path for deterministic ordering. Skips ``_quarantine`` and other ``_``-prefixed
-    directories. ``kinds`` optionally restricts to a set of kind-directory names
-    (the codegen-worthy ones for a given game, e.g. ``unit``, ``building``).
+    directories. ``kinds`` optionally restricts to an explicit set of kind-directory
+    names. ``valid_kinds`` (from ``game-config.json``) drops directories that are
+    not real kinds, so stale leftover dirs from a prior taxonomy never produce
+    goals — this makes a bare ``--from-vault`` (all kinds) safe to run hands-off.
     """
     if not vault_dir.exists():
         return []
@@ -363,6 +432,8 @@ def derive_goals_from_vault(
     for md in sorted(vault_dir.glob("*/*.md")):
         kind = md.parent.name
         if kind.startswith("_") or (kinds and kind not in kinds):
+            continue
+        if valid_kinds is not None and kind not in valid_kinds:
             continue
         slug = md.stem
         goals.append((slug, f"implement the {slug.replace('_', ' ')} {kind}"))
@@ -390,22 +461,41 @@ def _dump_turn_output(note_id: str, text: str, out_dir: Path) -> None:
     (out_dir / f"{note_id}.md").write_text(text, encoding="utf-8")
 
 
-def _process_goal(
+@dataclass
+class PreparedTurn:
+    """Phase-A result for one goal: codegen output, already validated.
+
+    Produced by ``_prepare_turn`` with no writes to ``state`` or ``game/``, so a
+    batch of these can be computed concurrently. ``pending_reason`` is set when
+    the turn failed before the gate (backend error, bad source header, no file
+    blocks); the serial commit phase then just records it pending.
+    """
+
+    note_id: str
+    goal: str
+    parsed: list[tuple[str, str]] | None = None
+    response_text: str = ""
+    pending_reason: list[str] | None = None
+    error: str | None = None
+
+
+def _prepare_turn(
     note_id: str,
     goal: str,
-    state: dict[str, Any],
     *,
-    game_dir: Path,
     llm_mode: str,
     model: str | None,
     baseline_path: Path,
     generate: Any,
-    cargo_runner: Any,
     turn_output_dir: Path,
-    registration: dict[str, str] | None,
-    agg_name: str | None,
-) -> TurnResult:
-    """Run one codegen turn end-to-end. Mutates ``state`` in place."""
+) -> PreparedTurn:
+    """Run codegen + validate its output. Pure: no ``state`` / ``game/`` writes.
+
+    Safe to run concurrently across goals — there is no shared mutable state
+    (``retrieval`` builds its own Chroma client per call). Failures are captured
+    as a ``pending_reason`` rather than raised, so one bad turn never aborts a
+    parallel batch.
+    """
     try:
         summary = generate(goal, llm_mode=llm_mode, model=model, baseline_path=baseline_path)
     except Exception as exc:
@@ -413,47 +503,113 @@ def _process_goal(
         # `claude -p` intermittently exits 1 on a large prompt. A hands-off loop
         # must survive it: record pending (retried on the next run) and let the
         # error budget decide when to stop, rather than crashing the whole run.
-        system_map.record_pending(state, note_id, ["codegen_error"])
-        return TurnResult(note_id, goal, status="pending", error=f"codegen_error: {exc}"[:240])
+        return PreparedTurn(
+            note_id, goal, pending_reason=["codegen_error"], error=f"codegen_error: {exc}"[:240]
+        )
     _dump_turn_output(note_id, summary["response_text"], turn_output_dir)
+    text = summary["response_text"]
     if not summary["sources_header_ok"]:
         offending = summary["sources_header_offending"] or ["missing_sources_header"]
-        system_map.record_pending(state, note_id, offending)
-        return TurnResult(note_id, goal, status="pending", error="invalid_source_header")
-
-    parsed = parse_codegen_output(summary["response_text"])
+        return PreparedTurn(
+            note_id,
+            goal,
+            response_text=text,
+            pending_reason=offending,
+            error="invalid_source_header",
+        )
+    parsed = parse_codegen_output(text)
     if not parsed:
-        system_map.record_pending(state, note_id, ["no_file_blocks_in_output"])
-        return TurnResult(note_id, goal, status="pending", error="no_file_blocks")
+        return PreparedTurn(
+            note_id,
+            goal,
+            response_text=text,
+            pending_reason=["no_file_blocks_in_output"],
+            error="no_file_blocks",
+        )
+    return PreparedTurn(note_id, goal, parsed=parsed, response_text=text)
 
-    written, skipped = merge_into_game(parsed, game_dir, aggregator_name=agg_name)
+
+def _prepare_batch(
+    batch: list[tuple[str, str]],
+    *,
+    concurrency: int,
+    llm_mode: str,
+    model: str | None,
+    baseline_path: Path,
+    generate: Any,
+    turn_output_dir: Path,
+) -> list[PreparedTurn]:
+    """Prepare a batch of ``(note_id, goal)`` turns; concurrent when ``concurrency>1``.
+
+    The returned list is in ``batch`` order. Concurrency parallelizes only the
+    pure codegen phase (the slow LLM subprocess call); the caller still merges
+    and gates serially, so the cargo build and ``system_map`` order stay
+    deterministic regardless of ``concurrency``.
+    """
+    kw = {
+        "llm_mode": llm_mode,
+        "model": model,
+        "baseline_path": baseline_path,
+        "generate": generate,
+        "turn_output_dir": turn_output_dir,
+    }
+    if concurrency <= 1 or len(batch) <= 1:
+        return [_prepare_turn(note_id, goal, **kw) for note_id, goal in batch]
+    with ThreadPoolExecutor(max_workers=concurrency) as pool:
+        futures = [pool.submit(_prepare_turn, note_id, goal, **kw) for note_id, goal in batch]
+        return [f.result() for f in futures]
+
+
+def _commit_turn(
+    prepared: PreparedTurn,
+    state: dict[str, Any],
+    *,
+    game_dir: Path,
+    registration: dict[str, str] | None,
+    agg_name: str | None,
+    crate_root_name: str | None,
+    cargo_runner: Any,
+) -> TurnResult:
+    """Merge a prepared turn into ``game/``, gate it on cargo, record. Serial.
+
+    Mutates ``state`` and the working tree, so this must run one turn at a time
+    (a shared cargo target cannot gate two merges at once). On any failure the
+    merge is reverted byte-exact and the turn is recorded pending.
+    """
+    if prepared.pending_reason is not None:
+        system_map.record_pending(state, prepared.note_id, prepared.pending_reason)
+        return TurnResult(prepared.note_id, prepared.goal, status="pending", error=prepared.error)
+
+    written, skipped = merge_into_game(
+        prepared.parsed, game_dir, aggregator_name=agg_name, crate_root_name=crate_root_name
+    )
     registered = register_modules([w.path for w in written], game_dir, registration)
     ok, build_output = cargo_runner(game_dir)
     if not ok:
         revert_merge(written + registered)
-        system_map.record_pending(state, note_id, ["cargo_build_failed"])
+        system_map.record_pending(state, prepared.note_id, ["cargo_build_failed"])
         return TurnResult(
-            note_id,
-            goal,
+            prepared.note_id,
+            prepared.goal,
             status="pending",
             files_skipped=skipped,
             error=f"cargo_build_failed: {build_output.strip()[:240]}",
         )
 
-    sources = ",".join(codegen.extract_source_paths(summary["response_text"]))
+    sources = ",".join(codegen.extract_source_paths(prepared.response_text))
     file_list = ";".join(
         str(entry.path.relative_to(game_dir)).replace("\\", "/") for entry in written
     )
     system_map.record_implementation(
         state,
-        note_id=note_id,
+        note_id=prepared.note_id,
         file=file_list,
-        sha=_sha256(summary["response_text"]),
+        sha=_sha256(prepared.response_text),
         verified_against=sources,
     )
     return TurnResult(
-        note_id,
-        goal,
+        prepared.note_id,
+        prepared.goal,
         status="implemented",
         files_written=[
             str(entry.path.relative_to(game_dir)).replace("\\", "/") for entry in written
@@ -475,6 +631,7 @@ def run_loop(
     cargo_runner: Any = run_cargo_build,
     registration: dict[str, str] | None = None,
     max_turns: int | None = None,
+    concurrency: int = 1,
 ) -> list[TurnResult]:
     """Drive ``goals`` through the codegen + cargo loop. Persists state once at end.
 
@@ -483,40 +640,71 @@ def run_loop(
     ``max_turns`` caps how many goals are actually attempted this run; goals
     skipped as already-implemented do not count against it, so ``--limit`` makes
     real forward progress regardless of how much is already done.
+
+    ``concurrency`` (>1) runs the codegen phase of upcoming turns in parallel,
+    in lookahead batches of that size, while the merge + cargo gate still runs
+    one turn at a time in goal order. So results, ``system_map`` order, and the
+    error budget behave identically to the serial path (``concurrency=1``); only
+    the LLM wait is overlapped. Wasted calls on an error-budget stop are bounded
+    to one batch.
     """
     state = system_map.load_state(state_path)
     turn_output_dir = state_path.parent / "turns"
     agg_name = aggregator_basename(registration)
-    results: list[TurnResult] = []
-    errors = 0
-    attempted = 0
+    crate_root_name = crate_root_basename(registration)
+    concurrency = max(1, concurrency)
+
+    # Pass 1: ordered plan. Skips are recorded inline (free); attempts are the
+    # goals that will actually run codegen, capped by max_turns.
+    plan: list[tuple[str, Any, Any]] = []
+    attempts: list[tuple[str, str]] = []
     for explicit_id, goal in goals:
         note_id = explicit_id or derive_note_id(goal)
         if already_implemented(state, note_id):
-            results.append(TurnResult(note_id, goal, status="skipped"))
+            plan.append(("skip", TurnResult(note_id, goal, status="skipped"), None))
             continue
-        result = _process_goal(
-            note_id,
-            goal,
+        plan.append(("attempt", note_id, goal))
+        attempts.append((note_id, goal))
+        if max_turns is not None and len(attempts) >= max_turns:
+            break
+
+    prep_kw = {
+        "concurrency": concurrency,
+        "llm_mode": llm_mode,
+        "model": model,
+        "baseline_path": baseline_path,
+        "generate": generate,
+        "turn_output_dir": turn_output_dir,
+    }
+    prepared: dict[int, PreparedTurn] = {}
+    next_unprepared = 0
+    attempt_seq = 0
+    results: list[TurnResult] = []
+    errors = 0
+    for kind, *rest in plan:
+        if kind == "skip":
+            results.append(rest[0])
+            continue
+        if attempt_seq not in prepared:
+            chunk = attempts[next_unprepared : next_unprepared + concurrency]
+            for offset, prep in enumerate(_prepare_batch(chunk, **prep_kw)):
+                prepared[next_unprepared + offset] = prep
+            next_unprepared += len(chunk)
+        result = _commit_turn(
+            prepared[attempt_seq],
             state,
             game_dir=game_dir,
-            llm_mode=llm_mode,
-            model=model,
-            baseline_path=baseline_path,
-            generate=generate,
-            cargo_runner=cargo_runner,
-            turn_output_dir=turn_output_dir,
             registration=registration,
             agg_name=agg_name,
+            crate_root_name=crate_root_name,
+            cargo_runner=cargo_runner,
         )
+        attempt_seq += 1
         results.append(result)
-        attempted += 1
         if result.status == "pending":
             errors += 1
             if errors >= error_budget:
                 break
-        if max_turns is not None and attempted >= max_turns:
-            break
     state = system_map.cap_tokens(state)
     system_map.save_state(state_path, state)
     return results
@@ -576,6 +764,16 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help="max goals to actually attempt this run (skipped ones do not count)",
     )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help=(
+            "run codegen for upcoming turns in parallel batches of this size "
+            "(default 1 = sequential). The cargo gate still runs serially; each "
+            "worker loads its own embedder, so bound this by available memory."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -586,9 +784,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.from_vault:
         kinds = [k.strip() for k in args.kinds.split(",") if k.strip()] if args.kinds else None
-        goals = derive_goals_from_vault(args.vault_dir, kinds)
+        valid_kinds = load_valid_kinds(args.game_config)
+        goals = derive_goals_from_vault(args.vault_dir, kinds, valid_kinds)
         if not goals:
-            print(f"error: no vault notes under {args.vault_dir}", file=sys.stderr)
+            allowed = sorted(valid_kinds) if valid_kinds else "all"
+            print(
+                f"error: no vault notes under {args.vault_dir} "
+                f"(kinds={kinds}, valid kinds from game-config={allowed})",
+                file=sys.stderr,
+            )
             return 2
     else:
         goals = load_goals(args.goals_file, args.goals)
@@ -609,6 +813,7 @@ def main(argv: list[str] | None = None) -> int:
         error_budget=args.error_budget,
         registration=load_module_registration(args.game_config),
         max_turns=args.limit,
+        concurrency=args.concurrency,
     )
 
     counts: dict[str, int] = {}

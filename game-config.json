@@ -762,7 +762,8 @@
     "notes": "Determinism rules are binding on all Phase 2 sim-path code. See CLAUDE.md > 'Target engine' for the full rule set.",
     "module_registration": {
       "aggregator": "{dir}/mod.rs",
-      "declaration": "pub mod {stem};"
+      "declaration": "pub mod {stem};",
+      "crate_root": "src/lib.rs"
     }
   },
   "dropped_categories": [

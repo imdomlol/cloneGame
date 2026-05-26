@@ -401,6 +401,11 @@ class RunCargoBuildTests(unittest.TestCase):
 
 
 _BEVY_REGISTRATION = {"aggregator": "{dir}/mod.rs", "declaration": "pub mod {stem};"}
+_BEVY_REGISTRATION_CR = {
+    "aggregator": "{dir}/mod.rs",
+    "declaration": "pub mod {stem};",
+    "crate_root": "src/lib.rs",
+}
 
 _LOSSY_MULTI_FILE = textwrap.dedent(
     """
@@ -498,6 +503,58 @@ class RegisterModulesTests(unittest.TestCase):
             trail = loop_driver.register_modules([game / "src" / "units" / "ranger.rs"], game, None)
         self.assertEqual(trail, [])
 
+    def _seed_lib(self, game: Path) -> Path:
+        (game / "src").mkdir(parents=True)
+        lib = game / "src" / "lib.rs"
+        lib.write_text("pub mod sim;\npub mod units;\n", encoding="utf-8")
+        return lib
+
+    def test_crate_root_wires_new_kind_into_lib(self) -> None:
+        # A brand-new kind dir must be declared in the crate root, else cargo
+        # silently leaves it out of the crate (false-green gate).
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            lib = self._seed_lib(game)
+            leaf = game / "src" / "buildings" / "wood_gate.rs"
+            leaf.parent.mkdir(parents=True)
+            leaf.write_text("pub struct WoodGate;\n", encoding="utf-8")
+
+            trail = loop_driver.register_modules([leaf], game, _BEVY_REGISTRATION_CR)
+
+            mod_txt = (game / "src" / "buildings" / "mod.rs").read_text(encoding="utf-8")
+            self.assertIn("pub mod wood_gate;", mod_txt)
+            lib_txt = lib.read_text(encoding="utf-8")
+            self.assertIn("pub mod buildings;", lib_txt)
+            self.assertIn("pub mod units;", lib_txt)  # untouched shared decl preserved
+            touched = {p.path.name for p in trail}
+            self.assertEqual(touched, {"mod.rs", "lib.rs"})
+
+    def test_crate_root_leaf_directly_under_src_goes_to_lib(self) -> None:
+        # The historical "known limit" (src/sim.rs) is now handled: a leaf whose
+        # parent IS the crate-root dir registers in lib.rs, not a bogus src/mod.rs.
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            lib = self._seed_lib(game)
+            leaf = game / "src" / "render.rs"
+            leaf.write_text("pub fn draw() {}\n", encoding="utf-8")
+
+            loop_driver.register_modules([leaf], game, _BEVY_REGISTRATION_CR)
+
+            self.assertIn("pub mod render;", lib.read_text(encoding="utf-8"))
+            self.assertFalse((game / "src" / "mod.rs").exists())
+
+    def test_crate_root_existing_kind_is_idempotent(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            lib = self._seed_lib(game)
+            (game / "src" / "units").mkdir()
+            leaf = game / "src" / "units" / "ranger.rs"
+            leaf.write_text("pub struct Ranger;\n", encoding="utf-8")
+
+            loop_driver.register_modules([leaf], game, _BEVY_REGISTRATION_CR)
+
+            self.assertEqual(lib.read_text(encoding="utf-8").count("pub mod units;"), 1)
+
 
 class MergeSkipsAggregatorTests(unittest.TestCase):
     def test_emitted_aggregator_is_skipped(self) -> None:
@@ -512,6 +569,21 @@ class MergeSkipsAggregatorTests(unittest.TestCase):
         written_rels = [str(w.path.relative_to(game)).replace("\\", "/") for w in written]
         self.assertEqual(written_rels, ["src/units/ranger.rs"])
         self.assertIn("src/units/mod.rs", skipped)
+
+    def test_emitted_crate_root_is_skipped(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            parsed = [
+                ("src/buildings/wood_gate.rs", "pub struct WoodGate;"),
+                ("src/lib.rs", "pub mod buildings;"),  # driver-owned crate root, must skip
+            ]
+            written, skipped = loop_driver.merge_into_game(
+                parsed, game, aggregator_name="mod.rs", crate_root_name="lib.rs"
+            )
+        written_rels = [str(w.path.relative_to(game)).replace("\\", "/") for w in written]
+        self.assertEqual(written_rels, ["src/buildings/wood_gate.rs"])
+        self.assertIn("src/lib.rs", skipped)
 
 
 class CohesionTests(unittest.TestCase):
@@ -594,6 +666,25 @@ class DeriveGoalsFromVaultTests(unittest.TestCase):
     def test_missing_vault_returns_empty(self) -> None:
         self.assertEqual(loop_driver.derive_goals_from_vault(Path("/no/vault")), [])
 
+    def test_valid_kinds_filter_drops_stale_dirs(self) -> None:
+        # 'unit'/'building' are stale singular dirs; only the plural kinds are
+        # real, so a valid_kinds filter must drop the stale ones entirely.
+        with TemporaryDirectory() as tmp:
+            vault = self._seed_vault(tmp)
+            (vault / "units").mkdir(parents=True)
+            (vault / "units" / "soldier.md").write_text("x", encoding="utf-8")
+            goals = loop_driver.derive_goals_from_vault(vault, valid_kinds={"units", "buildings"})
+        self.assertEqual(goals, [("soldier", "implement the soldier units")])
+
+    def test_load_valid_kinds_reads_config(self) -> None:
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text('{"kinds": {"units": {}, "buildings": {}}}', encoding="utf-8")
+            self.assertEqual(loop_driver.load_valid_kinds(cfg), {"units", "buildings"})
+
+    def test_load_valid_kinds_absent_returns_none(self) -> None:
+        self.assertIsNone(loop_driver.load_valid_kinds(Path("/no/such/config.json")))
+
 
 class MaxTurnsTests(unittest.TestCase):
     def test_limit_counts_only_attempted_not_skipped(self) -> None:
@@ -624,6 +715,111 @@ class MaxTurnsTests(unittest.TestCase):
         statuses = [(r.note_id, r.status) for r in results]
         # soldier skipped (free), ranger is the one attempted turn, sniper never reached.
         self.assertEqual(statuses, [("soldier", "skipped"), ("ranger", "implemented")])
+
+
+def _per_goal_generate(calls: list[str]) -> Any:
+    """Generate stub that emits a unique file per goal and records call order."""
+
+    def _g(task: str, **_kw: Any) -> dict[str, Any]:
+        calls.append(task)
+        slug = task.replace("implement the ", "").replace(" unit", "").strip().replace(" ", "_")
+        text = (
+            f"=== FILE: src/units/{slug}.rs ===\n"
+            f"// Sources: vault/units/{slug}.md\n"
+            f"pub struct {slug.title()};\n"
+            f"=== END FILE ==="
+        )
+        return {
+            "response_text": text,
+            "sources_header_ok": True,
+            "sources_header_offending": [],
+            "included_vault_ids": [],
+            "allowed_paths": [],
+            "engine_baseline_tokens": 0,
+            "user_message_tokens": 0,
+            "llm_mode": "claude",
+            "model": "test",
+        }
+
+    return _g
+
+
+_CONCURRENCY_GOALS = [
+    (None, "implement the a unit"),
+    (None, "implement the b unit"),
+    (None, "implement the c unit"),
+]
+
+
+class ConcurrencyTests(unittest.TestCase):
+    def _run(self, tmp: str, concurrency: int) -> list[Any]:
+        game = Path(tmp) / "game"
+        game.mkdir()
+        return loop_driver.run_loop(
+            _CONCURRENCY_GOALS,
+            game_dir=game,
+            state_path=Path(tmp) / "system_map.yaml",
+            baseline_path=Path(tmp) / "b.md",
+            generate=_per_goal_generate([]),
+            cargo_runner=lambda _gd: (True, ""),
+            concurrency=concurrency,
+        )
+
+    def test_parallel_matches_serial(self) -> None:
+        with TemporaryDirectory() as t1, TemporaryDirectory() as t2:
+            serial = self._run(t1, 1)
+            parallel = self._run(t2, 3)
+
+        def shape(rs: list[Any]) -> list[tuple[str, str, tuple[str, ...]]]:
+            return [(r.note_id, r.status, tuple(r.files_written)) for r in rs]
+
+        self.assertEqual(shape(serial), shape(parallel))
+        self.assertEqual([r.status for r in parallel], ["implemented"] * 3)
+
+    def test_parallel_preserves_order_with_skips(self) -> None:
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            state_path = Path(tmp) / "system_map.yaml"
+            preexisting = system_map.empty_state()
+            preexisting["implemented"].append(
+                {"id": "b", "file": "", "hash": "", "verified_against": ""}
+            )
+            system_map.save_state(state_path, preexisting)
+
+            results = loop_driver.run_loop(
+                _CONCURRENCY_GOALS,
+                game_dir=game,
+                state_path=state_path,
+                baseline_path=Path(tmp) / "b.md",
+                generate=_per_goal_generate([]),
+                cargo_runner=lambda _gd: (True, ""),
+                concurrency=3,
+            )
+        self.assertEqual(
+            [(r.note_id, r.status) for r in results],
+            [("a", "implemented"), ("b", "skipped"), ("c", "implemented")],
+        )
+
+    def test_error_budget_bounds_wasted_calls_to_one_batch(self) -> None:
+        calls: list[str] = []
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            results = loop_driver.run_loop(
+                [(None, f"implement the {c} unit") for c in "abcd"],
+                game_dir=game,
+                state_path=Path(tmp) / "system_map.yaml",
+                baseline_path=Path(tmp) / "b.md",
+                generate=_per_goal_generate(calls),
+                cargo_runner=lambda _gd: (False, "fail"),
+                error_budget=2,
+                concurrency=3,
+            )
+        # Budget trips at 2 pendings, so only 2 results — but a full lookahead
+        # batch of 3 was prepared, never the 4th. Waste is bounded to one batch.
+        self.assertEqual([r.status for r in results], ["pending", "pending"])
+        self.assertEqual(len(calls), 3)
 
 
 if __name__ == "__main__":
