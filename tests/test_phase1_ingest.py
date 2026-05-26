@@ -178,7 +178,7 @@ class SourceIndexTests(unittest.TestCase):
                 [("mechanic", completed)],
             )
 
-    def test_migrate_existing_note_copies_note_to_new_kind_with_updated_type(self) -> None:
+    def test_migrate_existing_note_moves_note_to_new_kind_with_updated_type(self) -> None:
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
             infected_dir = root / "vault" / "infected"
@@ -203,13 +203,38 @@ class SourceIndexTests(unittest.TestCase):
 
             self.assertEqual(errors, [])
             self.assertEqual(migrated, root / "vault" / "infected_unit" / "infected.md")
-            self.assertTrue(completed.exists())
+            # Migration is a move: the original under the old kind is removed so a
+            # re-ingest after a kind rename does not leave stale duplicate dirs.
+            self.assertFalse(completed.exists())
             data, fm_errors = frontmatter(migrated.read_text(encoding="utf-8"))
             self.assertEqual(fm_errors, [])
             self.assertEqual(data["type"], "infected_unit")
             self.assertEqual(
                 completed_source_for_kind(index, source_url, "infected_unit"), migrated
             )
+            # The stale old-kind index entry is dropped, not just superseded.
+            self.assertEqual(
+                completed_sources_for_other_kinds(index, source_url, "infected_unit"), []
+            )
+
+    def test_migrate_existing_note_keeps_original_when_migration_quarantined(self) -> None:
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            infected_dir = root / "vault" / "infected"
+            infected_dir.mkdir(parents=True)
+            completed = infected_dir / "broken.md"
+            source_url = "https://they-are-billions.fandom.com/wiki/Broken"
+            # No frontmatter -> migration validates with errors -> quarantined.
+            completed.write_text("no frontmatter here\n", encoding="utf-8")
+            index = completed_source_index(root)
+
+            _migrated, errors = migrate_existing_note(
+                root, index, source_url, "infected_unit", completed
+            )
+
+            self.assertNotEqual(errors, [])
+            # A failed migration must not delete the only good copy.
+            self.assertTrue(completed.exists())
 
 
 class ValidationTests(unittest.TestCase):

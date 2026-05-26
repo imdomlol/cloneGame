@@ -109,6 +109,18 @@ def migrate_existing_note(
     kind: str,
     existing_path: Path,
 ) -> tuple[Path, list[str]]:
+    """Move a note from its old kind dir to ``kind`` and rewrite its ``type:``.
+
+    Migration is a *move*, not a copy: once the note is rewritten into the new
+    kind directory, the original under the old kind is removed and its stale
+    ``source_idx`` entry is dropped. Without this, re-ingesting after a Phase 0
+    kind rename (e.g. ``unit`` -> ``units``) leaves the old-named directory
+    behind, so the vault accumulates duplicate notes under both spellings and a
+    ``--from-vault`` walk sees stale copies. The deletion is guarded so a no-op
+    migration (new path == existing path) never removes the file it just wrote,
+    and a migration that fails validation (lands in ``_quarantine``) keeps the
+    original rather than losing the only good copy.
+    """
     markdown = existing_path.read_text(encoding="utf-8")
     markdown = replace_frontmatter_type(markdown, kind)
     fm, errors = frontmatter(markdown)
@@ -116,4 +128,10 @@ def migrate_existing_note(
     path = write_result(root, kind, slug, markdown, errors)
     if not errors:
         source_idx.setdefault(source_key(source_url), []).append((kind, path))
+        if path.resolve() != existing_path.resolve():
+            existing_path.unlink(missing_ok=True)
+            bucket = source_idx.get(source_key(source_url), [])
+            source_idx[source_key(source_url)] = [
+                (k, p) for (k, p) in bucket if p.resolve() != existing_path.resolve()
+            ]
     return path, errors
