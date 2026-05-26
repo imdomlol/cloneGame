@@ -3,7 +3,9 @@
 use bevy::prelude::*;
 use fixed::types::I32F32;
 
-use crate::sim::{IncomingDamageEvent, SimChecksumState, SimHz, SimPosition};
+use crate::sim::{
+    DamageType, Health, IncomingDamageEvent, SimChecksumState, SimHz, SimPosition, UnitStats,
+};
 use crate::units::Infected;
 
 const CAELUS_BASE_HP: I32F32 = I32F32::lit("120");
@@ -14,44 +16,20 @@ const CAELUS_BASE_AD: I32F32 = I32F32::lit("50");
 const CAELUS_BASE_WR: I32F32 = I32F32::lit("7");
 const CAELUS_BASE_ARMOR_REDUCTION: I32F32 = I32F32::lit("0.10");
 const CAELUS_BASE_EFFECT_RADIUS: I32F32 = I32F32::lit("1.0");
+const CAELUS_REISSUE_ATTACK_FACTOR: I32F32 = I32F32::lit("0.85");
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Caelus;
 
 #[derive(Component, Clone, Copy)]
-pub struct CaelusHealth {
-    pub current: I32F32,
-    pub max: I32F32,
-}
-
-impl Default for CaelusHealth {
-    fn default() -> Self {
-        Self {
-            current: CAELUS_BASE_HP,
-            max: CAELUS_BASE_HP,
-        }
-    }
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct CaelusStats {
-    pub movement_speed: I32F32,
-    pub attack_range: I32F32,
-    pub attack_speed: I32F32,
-    pub attack_damage: I32F32,
-    pub watch_range: I32F32,
+pub struct CaelusCombatMods {
     pub armor_reduction: I32F32,
     pub effect_radius: I32F32,
 }
 
-impl Default for CaelusStats {
+impl Default for CaelusCombatMods {
     fn default() -> Self {
         Self {
-            movement_speed: CAELUS_BASE_MS,
-            attack_range: CAELUS_BASE_AR,
-            attack_speed: CAELUS_BASE_AS,
-            attack_damage: CAELUS_BASE_AD,
-            watch_range: CAELUS_BASE_WR,
             armor_reduction: CAELUS_BASE_ARMOR_REDUCTION,
             effect_radius: CAELUS_BASE_EFFECT_RADIUS,
         }
@@ -168,16 +146,65 @@ pub struct ReissueCaelusAttackCommandEvent {
     pub target: Entity,
 }
 
+pub fn caelus_base_health() -> Health {
+    Health::full(CAELUS_BASE_HP)
+}
+
+pub fn caelus_base_stats() -> UnitStats {
+    UnitStats {
+        move_speed: CAELUS_BASE_MS,
+        attack_range: CAELUS_BASE_AR,
+        attack_damage: CAELUS_BASE_AD,
+        attack_speed: CAELUS_BASE_AS,
+        watch_range: CAELUS_BASE_WR,
+    }
+}
+
+pub fn spawn_caelus(commands: &mut Commands, position: SimPosition) -> Entity {
+    commands
+        .spawn((
+            Caelus,
+            position,
+            caelus_base_health(),
+            caelus_base_stats(),
+            CaelusCombatMods::default(),
+            CaelusAttackCooldown::default(),
+            CaelusPerkState::default(),
+            CaelusLoadSpeedMultiplier::default(),
+        ))
+        .id()
+}
+
+fn is_center_perk_unlocked(perks: &CaelusPerkState) -> bool {
+    perks.aim_tier > 0 || perks.strength_tier > 0 || perks.protection_tier > 0 || perks.speed_tier > 0
+}
+
+fn can_unlock(perks: &CaelusPerkState, perk: CaelusPerk) -> bool {
+    match perk {
+        CaelusPerk::AimI | CaelusPerk::StrengthI | CaelusPerk::ProtectionI | CaelusPerk::SpeedI => {
+            true
+        }
+        _ => is_center_perk_unlocked(perks),
+    }
+}
+
 pub fn caelus_attack_tick_system(
     sim_hz: Res<SimHz>,
     mut attackers: Query<
-        (Entity, &SimPosition, &mut CaelusAttackCooldown, &CaelusStats, &CaelusLoadSpeedMultiplier),
+        (
+            Entity,
+            &SimPosition,
+            &mut CaelusAttackCooldown,
+            &UnitStats,
+            &CaelusCombatMods,
+            &CaelusLoadSpeedMultiplier,
+        ),
         With<Caelus>,
     >,
     infected_positions: Query<(Entity, &SimPosition), With<Infected>>,
     mut outgoing_damage: EventWriter<IncomingDamageEvent>,
 ) {
-    for (caelus_entity, caelus_pos, mut cooldown, stats, load_mult) in &mut attackers {
+    for (caelus_entity, caelus_pos, mut cooldown, stats, mods, load_mult) in &mut attackers {
         if cooldown.ticks_remaining > I32F32::ZERO {
             cooldown.ticks_remaining -= I32F32::ONE;
             continue;
@@ -214,7 +241,7 @@ pub fn caelus_attack_tick_system(
             continue;
         };
 
-        let effect_radius_sq = stats.effect_radius * stats.effect_radius;
+        let effect_radius_sq = mods.effect_radius * mods.effect_radius;
         for (infected_entity, infected_pos) in &infected_positions {
             let dx = infected_pos.x - impact_pos.x;
             let dy = infected_pos.y - impact_pos.y;
@@ -223,7 +250,7 @@ pub fn caelus_attack_tick_system(
                 outgoing_damage.send(IncomingDamageEvent {
                     target: infected_entity,
                     raw_amount: stats.attack_damage,
-                    damage_type: crate::sim::DamageType::Standard,
+                    damage_type: DamageType::Standard,
                     source: caelus_entity,
                 });
             }
@@ -234,6 +261,7 @@ pub fn caelus_attack_tick_system(
         } else {
             load_mult.0
         };
+
         cooldown.ticks_remaining = (sim_hz.0 / stats.attack_speed) / load_speed;
     }
 }
@@ -242,11 +270,10 @@ pub fn caelus_reissue_attack_command_system(
     mut events: EventReader<ReissueCaelusAttackCommandEvent>,
     mut units: Query<&mut CaelusAttackCooldown, With<Caelus>>,
 ) {
-    let faster_factor = I32F32::lit("0.85");
     for ev in events.read() {
         if let Ok(mut cooldown) = units.get_mut(ev.target) {
             if cooldown.ticks_remaining > I32F32::ZERO {
-                cooldown.ticks_remaining = cooldown.ticks_remaining * faster_factor;
+                cooldown.ticks_remaining *= CAELUS_REISSUE_ATTACK_FACTOR;
             }
         }
     }
@@ -254,11 +281,11 @@ pub fn caelus_reissue_attack_command_system(
 
 pub fn caelus_receive_damage_system(
     mut events: EventReader<CaelusDamageEvent>,
-    mut units: Query<(&mut CaelusHealth, &CaelusStats), With<Caelus>>,
+    mut units: Query<(&mut Health, &CaelusCombatMods), With<Caelus>>,
 ) {
     for ev in events.read() {
-        if let Ok((mut hp, stats)) = units.get_mut(ev.target) {
-            let applied = ev.raw_damage * (I32F32::ONE - stats.armor_reduction);
+        if let Ok((mut hp, mods)) = units.get_mut(ev.target) {
+            let applied = ev.raw_damage * (I32F32::ONE - mods.armor_reduction);
             hp.current = (hp.current - applied).max(I32F32::ZERO);
         }
     }
@@ -295,7 +322,7 @@ pub fn caelus_allocate_perk_system(
 ) {
     for ev in events.read() {
         if let Ok(mut perks) = units.get_mut(ev.target) {
-            if perks.perk_points_available == 0 {
+            if perks.perk_points_available == 0 || !can_unlock(&perks, ev.perk) {
                 continue;
             }
 
@@ -404,10 +431,19 @@ pub fn caelus_allocate_perk_system(
 
 pub fn caelus_refund_perks_system(
     mut events: EventReader<RefundCaelusPerksEvent>,
-    mut units: Query<(&mut CaelusPerkState, &mut CaelusStats, &mut CaelusHealth), With<Caelus>>,
+    mut units: Query<
+        (
+            &mut CaelusPerkState,
+            &mut UnitStats,
+            &mut CaelusCombatMods,
+            &mut Health,
+            &mut CaelusLoadSpeedMultiplier,
+        ),
+        With<Caelus>,
+    >,
 ) {
     for ev in events.read() {
-        if let Ok((mut perks, mut stats, mut hp)) = units.get_mut(ev.target) {
+        if let Ok((mut perks, mut stats, mut combat_mods, mut hp, mut load_mult)) = units.get_mut(ev.target) {
             let can_refund = matches!(perks.mission_state, MissionState::InProgress | MissionState::Lost);
             if !can_refund {
                 continue;
@@ -434,19 +470,30 @@ pub fn caelus_refund_perks_system(
             perks.speed_tier = 0;
             perks.effect_radius_tier = 0;
 
-            *stats = CaelusStats::default();
+            *stats = caelus_base_stats();
+            *combat_mods = CaelusCombatMods::default();
             hp.max = CAELUS_BASE_HP;
             if hp.current > hp.max {
                 hp.current = hp.max;
             }
+            load_mult.0 = I32F32::ONE;
         }
     }
 }
 
 pub fn caelus_apply_perks_system(
-    mut units: Query<(&CaelusPerkState, &mut CaelusStats, &mut CaelusHealth, &mut CaelusLoadSpeedMultiplier), With<Caelus>>,
+    mut units: Query<
+        (
+            &CaelusPerkState,
+            &mut UnitStats,
+            &mut CaelusCombatMods,
+            &mut Health,
+            &mut CaelusLoadSpeedMultiplier,
+        ),
+        With<Caelus>,
+    >,
 ) {
-    for (perks, mut stats, mut hp, mut load_mult) in &mut units {
+    for (perks, mut stats, mut combat_mods, mut hp, mut load_mult) in &mut units {
         let mut damage_mult = I32F32::ONE;
         if perks.aim_tier >= 1 {
             damage_mult += I32F32::lit("0.40");
@@ -535,13 +582,14 @@ pub fn caelus_apply_perks_system(
             radius_bonus += I32F32::lit("0.2");
         }
 
-        stats.movement_speed = CAELUS_BASE_MS * move_mult;
+        stats.move_speed = CAELUS_BASE_MS * move_mult;
         stats.attack_range = CAELUS_BASE_AR + range_bonus;
         stats.attack_speed = CAELUS_BASE_AS * as_mult;
         stats.attack_damage = CAELUS_BASE_AD * damage_mult;
         stats.watch_range = CAELUS_BASE_WR + range_bonus;
-        stats.armor_reduction = armor;
-        stats.effect_radius = CAELUS_BASE_EFFECT_RADIUS + radius_bonus;
+
+        combat_mods.armor_reduction = armor;
+        combat_mods.effect_radius = CAELUS_BASE_EFFECT_RADIUS + radius_bonus;
 
         hp.max = CAELUS_BASE_HP * hp_mult;
         if hp.current > hp.max {
@@ -554,21 +602,33 @@ pub fn caelus_apply_perks_system(
 
 pub fn caelus_checksum_system(
     mut checksum: ResMut<SimChecksumState>,
-    units: Query<(&CaelusHealth, &CaelusStats, &CaelusAttackCooldown, &CaelusPerkState), With<Caelus>>,
+    units: Query<
+        (
+            &Health,
+            &UnitStats,
+            &CaelusCombatMods,
+            &CaelusAttackCooldown,
+            &CaelusPerkState,
+            &CaelusLoadSpeedMultiplier,
+        ),
+        With<Caelus>,
+    >,
 ) {
-    for (hp, stats, cooldown, perks) in &units {
+    for (hp, stats, combat_mods, cooldown, perks, load_mult) in &units {
         checksum.accumulate(hp.current.to_bits() as u64);
         checksum.accumulate(hp.max.to_bits() as u64);
 
-        checksum.accumulate(stats.movement_speed.to_bits() as u64);
+        checksum.accumulate(stats.move_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_range.to_bits() as u64);
         checksum.accumulate(stats.attack_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_damage.to_bits() as u64);
         checksum.accumulate(stats.watch_range.to_bits() as u64);
-        checksum.accumulate(stats.armor_reduction.to_bits() as u64);
-        checksum.accumulate(stats.effect_radius.to_bits() as u64);
+
+        checksum.accumulate(combat_mods.armor_reduction.to_bits() as u64);
+        checksum.accumulate(combat_mods.effect_radius.to_bits() as u64);
 
         checksum.accumulate(cooldown.ticks_remaining.to_bits() as u64);
+        checksum.accumulate(load_mult.0.to_bits() as u64);
 
         checksum.accumulate(perks.perk_points_available as u64);
         checksum.accumulate(perks.aim_tier as u64);
@@ -580,6 +640,7 @@ pub fn caelus_checksum_system(
         checksum.accumulate(u64::from(perks.improved_vision_iii));
         checksum.accumulate(perks.speed_tier as u64);
         checksum.accumulate(perks.effect_radius_tier as u64);
+
         let mission_state_bits = match perks.mission_state {
             MissionState::InProgress => 0_u64,
             MissionState::Completed => 1_u64,
