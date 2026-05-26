@@ -129,3 +129,32 @@ pub struct NoiseEmittedEvent {
     pub position: SimPosition,
     pub amount: I32F32,
 }
+
+/// Shared hit-point state for any combatant. Reuse this instead of defining a
+/// per-unit health component, so damage / heal / regen logic and the checksum
+/// treat every unit's HP identically. Fixed-point for cross-client determinism.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Health {
+    pub current: I32F32,
+    pub max: I32F32,
+}
+
+impl Health {
+    /// Construct at full health (`current == max`).
+    pub fn full(max: I32F32) -> Self {
+        Self { current: max, max }
+    }
+}
+
+/// Shared baseline combat stats common to every unit. Translate the unit's
+/// frontmatter stats into this; keep per-unit extras (veteran promotion,
+/// carried barrels, burn DoT, campaign upgrades) as their own components on top.
+/// Fixed-point for cross-client determinism.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UnitStats {
+    pub move_speed: I32F32,
+    pub attack_range: I32F32,
+    pub attack_damage: I32F32,
+    pub attack_speed: I32F32,
+    pub watch_range: I32F32,
+}

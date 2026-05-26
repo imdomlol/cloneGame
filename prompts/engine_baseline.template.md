@@ -11,7 +11,7 @@ This block is the Layer 1 sticky context: architecture rules, determinism contra
 - Architecture: {{architecture_summary}}
 - Networking: {{networking_model}}
 
-## Determinism rules
+## Engine rules
 
 Binding on every sim-path file generated under this engine. Render-only state (camera, particle visuals, UI animation) is exempt unless noted.
 
@@ -37,6 +37,7 @@ You have no file-writing tools. Do not ask for write permission. Emit each file 
 ### Content rules
 
 - Every generated source file's first line is `// Sources: vault/<kind>/<id>.md, ...`. The turn is rejected if the header is missing or cites a path not in the supplied retrieval bundle.
+- Reuse the shared foundation types named in the Engine rules for common state (health, position, stats); never redefine per unit what the foundation provides.
 - YAML frontmatter numbers are absolute truth. Do not round, paraphrase, or "balance" them.
 - No placeholders, no shorthand, no external deps not already in the engine baseline.
 - Imperative `IF / THEN / ON / WHILE` bullets in `## Behavioral Mechanics` lex deterministically: one conditional per bullet. Do not merge bullets even if they share a condition.
