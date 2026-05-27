@@ -37,6 +37,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +57,15 @@ from indexer import (  # noqa: E402
 DEFAULT_CAP_TOKENS = 2000
 DEFAULT_K = 5
 _TOKEN_ENCODING = "cl100k_base"
+
+# Chroma's PersistentClient races on tenant/database init when two of them are
+# constructed at once (the loop driver runs codegen concurrently, so two
+# retrieve() calls land here in parallel). Building the client + embedder once
+# per (dir, model) and reusing it removes that race and avoids reloading the
+# embedding weights every turn. The lock guards *creation* only; Chroma queries
+# are read-only and safe to run concurrently against the shared collections.
+_CLIENT_LOCK = threading.Lock()
+_COLLECTION_CACHE: dict[tuple[str, str], tuple[Any, Any]] = {}
 
 
 def merge_vector_results(
@@ -158,6 +168,42 @@ def pack_files(
     return packed, included
 
 
+def resolve_pin(
+    id_to_path: dict[str, str],
+    pin_id: str | None,
+    pin_kind: str | None,
+) -> str | None:
+    """Map a goal's note slug (+ optional kind) to its record id, or None.
+
+    Matches the record whose vault path stem equals ``pin_id`` and, when
+    ``pin_kind`` is given, whose parent directory name equals it (so a
+    cross-kind slug collision — a unit and a building sharing a name — pins the
+    right note). Game- and engine-agnostic: it keys on the vault layout
+    (``<kind>/<slug>.md``) the whole pipeline already produces, not on any
+    specific game's names. Returns None when nothing matches (pin is then a
+    silent no-op, never a hard failure).
+    """
+    if not pin_id:
+        return None
+    for rid, path in id_to_path.items():
+        p = Path(path)
+        if p.stem == pin_id and (pin_kind is None or p.parent.name == pin_kind):
+            return rid
+    return None
+
+
+def seed_with_pin(seed_ids: list[str], pin: str | None) -> list[str]:
+    """Return ``seed_ids`` with ``pin`` forced to the front (deduped).
+
+    Putting the pinned id first makes it a vector seed (its graph neighbours
+    still expand) AND guarantees it is packed before the token cap can evict it,
+    so the spec for the artifact under construction is always in context.
+    """
+    if not pin:
+        return seed_ids
+    return [pin] + [s for s in seed_ids if s != pin]
+
+
 def load_artifacts(
     repomix_path: Path,
     graph_path: Path,
@@ -175,6 +221,32 @@ def load_artifacts(
     return id_to_path, path_to_body, graph
 
 
+def _get_collections(chroma_dir: Path, model_name: str) -> tuple[Any, Any]:
+    """Return the ``(prose, mechanics)`` collections, building them once per key.
+
+    Construction (client + embedder + collections) is serialized behind
+    ``_CLIENT_LOCK`` and memoized by ``(chroma_dir, model_name)``. This is the
+    fix for the concurrent ``PersistentClient`` tenant-init race; it is engine-
+    and game-agnostic (the cache key is the index location, not any game data).
+    """
+    key = (str(chroma_dir), model_name)
+    with _CLIENT_LOCK:
+        cached = _COLLECTION_CACHE.get(key)
+        if cached is not None:
+            return cached
+        import chromadb
+        from chromadb.utils import embedding_functions
+
+        client = chromadb.PersistentClient(path=str(chroma_dir))
+        embedder = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name=model_name,
+        )
+        prose = client.get_or_create_collection(name="vault_prose", embedding_function=embedder)
+        mech = client.get_or_create_collection(name="vault_mechanics", embedding_function=embedder)
+        _COLLECTION_CACHE[key] = (prose, mech)
+        return prose, mech
+
+
 def query_collections(
     chroma_dir: Path,
     model_name: str,
@@ -182,15 +254,7 @@ def query_collections(
     k: int,
 ) -> tuple[list[str], list[float], list[str], list[float]]:
     """Query both Chroma collections; returns parallel id+distance lists."""
-    import chromadb
-    from chromadb.utils import embedding_functions
-
-    client = chromadb.PersistentClient(path=str(chroma_dir))
-    embedder = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name=model_name,
-    )
-    prose = client.get_or_create_collection(name="vault_prose", embedding_function=embedder)
-    mech = client.get_or_create_collection(name="vault_mechanics", embedding_function=embedder)
+    prose, mech = _get_collections(chroma_dir, model_name)
     prose_res = prose.query(query_texts=[task], n_results=k)
     mech_res = mech.query(query_texts=[task], n_results=k)
     return (
@@ -210,13 +274,22 @@ def retrieve(
     graph_path: Path = DEFAULT_GRAPH_PATH,
     repomix_path: Path = DEFAULT_REPOMIX,
     model_name: str = DEFAULT_EMBED_MODEL,
+    pin_id: str | None = None,
+    pin_kind: str | None = None,
 ) -> tuple[str, list[str]]:
-    """End-to-end retrieval: ``task → packed <file> blocks + included ids``."""
+    """End-to-end retrieval: ``task → packed <file> blocks + included ids``.
+
+    ``pin_id`` (+ optional ``pin_kind``) forces the goal's own vault note to the
+    front of the bundle so the spec being implemented is always in context, even
+    when the imperative task phrasing does not rank it into the vector top-k.
+    See ``resolve_pin`` / ``seed_with_pin``.
+    """
     id_to_path, path_to_body, graph = load_artifacts(repomix_path, graph_path)
     prose_ids, prose_dists, mech_ids, mech_dists = query_collections(
         chroma_dir, model_name, task, k
     )
     seed_ids = merge_vector_results(prose_ids, prose_dists, mech_ids, mech_dists)
+    seed_ids = seed_with_pin(seed_ids, resolve_pin(id_to_path, pin_id, pin_kind))
     ordered = graph_expand(seed_ids, graph)
     return pack_files(ordered, id_to_path, path_to_body, cap_tokens=cap_tokens)
 

@@ -14,6 +14,8 @@ from phase2.retrieval import (
     graph_expand,
     merge_vector_results,
     pack_files,
+    resolve_pin,
+    seed_with_pin,
 )
 
 
@@ -52,6 +54,40 @@ class MergeVectorResultsTests(unittest.TestCase):
 
     def test_handles_empty_inputs(self) -> None:
         self.assertEqual(merge_vector_results([], [], [], []), [])
+
+
+_PIN_ID_TO_PATH = {
+    "lm": "vault/buildings/land_mine.md",
+    "sld_u": "vault/units/soldier.md",
+    "sld_b": "vault/buildings/soldier.md",
+}
+
+
+class ResolvePinTests(unittest.TestCase):
+    def test_matches_by_stem(self) -> None:
+        self.assertEqual(resolve_pin(_PIN_ID_TO_PATH, "land_mine", None), "lm")
+
+    def test_kind_disambiguates_stem_collision(self) -> None:
+        self.assertEqual(resolve_pin(_PIN_ID_TO_PATH, "soldier", "units"), "sld_u")
+        self.assertEqual(resolve_pin(_PIN_ID_TO_PATH, "soldier", "buildings"), "sld_b")
+
+    def test_no_match_returns_none(self) -> None:
+        self.assertIsNone(resolve_pin(_PIN_ID_TO_PATH, "ghost", None))
+        self.assertIsNone(resolve_pin(_PIN_ID_TO_PATH, "land_mine", "units"))
+
+    def test_empty_pin_id_returns_none(self) -> None:
+        self.assertIsNone(resolve_pin(_PIN_ID_TO_PATH, None, None))
+
+
+class SeedWithPinTests(unittest.TestCase):
+    def test_prepends_when_absent(self) -> None:
+        self.assertEqual(seed_with_pin(["a", "b"], "p"), ["p", "a", "b"])
+
+    def test_moves_to_front_when_present(self) -> None:
+        self.assertEqual(seed_with_pin(["a", "p", "b"], "p"), ["p", "a", "b"])
+
+    def test_none_pin_is_noop(self) -> None:
+        self.assertEqual(seed_with_pin(["a", "b"], None), ["a", "b"])
 
 
 class GraphExpandTests(unittest.TestCase):

@@ -134,6 +134,7 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 - **Wikilink invariant**: every `[[wiki_link]]` in a vault file body must be mirrored in `depends_on:` in the frontmatter. The compile system prompt enforces this; Phase 2's graph expansion will rely on it.
 - **The taxonomy AND per-kind schemas live in `game-config.json`, not in code.** Adding a new `kind` means: (1) add it to `kinds` in `game-config.json`, (2) optionally add a `frontmatter_schema` block under that kind, (3) re-run Phase 0 or hand-edit `categories` to route wiki categories to it. Phase 0 v2's LLM proposer can do (1) and (2) automatically for a new target game.
 - **The directory name `cloneGame` is aspirational.** No game code exists yet. Treat any task framed as "fix the game" as a request to work on the pipeline, unless the user explicitly says they've started Phase 2.
+- **Engine-specific fixes are a last resort** No good solution requires a game or engine-specific fix since this repo aims to be able to mix and match any and all of those options. All solutions need to be broad and able to actually apply for many cases.
 
 ## Development Guidelines
 

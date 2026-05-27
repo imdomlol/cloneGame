@@ -47,6 +47,7 @@ if str(_REPO_ROOT / "phase2") not in sys.path:
 if str(_REPO_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "scripts"))
 
+import system_map  # noqa: E402
 from compile_cache import run_llm  # noqa: E402
 from model_config import default_llm_mode, model_defaults  # noqa: E402
 from retrieval import count_tokens, retrieve  # noqa: E402
@@ -81,11 +82,77 @@ def default_model(llm_mode: str) -> str:
     return _MODEL_DEFAULTS[llm_mode]
 
 
-def build_user_message(system_map: str, vault_chunks: str, task: str) -> str:
-    """Assemble the user-side prompt in the four documented sections."""
+def _reference_section(exemplar: str | None) -> str:
+    """Render the optional sibling-exemplar block, or empty string when absent.
+
+    Game- and engine-agnostic: the loop driver supplies the first accepted
+    module of the same kind, and this block instructs the model to mirror its
+    *public surface* (accessors/constructors and their organization) so all
+    modules of a kind stay structurally consistent. It deliberately does NOT
+    mandate names — the exemplar carries whatever naming this game uses — which
+    is why the rule lives here rather than in any per-engine determinism file.
+    """
+    if not exemplar:
+        return ""
+    return (
+        "[REFERENCE SIBLING MODULE]\n"
+        "An already-accepted module of the same kind, included as the pattern to "
+        "follow. Match its public surface: the accessors and constructors it "
+        "exposes, and how it is organized. Adapt names and values to the current "
+        "goal and this codebase's existing conventions. Do not copy its behavior "
+        "or invent a different structure.\n"
+        "-------- BEGIN REFERENCE --------\n"
+        f"{exemplar.strip()}\n"
+        "-------- END REFERENCE --------\n\n"
+    )
+
+
+def _repair_section(repair: tuple[str, str] | None) -> str:
+    """Render the build-failure feedback block, or empty string when absent.
+
+    Engine-agnostic by construction: it carries the build tool's own error text
+    (``build_error``) plus the prior attempt's source, and asks the model to fix
+    that output. Whatever the engine, its compiler/build step is the correction
+    signal, so this needs no per-engine rules. ``repair`` is
+    ``(build_error, prior_attempt)``.
+    """
+    if not repair:
+        return ""
+    build_error, prior_attempt = repair
+    return (
+        "[BUILD FAILURE — REVISE]\n"
+        "Your previous output did not compile. Fix every error reported below and "
+        "re-emit the COMPLETE corrected file(s) in the same file output format. "
+        "Change only what is needed to compile; keep the structure and the "
+        "`// Sources:` header. Do not explain.\n"
+        "-------- BUILD OUTPUT --------\n"
+        f"{build_error.strip()}\n"
+        "-------- PREVIOUS ATTEMPT --------\n"
+        f"{prior_attempt.strip()}\n"
+        "-------- END --------\n\n"
+    )
+
+
+def build_user_message(
+    system_map: str,
+    vault_chunks: str,
+    task: str,
+    exemplar: str | None = None,
+    repair: tuple[str, str] | None = None,
+) -> str:
+    """Assemble the user-side prompt in the documented sections.
+
+    When ``exemplar`` is supplied, a ``[REFERENCE SIBLING MODULE]`` block is
+    inserted before the goal so the model mirrors an existing same-kind module's
+    public structure (see ``_reference_section``). When ``repair`` is supplied,
+    a ``[BUILD FAILURE — REVISE]`` block carries the build error + prior attempt
+    so the model fixes its own non-compiling output (see ``_repair_section``).
+    """
     return (
         f"[CURRENT RECREATION PROGRESS]\n{system_map.strip() or '(no prior turns)'}\n\n"
         f"[SANITIZED OBSIDIAN VAULT SPECIFICATION]\n{vault_chunks}\n\n"
+        f"{_reference_section(exemplar)}"
+        f"{_repair_section(repair)}"
         f"[TRANSLATION CONSTRAINTS]\n{_TRANSLATION_CONSTRAINTS}\n\n"
         f"[DEVELOPMENT GOAL]\n{task.strip()}"
     )
@@ -255,20 +322,30 @@ def generate(
     cli_runner: Any = run_llm,
     baseline_path: Path = DEFAULT_BASELINE_PATH,
     system_map_path: Path = DEFAULT_SYSTEM_MAP_PATH,
+    exemplar: str | None = None,
+    repair: tuple[str, str] | None = None,
+    pin_id: str | None = None,
+    pin_kind: str | None = None,
     dry_run: bool = False,
 ) -> dict[str, Any]:
     """End-to-end codegen turn. Returns ``{prompt, response?, usage?, ...}``.
 
     With ``dry_run=True`` no backend call is made; useful for inspecting
-    the assembled prompt or estimating token cost before spending.
+    the assembled prompt or estimating token cost before spending. ``exemplar``
+    is an optional same-kind sibling module rendered into the user message as the
+    structural pattern to follow. ``repair`` is an optional
+    ``(build_error, prior_attempt)`` pair that turns this into a fix-it turn (see
+    ``build_user_message``). ``pin_id`` (+ optional ``pin_kind``) forces the
+    goal's own vault note into the retrieval bundle so its spec is always in
+    context (see ``retrieval.retrieve``).
     """
     engine_baseline = _load_text(baseline_path)
     if not engine_baseline:
         raise FileNotFoundError(f"{baseline_path} missing; run phase2/baseline.py first")
-    system_map = _load_text(system_map_path)
-    vault_chunks, included_ids = retrieve(task)
+    system_map_block = system_map.render_for_prompt(system_map_path)
+    vault_chunks, included_ids = retrieve(task, pin_id=pin_id, pin_kind=pin_kind)
     allowed_paths = extract_allowed_paths(vault_chunks)
-    user_message = build_user_message(system_map, vault_chunks, task)
+    user_message = build_user_message(system_map_block, vault_chunks, task, exemplar, repair)
     resolved_model = model or default_model(llm_mode)
 
     summary: dict[str, Any] = {

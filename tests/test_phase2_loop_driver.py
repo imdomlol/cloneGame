@@ -801,7 +801,7 @@ class ConcurrencyTests(unittest.TestCase):
             [("a", "implemented"), ("b", "skipped"), ("c", "implemented")],
         )
 
-    def test_error_budget_bounds_wasted_calls_to_one_batch(self) -> None:
+    def test_error_budget_bounds_wasted_calls(self) -> None:
         calls: list[str] = []
         with TemporaryDirectory() as tmp:
             game = Path(tmp) / "game"
@@ -816,10 +816,243 @@ class ConcurrencyTests(unittest.TestCase):
                 error_budget=2,
                 concurrency=3,
             )
-        # Budget trips at 2 pendings, so only 2 results — but a full lookahead
-        # batch of 3 was prepared, never the 4th. Waste is bounded to one batch.
+        # All four share kind "unit" with no exemplar yet, so the chunk cap forces
+        # one-at-a-time prep until the first success seeds the exemplar. Here every
+        # turn fails, so each is prepared solo; the budget trips after 2 pendings
+        # and no further (3rd/4th) turn is ever prepared.
         self.assertEqual([r.status for r in results], ["pending", "pending"])
-        self.assertEqual(len(calls), 3)
+        self.assertEqual(len(calls), 2)
+
+
+def _recording_generate(calls: list[tuple[str, str | None]]) -> Any:
+    """Generate stub recording ``(note_slug, exemplar)`` and emitting one leaf."""
+
+    def _g(task: str, **kw: Any) -> dict[str, Any]:
+        slug = loop_driver.derive_note_id(task)
+        calls.append((slug, kw.get("exemplar")))
+        text = (
+            f"=== FILE: src/units/{slug}.rs ===\n"
+            f"// Sources: vault/units/{slug}.md\n"
+            f"pub struct {slug.title()};\n"
+            f"=== END FILE ==="
+        )
+        return {
+            "response_text": text,
+            "sources_header_ok": True,
+            "sources_header_offending": [],
+            "included_vault_ids": [],
+            "allowed_paths": [],
+            "engine_baseline_tokens": 0,
+            "user_message_tokens": 0,
+            "llm_mode": "claude",
+            "model": "test",
+        }
+
+    return _g
+
+
+class DeriveKindTests(unittest.TestCase):
+    def test_trailing_token_is_kind(self) -> None:
+        self.assertEqual(loop_driver.derive_kind("implement the soldier units"), "units")
+        self.assertEqual(
+            loop_driver.derive_kind("implement the advanced farm buildings"), "buildings"
+        )
+
+    def test_too_short_returns_none(self) -> None:
+        self.assertIsNone(loop_driver.derive_kind("soldier"))
+        self.assertIsNone(loop_driver.derive_kind(""))
+
+
+class SiblingExemplarTests(unittest.TestCase):
+    def test_first_of_kind_gets_no_exemplar_then_siblings_get_it(self) -> None:
+        calls: list[tuple[str, str | None]] = []
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            loop_driver.run_loop(
+                [
+                    (None, "implement the soldier units"),
+                    (None, "implement the ranger units"),
+                    (None, "implement the sniper units"),
+                ],
+                game_dir=game,
+                state_path=Path(tmp) / "system_map.yaml",
+                baseline_path=Path(tmp) / "b.md",
+                generate=_recording_generate(calls),
+                cargo_runner=lambda _gd: (True, ""),
+            )
+        by_slug = dict(calls)
+        self.assertIsNone(by_slug["soldier"], "first of kind has no sibling exemplar")
+        # ranger + sniper must receive soldier's generated source as the pattern.
+        self.assertIsNotNone(by_slug["ranger"])
+        self.assertIn("pub struct Soldier;", by_slug["ranger"])
+        self.assertIn("pub struct Soldier;", by_slug["sniper"])
+
+    def test_exemplar_seeded_from_already_implemented_module(self) -> None:
+        calls: list[tuple[str, str | None]] = []
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            (game / "src" / "units").mkdir(parents=True)
+            (game / "src" / "units" / "soldier.rs").write_text(
+                "// Sources: vault/units/soldier.md\npub struct Soldier;\n", encoding="utf-8"
+            )
+            state_path = Path(tmp) / "system_map.yaml"
+            preexisting = system_map.empty_state()
+            preexisting["implemented"].append(
+                {
+                    "id": "soldier",
+                    "file": "src/units/soldier.rs",
+                    "hash": "",
+                    "verified_against": "",
+                }
+            )
+            system_map.save_state(state_path, preexisting)
+
+            loop_driver.run_loop(
+                [
+                    (None, "implement the soldier units"),  # already implemented -> skipped
+                    (None, "implement the ranger units"),
+                ],
+                game_dir=game,
+                state_path=state_path,
+                baseline_path=Path(tmp) / "b.md",
+                generate=_recording_generate(calls),
+                cargo_runner=lambda _gd: (True, ""),
+            )
+        by_slug = dict(calls)
+        self.assertNotIn("soldier", by_slug, "skipped module is not regenerated")
+        self.assertIn("pub struct Soldier;", by_slug["ranger"] or "")
+
+
+def _repairable_generate(calls: list[str]) -> Any:
+    """Generate stub recording 'fresh'/'repair' per call; emits one leaf each time."""
+
+    def _g(task: str, **kw: Any) -> dict[str, Any]:
+        calls.append("repair" if kw.get("repair") else "fresh")
+        slug = loop_driver.derive_note_id(task)
+        text = (
+            f"=== FILE: src/units/{slug}.rs ===\n"
+            f"// Sources: vault/units/{slug}.md\n"
+            f"pub struct {slug.title()};\n"
+            f"=== END FILE ==="
+        )
+        return {
+            "response_text": text,
+            "sources_header_ok": True,
+            "sources_header_offending": [],
+            "included_vault_ids": [],
+            "allowed_paths": [],
+            "engine_baseline_tokens": 0,
+            "user_message_tokens": 0,
+            "llm_mode": "claude",
+            "model": "test",
+        }
+
+    return _g
+
+
+class RepairLoopTests(unittest.TestCase):
+    def _run(self, tmp: str, calls: list[str], build_seq: list[tuple[bool, str]], attempts: int):
+        game = Path(tmp) / "game"
+        game.mkdir()
+        results_iter = iter(build_seq)
+        return loop_driver.run_loop(
+            [(None, "implement the lucifer units")],
+            game_dir=game,
+            state_path=Path(tmp) / "system_map.yaml",
+            baseline_path=Path(tmp) / "b.md",
+            generate=_repairable_generate(calls),
+            cargo_runner=lambda _gd: next(results_iter),
+            repair_attempts=attempts,
+        )
+
+    def test_build_failure_repaired_then_recorded(self) -> None:
+        calls: list[str] = []
+        with TemporaryDirectory() as tmp:
+            results = self._run(tmp, calls, [(False, "error[E0277]"), (True, "")], attempts=2)
+        self.assertEqual([r.status for r in results], ["implemented"])
+        self.assertEqual(calls, ["fresh", "repair"])  # one repair sufficed
+
+    def test_repair_exhausted_records_pending(self) -> None:
+        calls: list[str] = []
+        with TemporaryDirectory() as tmp:
+            results = self._run(tmp, calls, [(False, "e1"), (False, "e2")], attempts=1)
+        self.assertEqual([r.status for r in results], ["pending"])
+        self.assertEqual(calls, ["fresh", "repair"])  # exhausted after 1 repair
+
+    def test_repair_disabled_fails_immediately(self) -> None:
+        calls: list[str] = []
+        with TemporaryDirectory() as tmp:
+            results = self._run(tmp, calls, [(False, "e1")], attempts=0)
+        self.assertEqual([r.status for r in results], ["pending"])
+        self.assertEqual(calls, ["fresh"])  # no repair attempted
+
+    def test_build_error_is_fed_to_repair_turn(self) -> None:
+        seen: list[tuple[str, str] | None] = []
+
+        def _gen(task: str, **kw: Any) -> dict[str, Any]:
+            seen.append(kw.get("repair"))
+            slug = loop_driver.derive_note_id(task)
+            text = (
+                f"=== FILE: src/units/{slug}.rs ===\n"
+                f"// Sources: vault/units/{slug}.md\nx\n=== END FILE ==="
+            )
+            return {
+                "response_text": text,
+                "sources_header_ok": True,
+                "sources_header_offending": [],
+                "included_vault_ids": [],
+                "allowed_paths": [],
+                "engine_baseline_tokens": 0,
+                "user_message_tokens": 0,
+                "llm_mode": "claude",
+                "model": "test",
+            }
+
+        with TemporaryDirectory() as tmp:
+            game = Path(tmp) / "game"
+            game.mkdir()
+            builds = iter([(False, "error[E0277]: 17-tuple"), (True, "")])
+            loop_driver.run_loop(
+                [(None, "implement the lucifer units")],
+                game_dir=game,
+                state_path=Path(tmp) / "system_map.yaml",
+                baseline_path=Path(tmp) / "b.md",
+                generate=_gen,
+                cargo_runner=lambda _gd: next(builds),
+                repair_attempts=1,
+            )
+        self.assertIsNone(seen[0])  # fresh turn: no repair context
+        self.assertIsNotNone(seen[1])  # repair turn carries (build_error, prior_text)
+        self.assertIn("17-tuple", seen[1][0])
+
+
+class BuildPlanDedupTests(unittest.TestCase):
+    """A slug repeated across kinds in one run is attempted only once."""
+
+    def test_duplicate_note_id_skipped_within_run(self) -> None:
+        goals = [
+            ("technology_tree", "implement the technology tree game_mechanics"),
+            ("technology_tree", "implement the technology tree research"),
+            ("noise", "implement the noise game_mechanics"),
+        ]
+        goal_kinds = {"technology_tree": "research", "noise": "game_mechanics"}
+        plan, attempts = loop_driver._build_plan(goals, system_map.empty_state(), goal_kinds, None)
+        attempt_ids = [nid for tag, nid, *_ in plan if tag == "attempt"]
+        skip_ids = [tr.note_id for tag, tr, *_ in plan if tag == "skip"]
+        self.assertEqual(attempt_ids, ["technology_tree", "noise"])
+        self.assertEqual(skip_ids, ["technology_tree"])  # the 2nd occurrence
+        self.assertEqual(len(attempts), 2)
+
+    def test_already_implemented_still_skips(self) -> None:
+        state = system_map.empty_state()
+        system_map.record_implementation(state, "soldier", "src/units/soldier.rs", "h", "v")
+        goals = [
+            ("soldier", "implement the soldier units"),
+            ("ranger", "implement the ranger units"),
+        ]
+        plan, _attempts = loop_driver._build_plan(goals, state, {}, None)
+        self.assertEqual([nid for tag, nid, *_ in plan if tag == "attempt"], ["ranger"])
 
 
 if __name__ == "__main__":

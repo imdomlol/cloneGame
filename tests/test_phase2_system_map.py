@@ -16,10 +16,12 @@ from unittest.mock import MagicMock
 from phase2.system_map import (
     TOKEN_CAP,
     cap_tokens,
+    count_tokens,
     empty_state,
     load_state,
     record_implementation,
     record_pending,
+    render_for_prompt,
     render_yaml,
     save_state,
     set_baseline_hash,
@@ -133,6 +135,46 @@ class CapTokensTests(unittest.TestCase):
             collapsed = sum(int(e["count"]) for e in summary_entries)
             details = [e for e in capped["implemented"] if "summary" not in e]
             self.assertEqual(collapsed + len(details), 8)
+
+
+class LedgerNotTruncatedTests(unittest.TestCase):
+    """Regression: the persisted ledger must stay complete even past the cap.
+
+    Collapsing the persisted ``implemented`` list (the idempotency ledger) made
+    finished modules look unfinished, so the loop re-generated them every run
+    and never converged. The cap must apply only to the prompt projection.
+    """
+
+    def _fill(self, n: int) -> dict:
+        state = empty_state()
+        for i in range(n):
+            record_implementation(state, f"id{i}", f"src/{i}.rs", f"sha{i}", f"vault/x/{i}.md")
+        return state
+
+    def test_save_load_preserves_all_entries(self) -> None:
+        with TemporaryDirectory() as d:
+            path = Path(d) / "s.yaml"
+            state = self._fill(200)  # far past the 1k-token prompt budget
+            save_state(path, state)
+            loaded = load_state(path)
+            ids = {e["id"] for e in loaded["implemented"]}
+            self.assertEqual(len(loaded["implemented"]), 200)
+            self.assertNotIn("summary", {k for e in loaded["implemented"] for k in e})
+            self.assertEqual(ids, {f"id{i}" for i in range(200)})
+
+    def test_render_for_prompt_caps_without_touching_disk(self) -> None:
+        with TemporaryDirectory() as d:
+            path = Path(d) / "s.yaml"
+            state = self._fill(200)
+            save_state(path, state)
+            block = render_for_prompt(path)
+            self.assertLessEqual(count_tokens(block), TOKEN_CAP)
+            # Disk ledger untouched by the prompt render.
+            self.assertEqual(len(load_state(path)["implemented"]), 200)
+
+    def test_render_for_prompt_missing_file_is_empty(self) -> None:
+        with TemporaryDirectory() as d:
+            self.assertEqual(render_for_prompt(Path(d) / "missing.yaml"), "")
 
 
 class RenderYamlTests(unittest.TestCase):

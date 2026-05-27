@@ -30,7 +30,8 @@ Per-goal flow inside one turn:
 5. Run ``cargo build`` in ``game/``. On non-zero exit, revert the merge
    and record pending. On success, ``record_implementation`` with the
    list of files written.
-6. After the loop, ``cap_tokens`` + persist ``build/system_map.yaml``.
+6. After the loop, persist the complete ``build/system_map.yaml`` ledger
+   (the 1k-token cap is applied later, only to the codegen prompt projection).
 
 Stops on the first ``--error-budget`` failures (default 3) so a broken
 prompt does not burn the whole queue.
@@ -156,6 +157,38 @@ def derive_note_id(goal: str) -> str:
     if match:
         return match.group("slug").lower()
     return re.sub(r"\W+", "_", goal.lower()).strip("_")[:40]
+
+
+def derive_kind(goal: str) -> str | None:
+    """Return the trailing word of an ``implement the X <kind>`` goal as its kind.
+
+    From-vault goals are ``"implement the <slug words> <kind>"``, so the kind is
+    the last whitespace token. This is only a *grouping key* for sibling-exemplar
+    reuse, not a vault lookup: it just has to be the same for every goal of one
+    kind in a run (it is, since they share the from-vault suffix). Returns None
+    when the goal has fewer than two tokens.
+    """
+    tokens = goal.strip().split()
+    if len(tokens) < 2:
+        return None
+    return tokens[-1].lower()
+
+
+def _read_leaf_text(game_dir: Path, rels: list[str], note_id: str) -> str | None:
+    """Read the exemplar leaf for ``note_id`` from a list of relative paths.
+
+    Prefers the file whose stem matches ``note_id`` (the module's own leaf),
+    else the first path. Empty entries are ignored. Returns the on-disk text, or
+    None when nothing readable is found (a stale or directory path).
+    """
+    candidates = [r for r in rels if r]
+    if not candidates:
+        return None
+    chosen = next((r for r in candidates if Path(r).stem == note_id), candidates[0])
+    target = game_dir / chosen
+    if not target.is_file():
+        return None
+    return target.read_text(encoding="utf-8")
 
 
 @dataclass
@@ -483,21 +516,34 @@ def _prepare_turn(
     note_id: str,
     goal: str,
     *,
+    exemplar: str | None,
     llm_mode: str,
     model: str | None,
     baseline_path: Path,
     generate: Any,
     turn_output_dir: Path,
+    repair: tuple[str, str] | None = None,
 ) -> PreparedTurn:
     """Run codegen + validate its output. Pure: no ``state`` / ``game/`` writes.
 
     Safe to run concurrently across goals — there is no shared mutable state
     (``retrieval`` builds its own Chroma client per call). Failures are captured
     as a ``pending_reason`` rather than raised, so one bad turn never aborts a
-    parallel batch.
+    parallel batch. ``exemplar`` is the same-kind sibling module passed to the
+    codegen prompt as the structural pattern (None for the first of a kind).
+    ``repair`` is an ``(build_error, prior_attempt)`` pair for a fix-it turn.
     """
     try:
-        summary = generate(goal, llm_mode=llm_mode, model=model, baseline_path=baseline_path)
+        summary = generate(
+            goal,
+            llm_mode=llm_mode,
+            model=model,
+            baseline_path=baseline_path,
+            exemplar=exemplar,
+            repair=repair,
+            pin_id=note_id,
+            pin_kind=derive_kind(goal),
+        )
     except Exception as exc:
         # The backend (claude -p / codex / SDK) can fail transiently — e.g.
         # `claude -p` intermittently exits 1 on a large prompt. A hands-off loop
@@ -530,7 +576,7 @@ def _prepare_turn(
 
 
 def _prepare_batch(
-    batch: list[tuple[str, str]],
+    batch: list[tuple[str, str, str | None]],
     *,
     concurrency: int,
     llm_mode: str,
@@ -539,12 +585,13 @@ def _prepare_batch(
     generate: Any,
     turn_output_dir: Path,
 ) -> list[PreparedTurn]:
-    """Prepare a batch of ``(note_id, goal)`` turns; concurrent when ``concurrency>1``.
+    """Prepare a batch of ``(note_id, goal, exemplar)`` turns; concurrent when N>1.
 
     The returned list is in ``batch`` order. Concurrency parallelizes only the
     pure codegen phase (the slow LLM subprocess call); the caller still merges
     and gates serially, so the cargo build and ``system_map`` order stay
-    deterministic regardless of ``concurrency``.
+    deterministic regardless of ``concurrency``. Each turn carries its own
+    resolved ``exemplar`` (same-kind sibling source, or None).
     """
     kw = {
         "llm_mode": llm_mode,
@@ -554,10 +601,60 @@ def _prepare_batch(
         "turn_output_dir": turn_output_dir,
     }
     if concurrency <= 1 or len(batch) <= 1:
-        return [_prepare_turn(note_id, goal, **kw) for note_id, goal in batch]
+        return [_prepare_turn(nid, goal, exemplar=ex, **kw) for nid, goal, ex in batch]
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
-        futures = [pool.submit(_prepare_turn, note_id, goal, **kw) for note_id, goal in batch]
+        futures = [
+            pool.submit(_prepare_turn, nid, goal, exemplar=ex, **kw) for nid, goal, ex in batch
+        ]
         return [f.result() for f in futures]
+
+
+def _try_build(
+    prepared: PreparedTurn,
+    game_dir: Path,
+    registration: dict[str, str] | None,
+    agg_name: str | None,
+    crate_root_name: str | None,
+    cargo_runner: Any,
+) -> tuple[bool, list[WrittenFile], list[WrittenFile], str, list[str]]:
+    """Merge + register a prepared turn and run the build gate, once.
+
+    Returns ``(ok, written, touched, build_output, skipped)``: ``written`` is the
+    leaf files (for the implemented record), ``touched`` is leaves + aggregators
+    (for revert on failure).
+    """
+    written, skipped = merge_into_game(
+        prepared.parsed, game_dir, aggregator_name=agg_name, crate_root_name=crate_root_name
+    )
+    registered = register_modules([w.path for w in written], game_dir, registration)
+    ok, build_output = cargo_runner(game_dir)
+    return ok, written, written + registered, build_output, skipped
+
+
+def _record_success(
+    prepared: PreparedTurn,
+    state: dict[str, Any],
+    written: list[WrittenFile],
+    game_dir: Path,
+    skipped: list[str],
+) -> TurnResult:
+    """Record an implemented turn in ``state`` and build its TurnResult."""
+    rels = [str(w.path.relative_to(game_dir)).replace("\\", "/") for w in written]
+    sources = ",".join(codegen.extract_source_paths(prepared.response_text))
+    system_map.record_implementation(
+        state,
+        note_id=prepared.note_id,
+        file=";".join(rels),
+        sha=_sha256(prepared.response_text),
+        verified_against=sources,
+    )
+    return TurnResult(
+        prepared.note_id,
+        prepared.goal,
+        status="implemented",
+        files_written=rels,
+        files_skipped=skipped,
+    )
 
 
 def _commit_turn(
@@ -569,53 +666,179 @@ def _commit_turn(
     agg_name: str | None,
     crate_root_name: str | None,
     cargo_runner: Any,
+    repair_fn: Any = None,
+    repair_attempts: int = 0,
 ) -> TurnResult:
-    """Merge a prepared turn into ``game/``, gate it on cargo, record. Serial.
+    """Merge a prepared turn into ``game/``, gate it on the build, record. Serial.
 
     Mutates ``state`` and the working tree, so this must run one turn at a time
-    (a shared cargo target cannot gate two merges at once). On any failure the
-    merge is reverted byte-exact and the turn is recorded pending.
+    (a shared build target cannot gate two merges at once). On a build failure
+    the merge is reverted byte-exact, then — if ``repair_fn`` is set and attempts
+    remain — the build output is fed back through codegen for a fix-it turn and
+    re-gated. This is the engine-agnostic correction path: the build tool's own
+    errors drive the repair, so no per-engine rules are needed. After
+    ``repair_attempts`` exhausted (or an invalid repair) the turn is recorded
+    pending.
     """
     if prepared.pending_reason is not None:
         system_map.record_pending(state, prepared.note_id, prepared.pending_reason)
         return TurnResult(prepared.note_id, prepared.goal, status="pending", error=prepared.error)
 
-    written, skipped = merge_into_game(
-        prepared.parsed, game_dir, aggregator_name=agg_name, crate_root_name=crate_root_name
-    )
-    registered = register_modules([w.path for w in written], game_dir, registration)
-    ok, build_output = cargo_runner(game_dir)
-    if not ok:
-        revert_merge(written + registered)
-        system_map.record_pending(state, prepared.note_id, ["cargo_build_failed"])
-        return TurnResult(
-            prepared.note_id,
-            prepared.goal,
-            status="pending",
-            files_skipped=skipped,
-            error=f"cargo_build_failed: {build_output.strip()[:240]}",
+    attempt = prepared
+    build_output = ""
+    skipped: list[str] = []
+    for tries in range(repair_attempts + 1):
+        ok, written, touched, build_output, skipped = _try_build(
+            attempt, game_dir, registration, agg_name, crate_root_name, cargo_runner
         )
+        if ok:
+            return _record_success(attempt, state, written, game_dir, skipped)
+        revert_merge(touched)
+        if repair_fn is None or tries >= repair_attempts:
+            break
+        attempt = repair_fn(attempt.note_id, attempt.goal, attempt.response_text, build_output)
+        if attempt.parsed is None:
+            break
 
-    sources = ",".join(codegen.extract_source_paths(prepared.response_text))
-    file_list = ";".join(
-        str(entry.path.relative_to(game_dir)).replace("\\", "/") for entry in written
-    )
-    system_map.record_implementation(
-        state,
-        note_id=prepared.note_id,
-        file=file_list,
-        sha=_sha256(prepared.response_text),
-        verified_against=sources,
-    )
+    system_map.record_pending(state, prepared.note_id, ["cargo_build_failed"])
     return TurnResult(
         prepared.note_id,
         prepared.goal,
-        status="implemented",
-        files_written=[
-            str(entry.path.relative_to(game_dir)).replace("\\", "/") for entry in written
-        ],
+        status="pending",
         files_skipped=skipped,
+        error=f"cargo_build_failed: {build_output.strip()[:240]}",
     )
+
+
+def _chunk_end(
+    attempts: list[tuple[str, str, str | None]],
+    start: int,
+    concurrency: int,
+    ready_kinds: dict[str, str],
+) -> int:
+    """End index of the next prep chunk starting at ``start``.
+
+    Caps the chunk at ``concurrency`` and stops before a *second* same-kind turn
+    whose kind has no exemplar yet (``ready_kinds`` holds kinds that already do).
+    This forces the first module of a kind to be committed (seeding the
+    exemplar) before its siblings are prompted, so the sibling-consistency
+    mechanism holds even under concurrency. Once a kind is seeded, its siblings
+    batch freely up to ``concurrency``.
+    """
+    end = start
+    seen_unready: set[str] = set()
+    while end < len(attempts) and (end - start) < concurrency:
+        kind = attempts[end][2]
+        if kind is not None and kind not in ready_kinds:
+            if kind in seen_unready:
+                break
+            seen_unready.add(kind)
+        end += 1
+    return end
+
+
+def _seed_exemplars(
+    state: dict[str, Any], goal_kinds: dict[str, str | None], game_dir: Path
+) -> dict[str, str]:
+    """Build the initial per-kind exemplar map from already-implemented modules.
+
+    Lets a fresh sibling turn follow a module accepted in a *prior* run without
+    re-committing the seed this run (e.g. soldier stays implemented and seeds the
+    other units). First implemented module per kind wins. Kinds come from this
+    run's goals, so the grouping key matches the attempted siblings exactly.
+    """
+    exemplars: dict[str, str] = {}
+    for impl in state.get("implemented", []):
+        kind = goal_kinds.get(impl.get("id"))
+        if not kind or kind in exemplars:
+            continue
+        text = _read_leaf_text(game_dir, str(impl.get("file", "")).split(";"), impl.get("id", ""))
+        if text:
+            exemplars[kind] = text
+    return exemplars
+
+
+def _build_plan(
+    goals: list[tuple[str | None, str]],
+    state: dict[str, Any],
+    goal_kinds: dict[str, str | None],
+    max_turns: int | None,
+) -> tuple[list[tuple[str, Any, Any, Any]], list[tuple[str, str, str | None]]]:
+    """Return ``(plan, attempts)`` for ``goals`` in order.
+
+    ``plan`` interleaves ``("skip", TurnResult, ...)`` and ``("attempt", note_id,
+    goal, kind)`` entries so output order matches input order. ``attempts`` is
+    just the codegen-bound subset, capped at ``max_turns`` (skips do not count).
+
+    A note_id already implemented OR already attempted earlier in this same run
+    is skipped: the same slug can appear under two kinds (e.g. a ``technology_tree``
+    note in both ``game_mechanics`` and ``research``), and attempting it twice
+    would generate the module twice and write two ledger entries with one id.
+    First occurrence wins (goals arrive in deterministic sorted order).
+    """
+    plan: list[tuple[str, Any, Any, Any]] = []
+    attempts: list[tuple[str, str, str | None]] = []
+    planned_ids: set[str] = set()
+    for explicit_id, goal in goals:
+        note_id = explicit_id or derive_note_id(goal)
+        kind = goal_kinds.get(note_id)
+        if already_implemented(state, note_id) or note_id in planned_ids:
+            plan.append(("skip", TurnResult(note_id, goal, status="skipped"), None, None))
+            continue
+        plan.append(("attempt", note_id, goal, kind))
+        attempts.append((note_id, goal, kind))
+        planned_ids.add(note_id)
+        if max_turns is not None and len(attempts) >= max_turns:
+            break
+    return plan, attempts
+
+
+def _capture_exemplar(
+    exemplars: dict[str, str],
+    result: TurnResult,
+    kind: str | None,
+    note_id: str,
+    game_dir: Path,
+) -> None:
+    """Record the just-accepted module as the kind's exemplar if none is set yet."""
+    if result.status != "implemented" or not kind or kind in exemplars:
+        return
+    seed = _read_leaf_text(game_dir, result.files_written, note_id)
+    if seed:
+        exemplars[kind] = seed
+
+
+def _make_repair_fn(
+    *,
+    llm_mode: str,
+    model: str | None,
+    baseline_path: Path,
+    generate: Any,
+    turn_output_dir: Path,
+) -> Any:
+    """Build the codegen-with-build-error closure used by the repair loop.
+
+    Returns ``repair(note_id, goal, prior_text, build_error) -> PreparedTurn``: a
+    fresh codegen turn that feeds the failed source + the build tool's output
+    back so the model fixes its own output. No exemplar is passed — the prior
+    attempt already carries the structure to preserve. Engine-agnostic: the
+    correction signal is whatever the build runner emitted.
+    """
+
+    def _repair(note_id: str, goal: str, prior_text: str, build_error: str) -> PreparedTurn:
+        return _prepare_turn(
+            note_id,
+            goal,
+            exemplar=None,
+            llm_mode=llm_mode,
+            model=model,
+            baseline_path=baseline_path,
+            generate=generate,
+            turn_output_dir=turn_output_dir,
+            repair=(build_error, prior_text),
+        )
+
+    return _repair
 
 
 def run_loop(
@@ -632,6 +855,7 @@ def run_loop(
     registration: dict[str, str] | None = None,
     max_turns: int | None = None,
     concurrency: int = 1,
+    repair_attempts: int = 0,
 ) -> list[TurnResult]:
     """Drive ``goals`` through the codegen + cargo loop. Persists state once at end.
 
@@ -647,6 +871,11 @@ def run_loop(
     error budget behave identically to the serial path (``concurrency=1``); only
     the LLM wait is overlapped. Wasted calls on an error-budget stop are bounded
     to one batch.
+
+    ``repair_attempts`` (>0) enables the build-error repair loop: a turn whose
+    build fails is re-generated up to that many times with the build output fed
+    back, before being recorded pending. The repair codegen runs serially in the
+    gate phase (failures are the minority), so it does not perturb concurrency.
     """
     state = system_map.load_state(state_path)
     turn_output_dir = state_path.parent / "turns"
@@ -654,19 +883,14 @@ def run_loop(
     crate_root_name = crate_root_basename(registration)
     concurrency = max(1, concurrency)
 
-    # Pass 1: ordered plan. Skips are recorded inline (free); attempts are the
-    # goals that will actually run codegen, capped by max_turns.
-    plan: list[tuple[str, Any, Any]] = []
-    attempts: list[tuple[str, str]] = []
-    for explicit_id, goal in goals:
-        note_id = explicit_id or derive_note_id(goal)
-        if already_implemented(state, note_id):
-            plan.append(("skip", TurnResult(note_id, goal, status="skipped"), None))
-            continue
-        plan.append(("attempt", note_id, goal))
-        attempts.append((note_id, goal))
-        if max_turns is not None and len(attempts) >= max_turns:
-            break
+    # note_id -> kind for every goal this run; the seed map starts from modules
+    # already implemented (so a kept module like soldier seeds its siblings).
+    goal_kinds = {(eid or derive_note_id(g)): derive_kind(g) for eid, g in goals}
+    exemplars = _seed_exemplars(state, goal_kinds, game_dir)
+
+    # Ordered plan: skips recorded inline (free); attempts are the codegen-bound
+    # subset, capped by max_turns.
+    plan, attempts = _build_plan(goals, state, goal_kinds, max_turns)
 
     prep_kw = {
         "concurrency": concurrency,
@@ -676,20 +900,33 @@ def run_loop(
         "generate": generate,
         "turn_output_dir": turn_output_dir,
     }
+    repair_fn = (
+        _make_repair_fn(
+            llm_mode=llm_mode,
+            model=model,
+            baseline_path=baseline_path,
+            generate=generate,
+            turn_output_dir=turn_output_dir,
+        )
+        if repair_attempts > 0
+        else None
+    )
     prepared: dict[int, PreparedTurn] = {}
     next_unprepared = 0
     attempt_seq = 0
     results: list[TurnResult] = []
     errors = 0
-    for kind, *rest in plan:
-        if kind == "skip":
+    for tag, *rest in plan:
+        if tag == "skip":
             results.append(rest[0])
             continue
+        note_id, _goal, kind = rest
         if attempt_seq not in prepared:
-            chunk = attempts[next_unprepared : next_unprepared + concurrency]
+            end = _chunk_end(attempts, next_unprepared, concurrency, exemplars)
+            chunk = [(nid, g, exemplars.get(k)) for nid, g, k in attempts[next_unprepared:end]]
             for offset, prep in enumerate(_prepare_batch(chunk, **prep_kw)):
                 prepared[next_unprepared + offset] = prep
-            next_unprepared += len(chunk)
+            next_unprepared = end
         result = _commit_turn(
             prepared[attempt_seq],
             state,
@@ -698,14 +935,20 @@ def run_loop(
             agg_name=agg_name,
             crate_root_name=crate_root_name,
             cargo_runner=cargo_runner,
+            repair_fn=repair_fn,
+            repair_attempts=repair_attempts,
         )
+        _capture_exemplar(exemplars, result, kind, note_id, game_dir)
         attempt_seq += 1
         results.append(result)
         if result.status == "pending":
             errors += 1
             if errors >= error_budget:
                 break
-    state = system_map.cap_tokens(state)
+    # Persist the complete ledger (not the capped projection): already_implemented
+    # reads this list to skip finished work, so collapsing it would make the loop
+    # re-generate older modules every run and never converge. The 1k-token cap is
+    # applied only when codegen renders the Layer-4 block (system_map.render_for_prompt).
     system_map.save_state(state_path, state)
     return results
 
@@ -774,6 +1017,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "worker loads its own embedder, so bound this by available memory."
         ),
     )
+    parser.add_argument(
+        "--repair-attempts",
+        type=int,
+        default=2,
+        help=(
+            "on a build failure, re-generate the turn this many times with the "
+            "build error fed back before recording pending (default 2; 0 disables)"
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -814,6 +1066,7 @@ def main(argv: list[str] | None = None) -> int:
         registration=load_module_registration(args.game_config),
         max_turns=args.limit,
         concurrency=args.concurrency,
+        repair_attempts=args.repair_attempts,
     )
 
     counts: dict[str, int] = {}

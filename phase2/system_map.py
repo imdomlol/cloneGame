@@ -1,11 +1,24 @@
 """Rolling system-map state for Phase 2 codegen (Layer 4 of the context filter).
 
 Tracks ``implemented`` / ``pending`` / ``test_state`` / ``last_engine_baseline_hash``
-across codegen turns so the prompt does not have to replay raw history. The
-rendered YAML is hard-capped at 1,000 tokens (DEPLOYMENT_GUIDE §3.7); when
-adding entries pushes past the cap, ``cap_tokens`` collapses the oldest
-``implemented`` entries into a single summary line. A Haiku-driven compactor
-is provided as an optional path for richer summarisation.
+across codegen turns so the prompt does not have to replay raw history.
+
+Two distinct views of the same state, deliberately decoupled:
+
+* **Persisted ledger** (``system_map.yaml`` on disk) keeps the *complete*
+  ``implemented`` list. It is the idempotency ledger the loop driver consults
+  via ``already_implemented`` to skip work already done, so it must never be
+  lossy — collapsing entries here would make finished modules look unfinished
+  and the loop would re-generate them forever (never converging once the game
+  has more notes than fit the prompt budget).
+* **Prompt projection** is the Layer-4 block injected into codegen. *That* is
+  hard-capped at 1,000 tokens (DEPLOYMENT_GUIDE §3.7) by ``cap_tokens``, which
+  collapses the oldest ``implemented`` entries into one ``{summary, count}``
+  line. Use ``render_for_prompt`` to get the capped text; it does not touch the
+  persisted ledger. A Haiku-driven compactor is an optional richer path.
+
+The cap therefore bounds prompt cost without ever discarding the durable record
+of what has been built.
 
 CLI::
 
@@ -132,6 +145,11 @@ def cap_tokens(
     Always keeps the most recent ``min_kept`` entries in full. Older entries
     are folded into one ``{summary, count}`` placeholder line so the codegen
     LLM still sees that *N earlier files exist*, just not their detail.
+
+    This is the **prompt projection** only. It returns a capped *copy* and never
+    mutates the caller's state, so the persisted ledger stays complete (see the
+    module docstring). Use it via ``render_for_prompt``; do not persist its
+    output as the canonical state.
     """
     import copy
 
@@ -154,6 +172,23 @@ def cap_tokens(
         }
         work["implemented"] = [summary_entry, *kept]
     return work
+
+
+def render_for_prompt(
+    path: Path,
+    cap: int = TOKEN_CAP,
+    token_counter: Any = count_tokens,
+) -> str:
+    """Load the persisted ledger and render the token-capped Layer-4 block.
+
+    Returns "" when ``path`` is absent (so codegen emits the "(no prior turns)"
+    fallback). The on-disk ledger is read but never rewritten — capping happens
+    only on the text handed to the prompt, leaving the durable record intact.
+    """
+    if not path.exists():
+        return ""
+    state = load_state(path)
+    return render_yaml(cap_tokens(state, cap=cap, token_counter=token_counter))
 
 
 def summarise_with_haiku(
@@ -238,10 +273,14 @@ def _dispatch(args: argparse.Namespace) -> int:
         update_test_state(state, args.passing, args.failing, failing_ids)
     elif args.cmd == "baseline-hash":
         set_baseline_hash(state, args.hash)
-    state = cap_tokens(state)
+    # Persist the complete ledger; the 1k cap applies only to the prompt
+    # projection (render_for_prompt), never to the durable record.
     save_state(args.path, state)
-    tokens = count_tokens(render_yaml(state))
-    print(f"system_map: {tokens}/{TOKEN_CAP} tokens, wrote {args.path}")
+    prompt_tokens = count_tokens(render_yaml(cap_tokens(state)))
+    print(
+        f"system_map: {len(state.get('implemented', []))} implemented, "
+        f"prompt view {prompt_tokens}/{TOKEN_CAP} tokens, wrote {args.path}"
+    )
     return 0
 
 
