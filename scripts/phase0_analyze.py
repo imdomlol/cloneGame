@@ -1,3 +1,12 @@
+"""Phase 0 LLM analysis: wiki categories → proposed taxonomy.
+
+Shells out to a headless LLM CLI (`claude -p` or `codex exec`) to map raw wiki
+categories to engine-relevant kinds, propose a per-kind `frontmatter_schema`
+from wikitext samples, and suggest engine candidates. Enforces verbatim
+category titles, retries on malformed JSON, and normalizes kind names to
+snake_case before handing the proposal to `phase0_write`.
+"""
+
 import contextlib
 import json
 import os

@@ -1,6 +1,6 @@
 """Phase 2 retrieval: vector seeds + 1-hop graph expansion, token-capped.
 
-Layer 3 of the 4-layer codegen filter (see docs/DEPLOYMENT_GUIDE.md §3.4).
+Layer 3 of the 4-layer codegen filter (see DEPLOYMENT_GUIDE.md §3.4).
 Given a task string, returns a packed sequence of ``<file path="...">...</file>``
 blocks sized to fit a 2,000-token cap, prioritising direct vector hits over
 graph-expanded neighbours.

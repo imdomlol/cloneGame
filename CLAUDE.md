@@ -28,7 +28,7 @@ Learning stage: most things. Treat as a developing student, not a beginner, not 
 
 ## Current Project
 
-Goal: build a game-agnostic wiki-to-code pipeline. Given any public Fandom-style wiki, the pipeline produces a structured Obsidian vault and then generates a playable clone of that game. Phase 2 is scaffolded (indexer + retrieval + engine baseline + codegen + system_map all land 2026-05-22; no live turn spent yet) but no game source code has been produced. Individual games (e.g. They Are Billions) are used as reference deployments, but no part of the repo should be hard-coded to one game.
+Goal: build a game-agnostic wiki-to-code pipeline. Given any public Fandom-style wiki, the pipeline produces a structured Obsidian vault and then generates a playable clone of that game. All three phases are now live: Phase 2 codegen has been spent against the Anthropic API and has produced a real Rust/Bevy crate under `game/` (shared `Health`/`UnitStats` foundation, deterministic `tick_rng` + checksum desync detection in `game/src/sim.rs`, plus generated buildings, units, infected, wonders, and game_mechanics). Individual games (e.g. They Are Billions) are used as reference deployments, but no part of the repo should be hard-coded to one game.
 
 - Repo root: `C:\Users\dominic\Documents\GitHub\cloneGame`
 - Obsidian project folder (design notes, MEMORY.md, ERRORS.md): `cloneGame/` in the vault, reachable via the Obsidian MCP server. **This is not the same as the repo's `vault/` directory** — that one is Phase 1's generated output (gitignored, consumed by Phase 2).
@@ -41,9 +41,9 @@ Avoid: overly complex architectures, premature abstraction, enterprise patterns,
 
 ## What this repo is
 
-A wiki-to-code pipeline structured as three sequential phases. Phase 0 and Phase 1 are implemented in Python. **Phase 2 (codegen) is scaffolded but has not yet been run against the live Anthropic API** (`phase2/{indexer,retrieval,baseline,codegen,system_map}.py` exist with unit tests; the first real turn is gated on dom's in-session yes per Default Behavior 12). The repo therefore contains no game source code yet, only the data-extraction pipeline and the codegen plumbing that will feed it. The pipeline must work for any wiki — a specific game serves as the reference but never as a hard-coded target.
+A wiki-to-code pipeline structured as three sequential phases, all implemented. Phase 0 and Phase 1 are Python. **Phase 2 (codegen) is now live and has been run against the Anthropic API** (`phase2/{indexer,retrieval,baseline,codegen,system_map}.py` plus the orchestration drivers `phase2/driver.py` (one task, one file) and `phase2/loop_driver.py` (N goals, multi-file tree, gated behind `cargo build`)). Generated game source lives in `game/` (a Rust/Bevy crate). The pipeline must work for any wiki — a specific game serves as the reference but never as a hard-coded target. Phase 2 codegen output is per-game data, so do not hard-code anything about the current reference game into the pipeline modules.
 
-`docs/DEPLOYMENT_GUIDE.md` is the architecture spec. Per-phase implementation status and open questions live in the Obsidian vault at `cloneGame/plan.md`; active near-term work lives at `cloneGame/todo.md`. The decision log lives in the Obsidian vault at `cloneGame/MEMORY.md` — read it at the start of every session.
+`DEPLOYMENT_GUIDE.md` is the architecture spec. Per-phase implementation status and open questions live in the Obsidian vault at `cloneGame/plan.md`; active near-term work lives at `cloneGame/todo.md`. The decision log lives in the Obsidian vault at `cloneGame/MEMORY.md` — read it at the start of every session.
 
 ## Phase architecture
 
@@ -55,7 +55,7 @@ Phase 2  vault/ ──► repomix XML ──► Chroma index ──► codegen L
 
 - **Phase 0** queries `allcategories` + `categorymembers`, asks an LLM to (a) map raw wiki categories to engine-relevant `kinds`, (b) propose per-kind `frontmatter_schema` blocks from wikitext samples, (c) propose engine candidates, and auto-promotes the result into `game-config.json` (with `human_approved: true`). A mirror is written to `game-config.proposed.json` so `git diff` can be used for post-hoc review (this file is gitignored, so the diff is only meaningful between local runs, not across commits).
 - **Phase 1** walks the approved `categories` array, pulls wikitext via the MediaWiki API, **trims it** (HTML comments, `[[Category:]]` tags, `[[File:]]`/`[[Image:]]` links, image-only `<gallery>` blocks, repeated blank lines, see `trim_wikitext` in `phase1_ingest.py`) to save tokens while keeping infoboxes/stat tables/formulas/wikilinks intact, builds a compile prompt that includes the per-kind `frontmatter_schema` so the LLM uses canonical field names, runs the prompt through a headless LLM CLI (`claude -p` or `codex exec`), and validates the resulting YAML frontmatter against `schemas/_universal.schema.json` plus per-kind property types. Presence of per-kind fields is NOT enforced (only the universal schema's `required` list is). Files write to `vault/<kind>/<slug>.md` on success or `vault/_quarantine/<slug>.md` on validation failure. Compile output is cached by SHA-256 of `(rendered compile prompt + model id)`, so any change to wikitext, the trim function, the system prompt, or a kind's `frontmatter_schema` invalidates the cache cleanly. Production config in `phase1.config.toml` currently pins `llm_mode = "codex"` + `model = "gpt-5.4-mini"`.
-- **Phase 2** is scaffolded but un-spent. The engine for any given run comes from `chosen_engine` in that game's `game-config.json`. The reference deployment chose **Bevy (Rust)** with **deterministic lockstep** — see "Reference deployment engine" below for the binding determinism rules that apply when that engine is selected. The pipeline lives in `phase2/` (indexer → retrieval → baseline → codegen → system_map); per-engine determinism rules are data files under `prompts/engine_determinism/<engine>.md`, keyed by lowercased `chosen_engine.name`. The first real codegen turn against the Anthropic API is still gated on explicit user direction per Default Behavior 12.
+- **Phase 2** is live. The engine for any given run comes from `chosen_engine` in that game's `game-config.json`. The reference deployment chose **Bevy (Rust)** with **deterministic lockstep** — see "Reference deployment engine" below for the binding determinism rules that apply when that engine is selected. The pipeline lives in `phase2/` (indexer → retrieval → baseline → codegen → system_map), driven by `driver.py` (single task → single file) or `loop_driver.py` (a goals list → multi-file tree, each turn gated behind `cargo build game/` with revert-on-failure and `record_pending`). Per-engine determinism rules are data files under `prompts/engine_determinism/<engine>.md`, keyed by lowercased `chosen_engine.name`. Generated code lands in `game/src/`. Per Default Behavior 12, every live Anthropic codegen turn still needs an in-session yes before it runs.
 
 ## Reference deployment engine (chosen 2026-05-19): Bevy + lockstep
 
@@ -100,7 +100,16 @@ python phase2/indexer.py                            # rebuild Chroma + graph.jso
 python phase2/baseline.py                           # render build/engine_baseline.md
 python phase2/system_map.py init                    # one-time state init
 python phase2/codegen.py --dry-run "implement X"    # assemble prompt, skip API
-python phase2/codegen.py "implement X"              # live Anthropic call
+python phase2/codegen.py "implement X"              # live Anthropic call (DB12 gate)
+python phase2/driver.py <id> src/x.rs "implement X" # one task -> one file + system_map
+python phase2/loop_driver.py --goals-file goals.txt # N goals, multi-file, cargo-gated
+python phase2/loop_driver.py --dry-run "implement X" # assemble only, no API/build
+```
+
+Phase 2 game crate (the generated Rust/Bevy code; requires the Rust toolchain):
+```powershell
+cargo build  --manifest-path game/Cargo.toml        # what loop_driver gates each turn on
+cargo test   --manifest-path game/Cargo.toml        # integration tests in game/tests/
 ```
 
 Tests (unit tests for Phase 1 + Phase 2 helpers; the Chroma-touching path in `phase2/indexer.py` is not exercised, only the pure-Python parsing/packing/state helpers):
@@ -114,7 +123,7 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 
 ## Key files for navigation
 
-- `docs/DEPLOYMENT_GUIDE.md` — full architectural spec.
+- `DEPLOYMENT_GUIDE.md` — full architectural spec.
 - `cloneGame/plan.md` (Obsidian vault) — phase-by-phase implementation status (`[x] [~] [ ] [!]`) and open questions.
 - `cloneGame/todo.md` (Obsidian vault) — active near-term TODOs distilled from `plan.md`.
 - `cloneGame/MEMORY.md` (Obsidian vault) — decision log. Read at session start; never contradict without flagging.
@@ -133,7 +142,7 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 - **Frontmatter parsing is hand-rolled** in `phase1_ingest.py` (`parse_yaml_map` / `parse_block`). It handles the subset of YAML the compile prompt produces; don't assume full YAML compatibility. If frontmatter is getting mis-parsed, fix the compile prompt before reaching for a full YAML library.
 - **Wikilink invariant**: every `[[wiki_link]]` in a vault file body must be mirrored in `depends_on:` in the frontmatter. The compile system prompt enforces this; Phase 2's graph expansion will rely on it.
 - **The taxonomy AND per-kind schemas live in `game-config.json`, not in code.** Adding a new `kind` means: (1) add it to `kinds` in `game-config.json`, (2) optionally add a `frontmatter_schema` block under that kind, (3) re-run Phase 0 or hand-edit `categories` to route wiki categories to it. Phase 0 v2's LLM proposer can do (1) and (2) automatically for a new target game.
-- **The directory name `cloneGame` is aspirational.** No game code exists yet. Treat any task framed as "fix the game" as a request to work on the pipeline, unless the user explicitly says they've started Phase 2.
+- **Game code now exists under `game/`.** A task framed as "fix the game" is real: it means the generated Rust/Bevy crate, not the pipeline. Still distinguish the two — "fix the pipeline" / "fix codegen" means `scripts/` or `phase2/`. When in doubt about which layer a task targets, ask.
 - **Engine-specific fixes are a last resort** No good solution requires a game or engine-specific fix since this repo aims to be able to mix and match any and all of those options. All solutions need to be broad and able to actually apply for many cases.
 
 ## Development Guidelines
@@ -144,7 +153,8 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 - Functions must be smaller than 40 lines excluding comments and the catch/finally blocks of try/catch sections. If a function exceeds that, refactor it.
 - `scripts/phase1_ingest.py` is the Phase 1 orchestrator (`process_page`, `ingest`, `build_context`, `main`, dry-run + print helpers). Helpers live in sibling modules: `wikitext.py` (trimming), `frontmatter.py` (YAML parsing), `validation.py` (schema gate), `compile_cache.py` (prompt render + SHA cache + LLM dispatch), `wiki_api.py` (MediaWiki retry/pagination), `vault_index.py` (paths, source-key index, migration). Inter-script imports use bare `from <module> import ...` plus a `sys.path` bootstrap so both direct execution and unittest discovery work.
 - `scripts/phase0_analyze.py` is ~398 lines, right at the line. Treat any net-add as a refactor trigger.
-- `phase2/` is the Phase 2 codegen pipeline. Modules: `indexer.py` (repomix XML → Chroma + graph.json), `retrieval.py` (vector merge + 1-hop graph, 2k-token cap), `baseline.py` (renders `prompts/engine_baseline.template.md` with per-engine rules from `prompts/engine_determinism/<engine>.md`, 2.5k-token cap), `codegen.py` (Anthropic SDK call with `cache_control: ephemeral` on baseline, cache-hit logging, `// Sources:` header validation), `system_map.py` (rolling `build/system_map.yaml`, 1k-token cap). Imports use the same bare `from <module> import ...` + `sys.path` bootstrap pattern as scripts/.
+- `phase2/` is the Phase 2 codegen pipeline. Modules: `indexer.py` (repomix XML → Chroma + graph.json), `retrieval.py` (vector merge + 1-hop graph, 2k-token cap), `baseline.py` (renders `prompts/engine_baseline.template.md` with per-engine rules from `prompts/engine_determinism/<engine>.md`, 2.5k-token cap), `codegen.py` (Anthropic SDK call with `cache_control: ephemeral` on baseline, cache-hit logging, `// Sources:` header validation), `system_map.py` (rolling `build/system_map.yaml`, 1k-token cap), `driver.py` (single-shot: one task → one validated file + a `system_map` mutation), `loop_driver.py` (runs N goals, accepts a multi-file tree, merges into `game/` with backup, gates each turn on `cargo build`, reverts the whole turn on failure, stops after `--error-budget` failures). Imports use the same bare `from <module> import ...` + `sys.path` bootstrap pattern as scripts/.
+- `game/` is the generated Rust/Bevy crate (Phase 2 output, committed). `game/src/sim.rs` holds the shared determinism foundation (`tick_rng`, `SimChecksumState`, `Health`, `UnitStats`, `SimPosition`, damage/kill/noise events) that generated units and buildings build on; `game/src/{units,buildings,infected,wonders,game_mechanics}/` hold the per-entity modules. `game/tests/` holds integration tests. `Cargo.toml`/`Cargo.lock` are pinned regression anchors — `loop_driver.py` deliberately skips them when merging codegen output.
 
 ### Comments and Documentation
 
@@ -190,5 +200,5 @@ Do not commit until all four report clean.
 16. Maintain `MEMORY.md` in `cloneGame/` in the Obsidian vault. After any significant decision, add an entry: What was decided / Why / What was rejected and why. Read MEMORY.md at the start of every session. Never contradict a logged decision without flagging it first.
 17. When dom says "session end", "wrapping up", or "let's stop here": write a session summary to MEMORY.md. Include: Worked on / Completed / In progress / Decisions made / Next session priorities.
 18. Maintain `ERRORS.md` in `cloneGame/` in the Obsidian vault. When an approach takes more than 2 attempts to work, log it: What didn't work / What worked instead / Note for next time. Check ERRORS.md before suggesting approaches to similar tasks.
-19. If the Obsidian project folder does not exist, create one (path: `cloneGame/`). If you cannot reach the Obsidian server, create a temporary vault file at the repo root for dom to manually move later. Any markdown that does not need to be in the GitHub repo should live in the Obsidian vault (CLAUDE.md, README.md, and `docs/` stay in repo).
-20. Keep `docs/` and the Obsidian project folder current as the project progresses. When project state changes (Phase 0/1/2 milestones reached, decisions made, schemas updated, model swapped, new sub-systems added): update the relevant doc in `docs/` and replace TBD placeholders with actual values. Stale design docs are worse than missing ones. This complements rules 16 and 18, which still apply for MEMORY.md and ERRORS.md.
+19. If the Obsidian project folder does not exist, create one (path: `cloneGame/`). If you cannot reach the Obsidian server, create a temporary vault file at the repo root for dom to manually move later. Any markdown that does not need to be in the GitHub repo should live in the Obsidian vault (repo-root docs like `CLAUDE.md`, `README.md`, and `DEPLOYMENT_GUIDE.md` stay in repo).
+20. Keep the repo-root design docs (`DEPLOYMENT_GUIDE.md`) and the Obsidian project folder current as the project progresses. When project state changes (Phase 0/1/2 milestones reached, decisions made, schemas updated, model swapped, new sub-systems added): update the relevant repo-root doc and replace TBD placeholders with actual values. Stale design docs are worse than missing ones. This complements rules 16 and 18, which still apply for MEMORY.md and ERRORS.md.

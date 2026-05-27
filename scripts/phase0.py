@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""Phase 0 orchestrator: taxonomy discovery CLI entry point.
+
+Parses args, then dispatches the three-stage pipeline: fetch the wiki's
+category graph (`phase0_fetch`), ask an LLM to propose kinds, per-kind
+frontmatter schemas, and engine candidates (`phase0_analyze`), and write the
+proposal plus two-stage human confirmation that flips `human_approved`
+(`phase0_write`). `--wiki-url` overrides the configured base URL; `--dry-run`
+prints the proposed JSON and skips the write/confirm step.
+"""
 
 from __future__ import annotations
 

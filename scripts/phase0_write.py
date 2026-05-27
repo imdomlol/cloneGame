@@ -1,3 +1,12 @@
+"""Phase 0 proposal write + human confirmation.
+
+Emits `game-config.proposed.json`, prints an ANSI-coloured unified diff against
+the current `game-config.json`, and runs a two-stage terminal confirmation that
+flips `human_approved: true` only on explicit sign-off. The approved result is
+promoted into `game-config.json`; the proposed mirror is left for `git diff`
+review between local runs.
+"""
+
 from __future__ import annotations
 
 import json
