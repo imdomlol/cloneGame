@@ -1,56 +1,51 @@
 // Sources: vault/buildings/advanced_farm.md, vault/buildings/farm.md
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 use fixed::types::I32F32;
 
-use crate::sim::SimChecksumState;
+use crate::buildings::farm::{Farm, FarmAnchor, FarmBuildState, FarmDefenseLife, FarmEconomy, FarmFootprint, FarmPlacementClaims, FarmPlots, FarmProduction};
+use crate::sim::{Health, SimChecksumState};
 
 const ADVANCED_FARM_HP: I32F32 = I32F32::lit("500");
 const ADVANCED_FARM_DEFENSES_LIFE: I32F32 = I32F32::lit("125");
 const ADVANCED_FARM_WATCH_RANGE: I32F32 = I32F32::lit("7");
+const ADVANCED_FARM_BUILD_TIME_SECONDS: i32 = 60;
+const ADVANCED_FARM_UPGRADE_TIME_SECONDS: i32 = 26;
+const ADVANCED_FARM_SIZE_TILES: i32 = 2;
+const ADVANCED_FARM_PLOT_RADIUS_TILES: i32 = 2;
+const ADVANCED_FARM_MIN_SPACING_TILES: i32 = 4;
+const ADVANCED_FARM_FOOD_PER_PLOT: I32F32 = I32F32::lit("4");
+const ADVANCED_FARM_PFOOD_MIN: I32F32 = I32F32::lit("4");
+const ADVANCED_FARM_PFOOD_MAX: I32F32 = I32F32::lit("128");
 const ADVANCED_FARM_ENERGY_COST: i32 = 30;
 const ADVANCED_FARM_WOOD_COST: i32 = 30;
 const ADVANCED_FARM_STONE_COST: i32 = 20;
 const ADVANCED_FARM_IRON_COST: i32 = 20;
 const ADVANCED_FARM_OIL_COST: i32 = 20;
 const ADVANCED_FARM_GOLD_COST: i32 = 1200;
-const ADVANCED_FARM_BUILD_TIME_SECONDS: i32 = 60;
-const ADVANCED_FARM_UPGRADE_TIME_SECONDS: i32 = 26;
-const ADVANCED_FARM_BUILDING_SIZE_TILES: i32 = 2;
-const ADVANCED_FARM_PLOT_RADIUS_TILES: i32 = 2;
-const ADVANCED_FARM_MIN_SPACING_TILES: i32 = 4;
-const ADVANCED_FARM_FOOD_PER_PLOT: I32F32 = I32F32::lit("4");
-const ADVANCED_FARM_PFOOD_MIN: I32F32 = I32F32::lit("4");
-const ADVANCED_FARM_PFOOD_MAX: I32F32 = I32F32::lit("128");
 const ADVANCED_FARM_PCOLONISTS: i32 = 24;
 const SIM_HZ: i32 = 25;
-
-#[derive(Component, Default)]
-pub struct Farm;
 
 #[derive(Component, Default)]
 pub struct AdvancedFarm;
 
 #[derive(Component, Clone, Copy)]
-pub struct BuildingAnchor {
-    pub x: i32,
-    pub y: i32,
+pub struct AdvancedFarmDefenseLife {
+    pub current: I32F32,
+    pub max: I32F32,
 }
 
-#[derive(Component, Clone, Copy)]
-pub struct BuildingHealth {
-    pub hp: I32F32,
-    pub defenses_life: I32F32,
+impl AdvancedFarmDefenseLife {
+    pub fn full(max: I32F32) -> Self {
+        Self { current: max, max }
+    }
 }
 
-impl Default for BuildingHealth {
+impl Default for AdvancedFarmDefenseLife {
     fn default() -> Self {
-        Self {
-            hp: ADVANCED_FARM_HP,
-            defenses_life: ADVANCED_FARM_DEFENSES_LIFE,
-        }
+        Self::full(ADVANCED_FARM_DEFENSES_LIFE)
     }
 }
 
@@ -87,13 +82,32 @@ impl Default for AdvancedFarmEconomy {
 }
 
 #[derive(Component, Clone, Copy)]
-pub struct AdvancedFarmOutput {
+pub struct AdvancedFarmFootprint {
+    pub size_tiles: i32,
+    pub watch_range: I32F32,
+    pub plot_radius_tiles: i32,
+    pub min_spacing_tiles: i32,
+}
+
+impl Default for AdvancedFarmFootprint {
+    fn default() -> Self {
+        Self {
+            size_tiles: ADVANCED_FARM_SIZE_TILES,
+            watch_range: ADVANCED_FARM_WATCH_RANGE,
+            plot_radius_tiles: ADVANCED_FARM_PLOT_RADIUS_TILES,
+            min_spacing_tiles: ADVANCED_FARM_MIN_SPACING_TILES,
+        }
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct AdvancedFarmProduction {
     pub food: I32F32,
     pub min_food: I32F32,
     pub max_food: I32F32,
 }
 
-impl Default for AdvancedFarmOutput {
+impl Default for AdvancedFarmProduction {
     fn default() -> Self {
         Self {
             food: I32F32::ZERO,
@@ -103,57 +117,19 @@ impl Default for AdvancedFarmOutput {
     }
 }
 
-#[derive(Component, Clone, Copy)]
-pub struct AdvancedFarmFootprint {
-    pub size_tiles: i32,
-    pub watch_range: I32F32,
-}
-
-impl Default for AdvancedFarmFootprint {
-    fn default() -> Self {
-        Self {
-            size_tiles: ADVANCED_FARM_BUILDING_SIZE_TILES,
-            watch_range: ADVANCED_FARM_WATCH_RANGE,
-        }
-    }
-}
-
-#[derive(Component, Clone, Default)]
-pub struct AdvancedFarmPlots {
-    pub wheat_tiles: BTreeSet<(i32, i32)>,
-}
-
-#[derive(Resource, Default, Clone)]
-pub struct GrassTiles {
-    pub tiles: BTreeSet<(i32, i32)>,
-}
-
-#[derive(Resource, Default, Clone)]
-pub struct TileOccupancy {
-    pub blocked_tiles: BTreeSet<(i32, i32)>,
-}
-
 #[derive(Resource, Default, Clone)]
 pub struct AdvancedFarmPlacementClaims {
-    pub claims: BTreeMap<Entity, BuildingAnchor>,
-}
-
-#[derive(Event, Clone, Copy)]
-pub struct SetGrassTileEvent {
-    pub tile_x: i32,
-    pub tile_y: i32,
-    pub is_grass: bool,
-}
-
-#[derive(Event, Clone, Copy)]
-pub struct SetTileBlockedEvent {
-    pub tile_x: i32,
-    pub tile_y: i32,
-    pub blocked: bool,
+    pub claims: BTreeMap<Entity, FarmAnchor>,
 }
 
 #[derive(Event, Clone, Copy)]
 pub struct PlaceAdvancedFarmEvent {
+    pub tile_x: i32,
+    pub tile_y: i32,
+}
+
+#[derive(Event, Clone, Copy)]
+pub struct AdvancedFarmPlacementRejectedEvent {
     pub tile_x: i32,
     pub tile_y: i32,
 }
@@ -164,90 +140,62 @@ pub struct UpgradeFarmToAdvancedFarmEvent {
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct AdvancedFarmPlacementRejectedEvent {
-    pub tile_x: i32,
-    pub tile_y: i32,
+pub struct UpgradeFarmToAdvancedFarmRejectedEvent {
+    pub farm_entity: Entity,
 }
 
-fn build_seconds_to_ticks(seconds: i32) -> i32 {
+#[derive(Event, Clone, Copy)]
+pub struct DamageAdvancedFarmEvent {
+    pub farm_entity: Entity,
+    pub damage: I32F32,
+}
+
+fn seconds_to_ticks(seconds: i32) -> i32 {
     seconds * SIM_HZ
 }
 
-fn footprint_tiles(anchor: BuildingAnchor) -> impl Iterator<Item = (i32, i32)> {
-    let min_x = anchor.x;
-    let min_y = anchor.y;
-    let max_x = anchor.x + ADVANCED_FARM_BUILDING_SIZE_TILES - 1;
-    let max_y = anchor.y + ADVANCED_FARM_BUILDING_SIZE_TILES - 1;
-
-    (min_x..=max_x).flat_map(move |x| (min_y..=max_y).map(move |y| (x, y)))
-}
-
-fn max_axis_delta(a: BuildingAnchor, b: BuildingAnchor) -> i32 {
+fn max_axis_delta(a: FarmAnchor, b: FarmAnchor) -> i32 {
     let dx = (a.x - b.x).abs();
     let dy = (a.y - b.y).abs();
     dx.max(dy)
 }
 
-fn is_valid_spacing(anchor: BuildingAnchor, claims: &AdvancedFarmPlacementClaims) -> bool {
-    for existing in claims.claims.values() {
+fn is_anchor_free(anchor: FarmAnchor, farm_claims: &FarmPlacementClaims, advanced_claims: &AdvancedFarmPlacementClaims) -> bool {
+    for existing in farm_claims.claims.values() {
+        if existing.x == anchor.x && existing.y == anchor.y {
+            return false;
+        }
         if max_axis_delta(anchor, *existing) < ADVANCED_FARM_MIN_SPACING_TILES {
             return false;
         }
     }
-    true
-}
 
-fn footprint_is_unblocked(anchor: BuildingAnchor, occupancy: &TileOccupancy) -> bool {
-    for tile in footprint_tiles(anchor) {
-        if occupancy.blocked_tiles.contains(&tile) {
+    for existing in advanced_claims.claims.values() {
+        if existing.x == anchor.x && existing.y == anchor.y {
+            return false;
+        }
+        if max_axis_delta(anchor, *existing) < ADVANCED_FARM_MIN_SPACING_TILES {
             return false;
         }
     }
+
     true
-}
-
-fn apply_grass_tile_events_system(
-    mut events: EventReader<SetGrassTileEvent>,
-    mut grass: ResMut<GrassTiles>,
-) {
-    for ev in events.read() {
-        let tile = (ev.tile_x, ev.tile_y);
-        if ev.is_grass {
-            grass.tiles.insert(tile);
-        } else {
-            grass.tiles.remove(&tile);
-        }
-    }
-}
-
-fn apply_tile_block_events_system(
-    mut events: EventReader<SetTileBlockedEvent>,
-    mut occupancy: ResMut<TileOccupancy>,
-) {
-    for ev in events.read() {
-        let tile = (ev.tile_x, ev.tile_y);
-        if ev.blocked {
-            occupancy.blocked_tiles.insert(tile);
-        } else {
-            occupancy.blocked_tiles.remove(&tile);
-        }
-    }
 }
 
 fn place_advanced_farm_system(
     mut commands: Commands,
     mut events: EventReader<PlaceAdvancedFarmEvent>,
     mut rejected: EventWriter<AdvancedFarmPlacementRejectedEvent>,
-    mut claims: ResMut<AdvancedFarmPlacementClaims>,
-    occupancy: Res<TileOccupancy>,
+    farm_claims: Res<FarmPlacementClaims>,
+    mut advanced_claims: ResMut<AdvancedFarmPlacementClaims>,
 ) {
     for ev in events.read() {
-        let anchor = BuildingAnchor {
+        let anchor = FarmAnchor {
             x: ev.tile_x,
             y: ev.tile_y,
         };
 
-        if !is_valid_spacing(anchor, &claims) || !footprint_is_unblocked(anchor, &occupancy) {
+        if !is_anchor_free(anchor, &farm_claims, &advanced_claims) {
             rejected.send(AdvancedFarmPlacementRejectedEvent {
                 tile_x: ev.tile_x,
                 tile_y: ev.tile_y,
@@ -259,120 +207,147 @@ fn place_advanced_farm_system(
             .spawn((
                 AdvancedFarm,
                 anchor,
-                BuildingHealth::default(),
+                Health::full(ADVANCED_FARM_HP),
+                AdvancedFarmDefenseLife::default(),
                 AdvancedFarmBuildState {
-                    build_ticks_remaining: build_seconds_to_ticks(ADVANCED_FARM_BUILD_TIME_SECONDS),
+                    build_ticks_remaining: seconds_to_ticks(ADVANCED_FARM_BUILD_TIME_SECONDS),
                     upgrading_from_farm: false,
                     completed: false,
                 },
                 AdvancedFarmEconomy::default(),
-                AdvancedFarmOutput::default(),
                 AdvancedFarmFootprint::default(),
-                AdvancedFarmPlots::default(),
+                AdvancedFarmProduction::default(),
             ))
             .id();
 
-        claims.claims.insert(entity, anchor);
+        advanced_claims.claims.insert(entity, anchor);
     }
 }
 
 fn upgrade_farm_to_advanced_farm_system(
     mut commands: Commands,
     mut events: EventReader<UpgradeFarmToAdvancedFarmEvent>,
-    farms: Query<(Entity, &BuildingAnchor), With<Farm>>,
-    mut claims: ResMut<AdvancedFarmPlacementClaims>,
+    mut rejected: EventWriter<UpgradeFarmToAdvancedFarmRejectedEvent>,
+    farms: Query<(Entity, &FarmAnchor), With<Farm>>,
+    mut farm_claims: ResMut<FarmPlacementClaims>,
+    mut advanced_claims: ResMut<AdvancedFarmPlacementClaims>,
 ) {
     for ev in events.read() {
-        let Ok((farm_entity, farm_anchor)) = farms.get(ev.farm_entity) else {
+        let Ok((farm_entity, anchor)) = farms.get(ev.farm_entity) else {
+            rejected.send(UpgradeFarmToAdvancedFarmRejectedEvent {
+                farm_entity: ev.farm_entity,
+            });
             continue;
         };
 
-        if !is_valid_spacing(*farm_anchor, &claims) {
-            continue;
+        for (other_entity, other_anchor) in &farm_claims.claims {
+            if *other_entity == farm_entity {
+                continue;
+            }
+            if max_axis_delta(*anchor, *other_anchor) < ADVANCED_FARM_MIN_SPACING_TILES {
+                rejected.send(UpgradeFarmToAdvancedFarmRejectedEvent {
+                    farm_entity: ev.farm_entity,
+                });
+                continue;
+            }
         }
 
         commands.entity(farm_entity).remove::<Farm>();
+        commands.entity(farm_entity).remove::<(
+            FarmBuildState,
+            FarmEconomy,
+            FarmFootprint,
+            FarmProduction,
+            FarmDefenseLife,
+            FarmPlots,
+        )>();
         commands.entity(farm_entity).insert((
             AdvancedFarm,
-            BuildingHealth::default(),
+            Health::full(ADVANCED_FARM_HP),
+            AdvancedFarmDefenseLife::default(),
             AdvancedFarmBuildState {
-                build_ticks_remaining: build_seconds_to_ticks(ADVANCED_FARM_UPGRADE_TIME_SECONDS),
+                build_ticks_remaining: seconds_to_ticks(ADVANCED_FARM_UPGRADE_TIME_SECONDS),
                 upgrading_from_farm: true,
                 completed: false,
             },
             AdvancedFarmEconomy::default(),
-            AdvancedFarmOutput::default(),
             AdvancedFarmFootprint::default(),
-            AdvancedFarmPlots::default(),
+            AdvancedFarmProduction::default(),
         ));
 
-        claims.claims.insert(farm_entity, *farm_anchor);
+        farm_claims.claims.remove(&farm_entity);
+        advanced_claims.claims.insert(farm_entity, *anchor);
     }
 }
 
-fn advanced_farm_build_tick_system(
-    mut farms: Query<&mut AdvancedFarmBuildState, With<AdvancedFarm>>,
-) {
-    for mut state in &mut farms {
-        if state.completed {
+fn advanced_farm_build_tick_system(mut farms: Query<&mut AdvancedFarmBuildState, With<AdvancedFarm>>) {
+    for mut build in &mut farms {
+        if build.completed {
             continue;
         }
-
-        if state.build_ticks_remaining > 0 {
-            state.build_ticks_remaining -= 1;
+        if build.build_ticks_remaining > 0 {
+            build.build_ticks_remaining -= 1;
         }
-
-        if state.build_ticks_remaining <= 0 {
-            state.build_ticks_remaining = 0;
-            state.completed = true;
+        if build.build_ticks_remaining <= 0 {
+            build.build_ticks_remaining = 0;
+            build.completed = true;
         }
     }
 }
 
-fn advanced_farm_wheat_plot_and_output_system(
-    mut farms: Query<
-        (&BuildingAnchor, &AdvancedFarmBuildState, &mut AdvancedFarmPlots, &mut AdvancedFarmOutput),
-        With<AdvancedFarm>,
-    >,
-    grass: Res<GrassTiles>,
-    occupancy: Res<TileOccupancy>,
+fn refresh_advanced_farm_production_system(
+    mut farms: Query<(&AdvancedFarmBuildState, &mut AdvancedFarmProduction), With<AdvancedFarm>>,
 ) {
-    for (anchor, build_state, mut plots, mut output) in &mut farms {
-        if !build_state.completed {
-            plots.wheat_tiles.clear();
-            output.food = I32F32::ZERO;
+    for (build, mut production) in &mut farms {
+        if !build.completed {
+            production.food = I32F32::ZERO;
+            continue;
+        }
+        let plots_per_axis = ADVANCED_FARM_SIZE_TILES + ADVANCED_FARM_PLOT_RADIUS_TILES * 2;
+        let total_plots = plots_per_axis * plots_per_axis;
+        let raw_food = ADVANCED_FARM_FOOD_PER_PLOT * I32F32::from_num(total_plots);
+        production.food = raw_food.min(production.max_food).max(production.min_food);
+    }
+}
+
+fn damage_advanced_farm_system(
+    mut commands: Commands,
+    mut events: EventReader<DamageAdvancedFarmEvent>,
+    mut farms: Query<(Entity, &mut Health, &mut AdvancedFarmDefenseLife), With<AdvancedFarm>>,
+    mut claims: ResMut<AdvancedFarmPlacementClaims>,
+) {
+    for ev in events.read() {
+        let Ok((entity, mut health, mut defense)) = farms.get_mut(ev.farm_entity) else {
+            continue;
+        };
+
+        if ev.damage <= I32F32::ZERO {
             continue;
         }
 
-        let mut assigned: BTreeSet<(i32, i32)> = BTreeSet::new();
-        let min_x = anchor.x - ADVANCED_FARM_PLOT_RADIUS_TILES;
-        let max_x = anchor.x + ADVANCED_FARM_BUILDING_SIZE_TILES - 1 + ADVANCED_FARM_PLOT_RADIUS_TILES;
-        let min_y = anchor.y - ADVANCED_FARM_PLOT_RADIUS_TILES;
-        let max_y = anchor.y + ADVANCED_FARM_BUILDING_SIZE_TILES - 1 + ADVANCED_FARM_PLOT_RADIUS_TILES;
+        let mut remaining = ev.damage;
+        if defense.current > I32F32::ZERO {
+            let absorbed = if defense.current > remaining {
+                remaining
+            } else {
+                defense.current
+            };
+            defense.current -= absorbed;
+            remaining -= absorbed;
+        }
 
-        for x in min_x..=max_x {
-            for y in min_y..=max_y {
-                let tile = (x, y);
-                if !grass.tiles.contains(&tile) {
-                    continue;
-                }
-
-                let adjacent_to_footprint = x >= anchor.x - 1
-                    && x <= anchor.x + ADVANCED_FARM_BUILDING_SIZE_TILES
-                    && y >= anchor.y - 1
-                    && y <= anchor.y + ADVANCED_FARM_BUILDING_SIZE_TILES;
-
-                if !adjacent_to_footprint && occupancy.blocked_tiles.contains(&tile) {
-                    continue;
-                }
-
-                assigned.insert(tile);
+        if remaining > I32F32::ZERO {
+            if health.current > remaining {
+                health.current -= remaining;
+            } else {
+                health.current = I32F32::ZERO;
             }
         }
 
-        plots.wheat_tiles = assigned;
-        let food = ADVANCED_FARM_FOOD_PER_PLOT * I32F32::from_num(plots.wheat_tiles.len() as i32);
-        output.food = food.min(output.max_food).max(output.min_food);
+        if health.current == I32F32::ZERO {
+            claims.claims.remove(&entity);
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -381,50 +356,48 @@ fn advanced_farm_checksum_system(
     farms: Query<
         (
             Entity,
-            &BuildingAnchor,
-            &BuildingHealth,
+            &FarmAnchor,
+            &Health,
+            &AdvancedFarmDefenseLife,
             &AdvancedFarmBuildState,
             &AdvancedFarmEconomy,
-            &AdvancedFarmOutput,
             &AdvancedFarmFootprint,
-            &AdvancedFarmPlots,
+            &AdvancedFarmProduction,
         ),
         With<AdvancedFarm>,
     >,
     claims: Res<AdvancedFarmPlacementClaims>,
 ) {
-    for (entity, anchor, hp, build, eco, out, footprint, plots) in &farms {
+    for (entity, anchor, health, defense, build, economy, footprint, production) in &farms {
         checksum.accumulate(entity.to_bits() as u64);
         checksum.accumulate(anchor.x as u64);
         checksum.accumulate(anchor.y as u64);
 
-        checksum.accumulate(hp.hp.to_bits() as u64);
-        checksum.accumulate(hp.defenses_life.to_bits() as u64);
+        checksum.accumulate(health.current.to_bits() as u64);
+        checksum.accumulate(health.max.to_bits() as u64);
+        checksum.accumulate(defense.current.to_bits() as u64);
+        checksum.accumulate(defense.max.to_bits() as u64);
 
         checksum.accumulate(build.build_ticks_remaining as u64);
         checksum.accumulate(u64::from(build.upgrading_from_farm));
         checksum.accumulate(u64::from(build.completed));
 
-        checksum.accumulate(eco.energy_cost as u64);
-        checksum.accumulate(eco.wood_cost as u64);
-        checksum.accumulate(eco.stone_cost as u64);
-        checksum.accumulate(eco.iron_cost as u64);
-        checksum.accumulate(eco.oil_cost as u64);
-        checksum.accumulate(eco.gold_cost as u64);
-        checksum.accumulate(eco.pcolonists as u64);
-
-        checksum.accumulate(out.food.to_bits() as u64);
-        checksum.accumulate(out.min_food.to_bits() as u64);
-        checksum.accumulate(out.max_food.to_bits() as u64);
+        checksum.accumulate(economy.energy_cost as u64);
+        checksum.accumulate(economy.wood_cost as u64);
+        checksum.accumulate(economy.stone_cost as u64);
+        checksum.accumulate(economy.iron_cost as u64);
+        checksum.accumulate(economy.oil_cost as u64);
+        checksum.accumulate(economy.gold_cost as u64);
+        checksum.accumulate(economy.pcolonists as u64);
 
         checksum.accumulate(footprint.size_tiles as u64);
         checksum.accumulate(footprint.watch_range.to_bits() as u64);
+        checksum.accumulate(footprint.plot_radius_tiles as u64);
+        checksum.accumulate(footprint.min_spacing_tiles as u64);
 
-        checksum.accumulate(plots.wheat_tiles.len() as u64);
-        for (x, y) in &plots.wheat_tiles {
-            checksum.accumulate(*x as u64);
-            checksum.accumulate(*y as u64);
-        }
+        checksum.accumulate(production.food.to_bits() as u64);
+        checksum.accumulate(production.min_food.to_bits() as u64);
+        checksum.accumulate(production.max_food.to_bits() as u64);
     }
 
     checksum.accumulate(claims.claims.len() as u64);
@@ -439,23 +412,20 @@ pub struct AdvancedFarmPlugin;
 
 impl Plugin for AdvancedFarmPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GrassTiles>()
-            .init_resource::<TileOccupancy>()
-            .init_resource::<AdvancedFarmPlacementClaims>()
-            .add_event::<SetGrassTileEvent>()
-            .add_event::<SetTileBlockedEvent>()
+        app.init_resource::<AdvancedFarmPlacementClaims>()
             .add_event::<PlaceAdvancedFarmEvent>()
-            .add_event::<UpgradeFarmToAdvancedFarmEvent>()
             .add_event::<AdvancedFarmPlacementRejectedEvent>()
+            .add_event::<UpgradeFarmToAdvancedFarmEvent>()
+            .add_event::<UpgradeFarmToAdvancedFarmRejectedEvent>()
+            .add_event::<DamageAdvancedFarmEvent>()
             .add_systems(
                 FixedUpdate,
                 (
-                    apply_grass_tile_events_system,
-                    apply_tile_block_events_system,
                     place_advanced_farm_system,
                     upgrade_farm_to_advanced_farm_system,
                     advanced_farm_build_tick_system,
-                    advanced_farm_wheat_plot_and_output_system,
+                    refresh_advanced_farm_production_system,
+                    damage_advanced_farm_system,
                     advanced_farm_checksum_system,
                 )
                     .chain(),

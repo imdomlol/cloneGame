@@ -4,10 +4,9 @@ use bevy::prelude::*;
 use fixed::types::I32F32;
 
 use crate::sim::{
-    DamageType, Health, IncomingDamageEvent, NoiseEmittedEvent, SimChecksumState, SimHz, SimPosition,
-    UnitStats,
+    DamageType, EntityKilledEvent, Health, IncomingDamageEvent, NoiseEmittedEvent, SimChecksumState,
+    SimHz, SimPosition, UnitStats,
 };
-use crate::units::Infected;
 
 const LUCIFER_HP: I32F32 = I32F32::lit("500");
 const LUCIFER_MOVE_SPEED: I32F32 = I32F32::lit("1.8");
@@ -15,473 +14,311 @@ const LUCIFER_ATTACK_RANGE: I32F32 = I32F32::lit("3.5");
 const LUCIFER_ATTACK_SPEED: I32F32 = I32F32::lit("2");
 const LUCIFER_ATTACK_DAMAGE: I32F32 = I32F32::lit("24");
 const LUCIFER_WATCH_RANGE: I32F32 = I32F32::lit("6");
-const LUCIFER_BURN_DAMAGE: I32F32 = I32F32::lit("4");
-const LUCIFER_NOISE_PER_ATTACK: I32F32 = I32F32::lit("10");
-const LUCIFER_REGEN_HP_PER_SECOND: I32F32 = I32F32::lit("40");
 
+const LUCIFER_BURN_DAMAGE: I32F32 = I32F32::lit("4");
+const LUCIFER_ATTACK_NOISE: I32F32 = I32F32::lit("10");
 const LUCIFER_PHYSICAL_DAMAGE_REDUCTION: I32F32 = I32F32::lit("0.25");
 const LUCIFER_VENOM_RESISTANCE: I32F32 = I32F32::lit("0.65");
 const LUCIFER_FIRE_RESISTANCE: I32F32 = I32F32::lit("1");
-
-const LUCIFER_STARTUP_SECONDS: I32F32 = I32F32::lit("0.5");
-const LUCIFER_CONE_COS_SQ: I32F32 = I32F32::lit("0.25");
-const LUCIFER_DEATH_EXPLOSION_RADIUS: I32F32 = I32F32::lit("1.5");
-const LUCIFER_DEATH_EXPLOSION_DAMAGE: I32F32 = I32F32::lit("24");
-
-const LUCIFER_COST_GOLD: i32 = 600;
-const LUCIFER_BUILD_TIME_SECONDS: i32 = 36;
-const LUCIFER_COST_FOOD: i32 = 2;
-const LUCIFER_COST_WORKER: i32 = 1;
-const LUCIFER_COST_OIL: i32 = 15;
-const LUCIFER_MAINTENANCE_GOLD: i32 = 12;
-const LUCIFER_MAINTENANCE_OIL: i32 = 1;
+const LUCIFER_STANDARD_DAMAGE_MULTIPLIER: I32F32 = I32F32::lit("0.75");
+const LUCIFER_VENOM_DAMAGE_MULTIPLIER: I32F32 = I32F32::lit("0.35");
+const LUCIFER_FIRE_DAMAGE_MULTIPLIER: I32F32 = I32F32::ZERO;
+const LUCIFER_REGEN_PER_SECOND: I32F32 = I32F32::lit("40");
 
 #[derive(Component, Default)]
 pub struct Lucifer;
 
-#[derive(Component, Clone, Copy)]
-pub struct LuciferAttackProfile {
-    pub burn_damage: I32F32,
-    pub startup_seconds: I32F32,
-    pub cone_cos_sq: I32F32,
-    pub noise_per_attack: I32F32,
-}
-
-impl Default for LuciferAttackProfile {
-    fn default() -> Self {
-        Self {
-            burn_damage: LUCIFER_BURN_DAMAGE,
-            startup_seconds: LUCIFER_STARTUP_SECONDS,
-            cone_cos_sq: LUCIFER_CONE_COS_SQ,
-            noise_per_attack: LUCIFER_NOISE_PER_ATTACK,
-        }
-    }
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct LuciferResistances {
-    pub physical_damage_reduction: I32F32,
-    pub venom_resistance: I32F32,
-    pub fire_resistance: I32F32,
-}
-
-impl Default for LuciferResistances {
-    fn default() -> Self {
-        Self {
-            physical_damage_reduction: LUCIFER_PHYSICAL_DAMAGE_REDUCTION,
-            venom_resistance: LUCIFER_VENOM_RESISTANCE,
-            fire_resistance: LUCIFER_FIRE_RESISTANCE,
-        }
-    }
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct LuciferRegeneration {
-    pub hp_per_second: I32F32,
-}
-
-impl Default for LuciferRegeneration {
-    fn default() -> Self {
-        Self {
-            hp_per_second: LUCIFER_REGEN_HP_PER_SECOND,
-        }
-    }
-}
+#[derive(Component, Clone, Copy, Default)]
+pub struct ReplicatedUnitId(pub u64);
 
 #[derive(Component, Clone, Copy, Default)]
-pub struct LuciferAttackState {
-    pub startup_ticks_remaining: I32F32,
-    pub attack_cooldown_ticks: I32F32,
-    pub stream_active: bool,
+pub struct AttackNoise(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct BurnDamagePerHit(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct PhysicalDamageReduction(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct VenomResistance(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct FireResistance(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct RegenerationPerSecond(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct CarriesExplosiveBarrel(pub bool);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct FlameConeHitsMultipleTargets(pub bool);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct AttackStartupDelay(pub bool);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct InstantRetargetNoReload(pub bool);
+
+#[derive(Bundle)]
+pub struct LuciferBundle {
+    pub unit: Lucifer,
+    pub replicated_id: ReplicatedUnitId,
+    pub position: SimPosition,
+    pub health: Health,
+    pub stats: UnitStats,
+    pub attack_noise: AttackNoise,
+    pub burn_damage_per_hit: BurnDamagePerHit,
+    pub physical_damage_reduction: PhysicalDamageReduction,
+    pub venom_resistance: VenomResistance,
+    pub fire_resistance: FireResistance,
+    pub regeneration_per_second: RegenerationPerSecond,
+    pub carries_explosive_barrel: CarriesExplosiveBarrel,
+    pub flame_cone_hits_multiple_targets: FlameConeHitsMultipleTargets,
+    pub attack_startup_delay: AttackStartupDelay,
+    pub instant_retarget_no_reload: InstantRetargetNoReload,
 }
 
-#[derive(Component, Clone, Copy)]
-pub struct LuciferEconomy {
-    pub cost_gold: i32,
-    pub build_time_seconds: i32,
-    pub cost_food: i32,
-    pub cost_worker: i32,
-    pub cost_oil: i32,
-    pub maintenance_gold: i32,
-    pub maintenance_oil: i32,
-}
-
-impl Default for LuciferEconomy {
+impl Default for LuciferBundle {
     fn default() -> Self {
         Self {
-            cost_gold: LUCIFER_COST_GOLD,
-            build_time_seconds: LUCIFER_BUILD_TIME_SECONDS,
-            cost_food: LUCIFER_COST_FOOD,
-            cost_worker: LUCIFER_COST_WORKER,
-            cost_oil: LUCIFER_COST_OIL,
-            maintenance_gold: LUCIFER_MAINTENANCE_GOLD,
-            maintenance_oil: LUCIFER_MAINTENANCE_OIL,
+            unit: Lucifer,
+            replicated_id: ReplicatedUnitId::default(),
+            position: SimPosition {
+                x: I32F32::ZERO,
+                y: I32F32::ZERO,
+            },
+            health: Health::full(LUCIFER_HP),
+            stats: UnitStats {
+                move_speed: LUCIFER_MOVE_SPEED,
+                attack_range: LUCIFER_ATTACK_RANGE,
+                attack_damage: LUCIFER_ATTACK_DAMAGE,
+                attack_speed: LUCIFER_ATTACK_SPEED,
+                watch_range: LUCIFER_WATCH_RANGE,
+            },
+            attack_noise: AttackNoise(LUCIFER_ATTACK_NOISE),
+            burn_damage_per_hit: BurnDamagePerHit(LUCIFER_BURN_DAMAGE),
+            physical_damage_reduction: PhysicalDamageReduction(LUCIFER_PHYSICAL_DAMAGE_REDUCTION),
+            venom_resistance: VenomResistance(LUCIFER_VENOM_RESISTANCE),
+            fire_resistance: FireResistance(LUCIFER_FIRE_RESISTANCE),
+            regeneration_per_second: RegenerationPerSecond(LUCIFER_REGEN_PER_SECOND),
+            carries_explosive_barrel: CarriesExplosiveBarrel::default(),
+            flame_cone_hits_multiple_targets: FlameConeHitsMultipleTargets(true),
+            attack_startup_delay: AttackStartupDelay(true),
+            instant_retarget_no_reload: InstantRetargetNoReload(true),
         }
     }
 }
 
-#[derive(Component, Clone, Copy)]
-pub struct LuciferRecruitmentGate {
-    pub engineering_center_completed: bool,
-    pub oil_income_non_negative: bool,
-}
+#[derive(Resource, Default)]
+pub struct NextReplicatedUnitId(pub u64);
 
-impl Default for LuciferRecruitmentGate {
-    fn default() -> Self {
-        Self {
-            engineering_center_completed: false,
-            oil_income_non_negative: true,
-        }
-    }
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct LuciferBarrelState {
-    pub carrying_barrel: bool,
-}
-
-impl Default for LuciferBarrelState {
-    fn default() -> Self {
-        Self {
-            carrying_barrel: true,
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum WallMaterial {
-    Wood,
-    Stone,
-    Trap,
+#[derive(Event, Clone, Copy)]
+pub struct SpawnLuciferEvent {
+    pub position: SimPosition,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct SetLuciferRecruitmentStateEvent {
+pub struct LuciferFiredEvent {
+    pub entity: Entity,
+}
+
+#[derive(Event, Clone, Copy)]
+pub struct LuciferBurnAppliedEvent {
+    pub source: Entity,
     pub target: Entity,
-    pub engineering_center_completed: bool,
-    pub oil_income_non_negative: bool,
+    pub amount: I32F32,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct LuciferManualWallFireEvent {
-    pub lucifer: Entity,
-    pub wall_entity: Entity,
-    pub wall_material: WallMaterial,
+pub struct LuciferBarrelExplodedEvent {
+    pub source: Entity,
+    pub position: SimPosition,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct LuciferKilledEvent {
-    pub lucifer: Entity,
+pub struct SetLuciferBarrelCarriedEvent {
+    pub entity: Entity,
+    pub carrying: bool,
 }
 
-pub fn lucifer_base_health() -> Health {
-    Health::full(LUCIFER_HP)
-}
-
-pub fn lucifer_base_stats() -> UnitStats {
-    UnitStats {
-        move_speed: LUCIFER_MOVE_SPEED,
-        attack_range: LUCIFER_ATTACK_RANGE,
-        attack_damage: LUCIFER_ATTACK_DAMAGE,
-        attack_speed: LUCIFER_ATTACK_SPEED,
-        watch_range: LUCIFER_WATCH_RANGE,
-    }
-}
-
-fn choose_primary_target(
-    lucifer_pos: SimPosition,
-    stats: UnitStats,
-    infected_positions: &Query<(Entity, &SimPosition), With<Infected>>,
-) -> Option<SimPosition> {
-    let mut best: Option<(SimPosition, I32F32)> = None;
-    let range_sq = stats.attack_range * stats.attack_range;
-
-    for (_, infected_pos) in infected_positions {
-        let dx = infected_pos.x - lucifer_pos.x;
-        let dy = infected_pos.y - lucifer_pos.y;
-        let dist_sq = dx * dx + dy * dy;
-        if dist_sq > range_sq {
-            continue;
-        }
-
-        match best {
-            None => best = Some((*infected_pos, dist_sq)),
-            Some((best_pos, best_dist_sq)) => {
-                if dist_sq < best_dist_sq
-                    || (dist_sq == best_dist_sq
-                        && (infected_pos.x < best_pos.x
-                            || (infected_pos.x == best_pos.x && infected_pos.y < best_pos.y)))
-                {
-                    best = Some((*infected_pos, dist_sq));
-                }
-            }
-        }
-    }
-
-    best.map(|(pos, _)| pos)
-}
-
-pub fn lucifer_attack_tick_system(
-    sim_hz: Res<SimHz>,
-    mut lucifers: Query<
-        (
-            Entity,
-            &SimPosition,
-            &UnitStats,
-            &LuciferAttackProfile,
-            &LuciferRecruitmentGate,
-            &mut LuciferAttackState,
-        ),
-        With<Lucifer>,
-    >,
-    infected_positions: Query<(Entity, &SimPosition), With<Infected>>,
-    mut outgoing_damage: EventWriter<IncomingDamageEvent>,
-    mut noise_events: EventWriter<NoiseEmittedEvent>,
+fn spawn_lucifer_system(
+    mut commands: Commands,
+    mut events: EventReader<SpawnLuciferEvent>,
+    mut next_id: ResMut<NextReplicatedUnitId>,
 ) {
-    for (lucifer_entity, lucifer_pos, stats, attack_profile, recruitment_gate, mut attack_state) in &mut lucifers {
-        if !recruitment_gate.engineering_center_completed || !recruitment_gate.oil_income_non_negative {
-            continue;
-        }
+    for ev in events.read() {
+        let mut bundle = LuciferBundle::default();
+        bundle.position = ev.position;
+        bundle.replicated_id = ReplicatedUnitId(next_id.0);
+        next_id.0 = next_id.0.wrapping_add(1);
+        commands.spawn(bundle);
+    }
+}
 
-        let Some(primary_target_pos) = choose_primary_target(*lucifer_pos, *stats, &infected_positions) else {
-            attack_state.startup_ticks_remaining = I32F32::ZERO;
-            attack_state.attack_cooldown_ticks = I32F32::ZERO;
-            attack_state.stream_active = false;
+fn lucifer_fire_noise_system(
+    mut events: EventReader<LuciferFiredEvent>,
+    lucifers: Query<(&SimPosition, &AttackNoise), With<Lucifer>>,
+    mut noise_writer: EventWriter<NoiseEmittedEvent>,
+) {
+    for ev in events.read() {
+        let Ok((position, noise)) = lucifers.get(ev.entity) else {
             continue;
         };
 
-        if !attack_state.stream_active {
-            if attack_state.startup_ticks_remaining <= I32F32::ZERO {
-                attack_state.startup_ticks_remaining = sim_hz.0 * attack_profile.startup_seconds;
-            }
-            attack_state.startup_ticks_remaining -= I32F32::ONE;
-            if attack_state.startup_ticks_remaining > I32F32::ZERO {
-                continue;
-            }
-            attack_state.stream_active = true;
-            attack_state.attack_cooldown_ticks = I32F32::ZERO;
-        }
-
-        if attack_state.attack_cooldown_ticks > I32F32::ZERO {
-            attack_state.attack_cooldown_ticks -= I32F32::ONE;
-            continue;
-        }
-
-        let axis_x = primary_target_pos.x - lucifer_pos.x;
-        let axis_y = primary_target_pos.y - lucifer_pos.y;
-        let axis_len_sq = axis_x * axis_x + axis_y * axis_y;
-        if axis_len_sq <= I32F32::ZERO {
-            continue;
-        }
-
-        let range_sq = stats.attack_range * stats.attack_range;
-        for (infected_entity, infected_pos) in &infected_positions {
-            let rel_x = infected_pos.x - lucifer_pos.x;
-            let rel_y = infected_pos.y - lucifer_pos.y;
-            let rel_len_sq = rel_x * rel_x + rel_y * rel_y;
-            if rel_len_sq > range_sq {
-                continue;
-            }
-
-            let dot = rel_x * axis_x + rel_y * axis_y;
-            if dot <= I32F32::ZERO {
-                continue;
-            }
-
-            let dot_sq = dot * dot;
-            let rhs = rel_len_sq * axis_len_sq * attack_profile.cone_cos_sq;
-            if dot_sq < rhs {
-                continue;
-            }
-
-            outgoing_damage.send(IncomingDamageEvent {
-                target: infected_entity,
-                raw_amount: stats.attack_damage,
-                damage_type: DamageType::Standard,
-                source: lucifer_entity,
-            });
-            outgoing_damage.send(IncomingDamageEvent {
-                target: infected_entity,
-                raw_amount: attack_profile.burn_damage,
-                damage_type: DamageType::Fire,
-                source: lucifer_entity,
-            });
-        }
-
-        noise_events.send(NoiseEmittedEvent {
-            source: lucifer_entity,
-            position: *lucifer_pos,
-            amount: attack_profile.noise_per_attack,
+        noise_writer.send(NoiseEmittedEvent {
+            source: ev.entity,
+            position: *position,
+            amount: noise.0,
         });
-
-        attack_state.attack_cooldown_ticks = sim_hz.0 / stats.attack_speed;
     }
 }
 
-pub fn lucifer_receive_damage_system(
+fn apply_lucifer_damage_system(
     mut damage_events: EventReader<IncomingDamageEvent>,
-    mut lucifers: Query<(Entity, &mut Health, &LuciferResistances), With<Lucifer>>,
-    mut killed_events: EventWriter<LuciferKilledEvent>,
+    mut lucifers: Query<&mut Health, With<Lucifer>>,
+    mut killed_writer: EventWriter<EntityKilledEvent>,
 ) {
-    for event in damage_events.read() {
-        if let Ok((lucifer_entity, mut health, resistances)) = lucifers.get_mut(event.target) {
-            let reduction = match event.damage_type {
-                DamageType::Standard => resistances.physical_damage_reduction,
-                DamageType::Fire => resistances.fire_resistance,
-                DamageType::Venom => resistances.venom_resistance,
-            };
+    for ev in damage_events.read() {
+        let Ok(mut health) = lucifers.get_mut(ev.target) else {
+            continue;
+        };
 
-            let applied_damage = event.raw_amount * (I32F32::ONE - reduction);
-            health.current = (health.current - applied_damage).max(I32F32::ZERO);
+        if health.current <= I32F32::ZERO {
+            continue;
+        }
 
-            if health.current <= I32F32::ZERO {
-                killed_events.send(LuciferKilledEvent {
-                    lucifer: lucifer_entity,
-                });
-            }
+        let multiplier = match ev.damage_type {
+            DamageType::Standard => LUCIFER_STANDARD_DAMAGE_MULTIPLIER,
+            DamageType::Fire => LUCIFER_FIRE_DAMAGE_MULTIPLIER,
+            DamageType::Venom => LUCIFER_VENOM_DAMAGE_MULTIPLIER,
+        };
+
+        let applied = ev.raw_amount * multiplier;
+        if applied >= health.current {
+            health.current = I32F32::ZERO;
+            killed_writer.send(EntityKilledEvent {
+                entity: ev.target,
+                killer: ev.source,
+                exp_reward: I32F32::ZERO,
+                difficulty_tier: 0,
+            });
+        } else {
+            health.current = health.current - applied;
         }
     }
 }
 
-pub fn lucifer_regeneration_system(
+fn lucifer_regeneration_system(
     sim_hz: Res<SimHz>,
-    mut lucifers: Query<(&mut Health, &LuciferRegeneration), With<Lucifer>>,
+    mut lucifers: Query<(&mut Health, &RegenerationPerSecond), With<Lucifer>>,
 ) {
-    for (mut health, regeneration) in &mut lucifers {
-        if health.current <= I32F32::ZERO || health.current >= health.max {
+    if sim_hz.0 <= I32F32::ZERO {
+        return;
+    }
+
+    for (mut health, regen_per_second) in &mut lucifers {
+        if health.current >= health.max {
             continue;
         }
-        let regen_per_tick = regeneration.hp_per_second / sim_hz.0;
-        health.current = (health.current + regen_per_tick).min(health.max);
+
+        let regen_per_tick = regen_per_second.0 / sim_hz.0;
+        let healed = health.current + regen_per_tick;
+        health.current = if healed > health.max { health.max } else { healed };
     }
 }
 
-pub fn lucifer_recruitment_gate_system(
-    mut events: EventReader<SetLuciferRecruitmentStateEvent>,
-    mut lucifers: Query<&mut LuciferRecruitmentGate, With<Lucifer>>,
+fn set_lucifer_barrel_state_system(
+    mut events: EventReader<SetLuciferBarrelCarriedEvent>,
+    mut lucifers: Query<&mut CarriesExplosiveBarrel, With<Lucifer>>,
 ) {
-    for event in events.read() {
-        if let Ok(mut gate) = lucifers.get_mut(event.target) {
-            gate.engineering_center_completed = event.engineering_center_completed;
-            gate.oil_income_non_negative = event.oil_income_non_negative;
-        }
+    for ev in events.read() {
+        let Ok(mut carrying) = lucifers.get_mut(ev.entity) else {
+            continue;
+        };
+        carrying.0 = ev.carrying;
     }
 }
 
-pub fn lucifer_death_explosion_system(
-    mut killed_events: EventReader<LuciferKilledEvent>,
-    lucifer_state: Query<(&SimPosition, &LuciferBarrelState), With<Lucifer>>,
-    infected_positions: Query<(Entity, &SimPosition), With<Infected>>,
-    mut outgoing_damage: EventWriter<IncomingDamageEvent>,
+fn lucifer_death_barrel_explosion_system(
+    mut death_events: EventReader<EntityKilledEvent>,
+    lucifers: Query<(&SimPosition, &CarriesExplosiveBarrel), With<Lucifer>>,
+    mut explosion_writer: EventWriter<LuciferBarrelExplodedEvent>,
 ) {
-    let radius_sq = LUCIFER_DEATH_EXPLOSION_RADIUS * LUCIFER_DEATH_EXPLOSION_RADIUS;
-
-    for killed in killed_events.read() {
-        let Ok((death_position, barrel_state)) = lucifer_state.get(killed.lucifer) else {
-            continue;
-        };
-        if !barrel_state.carrying_barrel {
-            continue;
-        }
-
-        for (infected_entity, infected_pos) in &infected_positions {
-            let dx = infected_pos.x - death_position.x;
-            let dy = infected_pos.y - death_position.y;
-            let dist_sq = dx * dx + dy * dy;
-            if dist_sq <= radius_sq {
-                outgoing_damage.send(IncomingDamageEvent {
-                    target: infected_entity,
-                    raw_amount: LUCIFER_DEATH_EXPLOSION_DAMAGE,
-                    damage_type: DamageType::Fire,
-                    source: killed.lucifer,
-                });
-            }
-        }
-    }
-}
-
-pub fn lucifer_manual_wall_fire_system(
-    mut events: EventReader<LuciferManualWallFireEvent>,
-    lucifers: Query<(&UnitStats, &LuciferAttackProfile), With<Lucifer>>,
-    mut outgoing_damage: EventWriter<IncomingDamageEvent>,
-) {
-    for event in events.read() {
-        let Ok((stats, attack_profile)) = lucifers.get(event.lucifer) else {
+    for ev in death_events.read() {
+        let Ok((position, carrying)) = lucifers.get(ev.entity) else {
             continue;
         };
 
-        let base_fire_damage = stats.attack_damage + attack_profile.burn_damage;
-        let wall_damage = match event.wall_material {
-            WallMaterial::Wood => base_fire_damage,
-            WallMaterial::Stone => base_fire_damage / I32F32::from_num(2),
-            WallMaterial::Trap => I32F32::ZERO,
-        };
-
-        if wall_damage > I32F32::ZERO {
-            outgoing_damage.send(IncomingDamageEvent {
-                target: event.wall_entity,
-                raw_amount: wall_damage,
-                damage_type: DamageType::Fire,
-                source: event.lucifer,
+        if carrying.0 {
+            explosion_writer.send(LuciferBarrelExplodedEvent {
+                source: ev.entity,
+                position: *position,
             });
         }
     }
 }
 
-pub fn lucifer_checksum_system(
+fn lucifer_checksum_system(
     mut checksum: ResMut<SimChecksumState>,
-    lucifers: Query<
+    units: Query<
         (
+            &ReplicatedUnitId,
+            &SimPosition,
             &Health,
             &UnitStats,
-            &LuciferAttackProfile,
-            &LuciferResistances,
-            &LuciferRegeneration,
-            &LuciferAttackState,
-            &LuciferEconomy,
-            &LuciferRecruitmentGate,
-            &LuciferBarrelState,
+            &AttackNoise,
+            &BurnDamagePerHit,
+            &PhysicalDamageReduction,
+            &VenomResistance,
+            &FireResistance,
+            &RegenerationPerSecond,
+            &CarriesExplosiveBarrel,
+            &FlameConeHitsMultipleTargets,
+            &AttackStartupDelay,
+            &InstantRetargetNoReload,
         ),
         With<Lucifer>,
     >,
 ) {
-    for (health, stats, attack_profile, resistances, regeneration, attack_state, economy, gate, barrel) in &lucifers {
-        checksum.accumulate(health.current.to_bits() as u64);
-        checksum.accumulate(health.max.to_bits() as u64);
-
+    for (
+        replicated_id,
+        pos,
+        hp,
+        stats,
+        noise,
+        burn_damage,
+        physical_reduction,
+        venom_resistance,
+        fire_resistance,
+        regen_per_second,
+        carries_barrel,
+        cone_hits_multiple,
+        startup_delay,
+        instant_retarget,
+    ) in &units
+    {
+        checksum.accumulate(replicated_id.0);
+        checksum.accumulate(pos.x.to_bits() as u64);
+        checksum.accumulate(pos.y.to_bits() as u64);
+        checksum.accumulate(hp.current.to_bits() as u64);
+        checksum.accumulate(hp.max.to_bits() as u64);
         checksum.accumulate(stats.move_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_range.to_bits() as u64);
         checksum.accumulate(stats.attack_damage.to_bits() as u64);
         checksum.accumulate(stats.attack_speed.to_bits() as u64);
         checksum.accumulate(stats.watch_range.to_bits() as u64);
-
-        checksum.accumulate(attack_profile.burn_damage.to_bits() as u64);
-        checksum.accumulate(attack_profile.startup_seconds.to_bits() as u64);
-        checksum.accumulate(attack_profile.cone_cos_sq.to_bits() as u64);
-        checksum.accumulate(attack_profile.noise_per_attack.to_bits() as u64);
-
-        checksum.accumulate(resistances.physical_damage_reduction.to_bits() as u64);
-        checksum.accumulate(resistances.venom_resistance.to_bits() as u64);
-        checksum.accumulate(resistances.fire_resistance.to_bits() as u64);
-
-        checksum.accumulate(regeneration.hp_per_second.to_bits() as u64);
-
-        checksum.accumulate(attack_state.startup_ticks_remaining.to_bits() as u64);
-        checksum.accumulate(attack_state.attack_cooldown_ticks.to_bits() as u64);
-        checksum.accumulate(u64::from(attack_state.stream_active));
-
-        checksum.accumulate(economy.cost_gold as u64);
-        checksum.accumulate(economy.build_time_seconds as u64);
-        checksum.accumulate(economy.cost_food as u64);
-        checksum.accumulate(economy.cost_worker as u64);
-        checksum.accumulate(economy.cost_oil as u64);
-        checksum.accumulate(economy.maintenance_gold as u64);
-        checksum.accumulate(economy.maintenance_oil as u64);
-
-        checksum.accumulate(u64::from(gate.engineering_center_completed));
-        checksum.accumulate(u64::from(gate.oil_income_non_negative));
-
-        checksum.accumulate(u64::from(barrel.carrying_barrel));
+        checksum.accumulate(noise.0.to_bits() as u64);
+        checksum.accumulate(burn_damage.0.to_bits() as u64);
+        checksum.accumulate(physical_reduction.0.to_bits() as u64);
+        checksum.accumulate(venom_resistance.0.to_bits() as u64);
+        checksum.accumulate(fire_resistance.0.to_bits() as u64);
+        checksum.accumulate(regen_per_second.0.to_bits() as u64);
+        checksum.accumulate(u64::from(carries_barrel.0));
+        checksum.accumulate(u64::from(cone_hits_multiple.0));
+        checksum.accumulate(u64::from(startup_delay.0));
+        checksum.accumulate(u64::from(instant_retarget.0));
     }
 }
 
@@ -489,18 +326,21 @@ pub struct LuciferPlugin;
 
 impl Plugin for LuciferPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SetLuciferRecruitmentStateEvent>()
-            .add_event::<LuciferManualWallFireEvent>()
-            .add_event::<LuciferKilledEvent>()
+        app.init_resource::<NextReplicatedUnitId>()
+            .add_event::<SpawnLuciferEvent>()
+            .add_event::<LuciferFiredEvent>()
+            .add_event::<LuciferBurnAppliedEvent>()
+            .add_event::<LuciferBarrelExplodedEvent>()
+            .add_event::<SetLuciferBarrelCarriedEvent>()
             .add_systems(
                 FixedUpdate,
                 (
-                    lucifer_attack_tick_system,
-                    lucifer_receive_damage_system,
+                    spawn_lucifer_system,
+                    lucifer_fire_noise_system,
+                    apply_lucifer_damage_system,
                     lucifer_regeneration_system,
-                    lucifer_recruitment_gate_system,
-                    lucifer_death_explosion_system,
-                    lucifer_manual_wall_fire_system,
+                    set_lucifer_barrel_state_system,
+                    lucifer_death_barrel_explosion_system,
                     lucifer_checksum_system,
                 )
                     .chain(),

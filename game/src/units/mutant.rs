@@ -3,341 +3,252 @@
 use bevy::prelude::*;
 use fixed::types::I32F32;
 
-use crate::sim::{
-    DamageType, Health, IncomingDamageEvent, SimChecksumState, SimHz, SimPosition, UnitStats,
-};
-use crate::units::Infected;
+use crate::sim::{Health, SimChecksumState, SimPosition, UnitStats};
 
-pub const MUTANT_HP: I32F32 = I32F32::lit("2000");
-pub const MUTANT_MOVE_SPEED: I32F32 = I32F32::lit("6");
-pub const MUTANT_ATTACK_RANGE: I32F32 = I32F32::lit("2");
-pub const MUTANT_ATTACK_SPEED: I32F32 = I32F32::lit("2");
-pub const MUTANT_ATTACK_DAMAGE: I32F32 = I32F32::lit("30");
-pub const MUTANT_WATCH_RANGE: I32F32 = I32F32::lit("12");
-
-pub const MUTANT_ARMOR_STANDARD: I32F32 = I32F32::lit("0.25");
-pub const MUTANT_ARMOR_FIRE: I32F32 = I32F32::lit("0.50");
-pub const MUTANT_ARMOR_VENOM: I32F32 = I32F32::lit("0.50");
-
-pub const MUTANT_NOISE: I32F32 = I32F32::lit("0");
-pub const MUTANT_HEALTH_REGEN_PER_SECOND: I32F32 = I32F32::lit("10");
-
-pub const MUTANT_COST_GOLD: i32 = 5000;
-pub const MUTANT_COST_FOOD: i32 = 20;
-pub const MUTANT_COST_WORKERS: i32 = 1;
-pub const MUTANT_COST_IRON: i32 = 20;
-pub const MUTANT_COST_OIL: i32 = 60;
-pub const MUTANT_MAINTENANCE_GOLD: i32 = 80;
-pub const MUTANT_MAINTENANCE_OIL: i32 = 5;
-pub const MUTANT_BUILD_TIME_SECONDS: i32 = 41;
-pub const MUTANT_RESEARCH_COST_GOLD: i32 = 6000;
-pub const MUTANT_FIRST_UNIT_TOTAL_GOLD_COST: i32 = 11000;
+const MUTANT_HP: I32F32 = I32F32::lit("2000");
+const MUTANT_MOVE_SPEED: I32F32 = I32F32::lit("6");
+const MUTANT_ATTACK_RANGE: I32F32 = I32F32::lit("2");
+const MUTANT_ATTACK_SPEED: I32F32 = I32F32::lit("2");
+const MUTANT_ATTACK_DAMAGE: I32F32 = I32F32::lit("30");
+const MUTANT_WATCH_RANGE: I32F32 = I32F32::lit("12");
+const MUTANT_BASE_ARMOR_REDUCTION: I32F32 = I32F32::lit("0.25");
+const MUTANT_FIRE_RESISTANCE: I32F32 = I32F32::lit("0.50");
+const MUTANT_VENOM_RESISTANCE: I32F32 = I32F32::lit("0.50");
+const MUTANT_REGEN_PER_SECOND: I32F32 = I32F32::lit("10");
+const MUTANT_AOE_RANGE: I32F32 = I32F32::lit("2");
+const MUTANT_ATTACK_NOISE: I32F32 = I32F32::lit("0");
+const SIM_TICKS_PER_SECOND: i32 = 20;
+const SEVERE_INJURY_RATIO: I32F32 = I32F32::lit("0.25");
 
 #[derive(Component, Default)]
 pub struct Mutant;
 
-#[derive(Component, Clone, Copy)]
-pub struct MutantArmorProfile {
-    pub standard_reduction: I32F32,
-    pub fire_reduction: I32F32,
-    pub venom_reduction: I32F32,
-}
-
-impl Default for MutantArmorProfile {
-    fn default() -> Self {
-        Self {
-            standard_reduction: MUTANT_ARMOR_STANDARD,
-            fire_reduction: MUTANT_ARMOR_FIRE,
-            venom_reduction: MUTANT_ARMOR_VENOM,
-        }
-    }
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct MutantRegeneration {
-    pub hp_per_second: I32F32,
-}
-
-impl Default for MutantRegeneration {
-    fn default() -> Self {
-        Self {
-            hp_per_second: MUTANT_HEALTH_REGEN_PER_SECOND,
-        }
-    }
-}
-
 #[derive(Component, Clone, Copy, Default)]
-pub struct MutantAttackCooldown {
-    pub ticks_remaining: I32F32,
-}
+pub struct ReplicatedUnitId(pub u64);
 
-#[derive(Component, Clone, Copy, Default)]
-pub struct MutantResearchGate {
-    pub researched_in_high_research: bool,
+#[derive(Component, Clone, Copy)]
+pub struct ArmorReduction(pub I32F32);
+
+impl Default for ArmorReduction {
+    fn default() -> Self {
+        Self(MUTANT_BASE_ARMOR_REDUCTION)
+    }
 }
 
 #[derive(Component, Clone, Copy)]
-pub struct MutantRecruitmentGate {
-    pub engineering_center_online: bool,
-    pub oil_income_non_negative: bool,
-}
+pub struct FireResistance(pub I32F32);
 
-impl Default for MutantRecruitmentGate {
+impl Default for FireResistance {
     fn default() -> Self {
-        Self {
-            engineering_center_online: false,
-            oil_income_non_negative: true,
-        }
+        Self(MUTANT_FIRE_RESISTANCE)
     }
-}
-
-#[derive(Component, Clone, Copy, Default)]
-pub struct MutantCombatState {
-    pub in_combat: bool,
-    pub severely_injured: bool,
 }
 
 #[derive(Component, Clone, Copy)]
-pub struct MutantEconomy {
-    pub cost_gold: i32,
-    pub cost_food: i32,
-    pub cost_workers: i32,
-    pub cost_iron: i32,
-    pub cost_oil: i32,
-    pub maintenance_gold: i32,
-    pub maintenance_oil: i32,
-    pub build_time_seconds: i32,
-    pub research_cost_gold: i32,
-    pub first_unit_total_gold_cost: i32,
-    pub noise: I32F32,
+pub struct VenomResistance(pub I32F32);
+
+impl Default for VenomResistance {
+    fn default() -> Self {
+        Self(MUTANT_VENOM_RESISTANCE)
+    }
 }
 
-impl Default for MutantEconomy {
+#[derive(Component, Clone, Copy)]
+pub struct HealthRegenerationPerSecond(pub I32F32);
+
+impl Default for HealthRegenerationPerSecond {
+    fn default() -> Self {
+        Self(MUTANT_REGEN_PER_SECOND)
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct RegenPerTick(pub I32F32);
+
+impl Default for RegenPerTick {
+    fn default() -> Self {
+        Self(MUTANT_REGEN_PER_SECOND / I32F32::from_num(SIM_TICKS_PER_SECOND))
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct SevereInjuryThreshold(pub I32F32);
+
+impl Default for SevereInjuryThreshold {
+    fn default() -> Self {
+        Self(SEVERE_INJURY_RATIO)
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct AttackNoise(pub I32F32);
+
+impl Default for AttackNoise {
+    fn default() -> Self {
+        Self(MUTANT_ATTACK_NOISE)
+    }
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct MeleeAoeRange(pub I32F32);
+
+impl Default for MeleeAoeRange {
+    fn default() -> Self {
+        Self(MUTANT_AOE_RANGE)
+    }
+}
+
+#[derive(Bundle)]
+pub struct MutantBundle {
+    pub unit: Mutant,
+    pub replicated_id: ReplicatedUnitId,
+    pub position: SimPosition,
+    pub health: Health,
+    pub stats: UnitStats,
+    pub armor_reduction: ArmorReduction,
+    pub fire_resistance: FireResistance,
+    pub venom_resistance: VenomResistance,
+    pub health_regeneration_per_second: HealthRegenerationPerSecond,
+    pub regen_per_tick: RegenPerTick,
+    pub severe_injury_threshold: SevereInjuryThreshold,
+    pub attack_noise: AttackNoise,
+    pub melee_aoe_range: MeleeAoeRange,
+}
+
+#[derive(Resource, Default)]
+pub struct NextReplicatedUnitId(pub u64);
+
+#[derive(Event, Clone, Copy)]
+pub struct SpawnMutantEvent {
+    pub position: SimPosition,
+}
+
+impl Default for MutantBundle {
     fn default() -> Self {
         Self {
-            cost_gold: MUTANT_COST_GOLD,
-            cost_food: MUTANT_COST_FOOD,
-            cost_workers: MUTANT_COST_WORKERS,
-            cost_iron: MUTANT_COST_IRON,
-            cost_oil: MUTANT_COST_OIL,
-            maintenance_gold: MUTANT_MAINTENANCE_GOLD,
-            maintenance_oil: MUTANT_MAINTENANCE_OIL,
-            build_time_seconds: MUTANT_BUILD_TIME_SECONDS,
-            research_cost_gold: MUTANT_RESEARCH_COST_GOLD,
-            first_unit_total_gold_cost: MUTANT_FIRST_UNIT_TOTAL_GOLD_COST,
-            noise: MUTANT_NOISE,
+            unit: Mutant,
+            replicated_id: ReplicatedUnitId::default(),
+            position: SimPosition {
+                x: I32F32::ZERO,
+                y: I32F32::ZERO,
+            },
+            health: Health::full(MUTANT_HP),
+            stats: UnitStats {
+                move_speed: MUTANT_MOVE_SPEED,
+                attack_range: MUTANT_ATTACK_RANGE,
+                attack_damage: MUTANT_ATTACK_DAMAGE,
+                attack_speed: MUTANT_ATTACK_SPEED,
+                watch_range: MUTANT_WATCH_RANGE,
+            },
+            armor_reduction: ArmorReduction::default(),
+            fire_resistance: FireResistance::default(),
+            venom_resistance: VenomResistance::default(),
+            health_regeneration_per_second: HealthRegenerationPerSecond::default(),
+            regen_per_tick: RegenPerTick::default(),
+            severe_injury_threshold: SevereInjuryThreshold::default(),
+            attack_noise: AttackNoise::default(),
+            melee_aoe_range: MeleeAoeRange::default(),
         }
     }
 }
 
-#[derive(Event, Clone, Copy)]
-pub struct MutantDamageEvent {
-    pub target: Entity,
-    pub raw_damage: I32F32,
-    pub damage_type: DamageType,
-}
-
-#[derive(Event, Clone, Copy)]
-pub struct SetMutantResearchStateEvent {
-    pub target: Entity,
-    pub researched_in_high_research: bool,
-}
-
-#[derive(Event, Clone, Copy)]
-pub struct SetMutantRecruitmentStateEvent {
-    pub target: Entity,
-    pub engineering_center_online: bool,
-    pub oil_income_non_negative: bool,
-}
-
-#[derive(Event, Clone, Copy)]
-pub struct SetMutantCombatStateEvent {
-    pub target: Entity,
-    pub in_combat: bool,
-    pub severely_injured: bool,
-}
-
-pub fn mutant_research_gate_system(
-    mut events: EventReader<SetMutantResearchStateEvent>,
-    mut mutants: Query<&mut MutantResearchGate, With<Mutant>>,
+fn spawn_mutant_system(
+    mut commands: Commands,
+    mut events: EventReader<SpawnMutantEvent>,
+    mut next_id: ResMut<NextReplicatedUnitId>,
 ) {
     for ev in events.read() {
-        if let Ok(mut gate) = mutants.get_mut(ev.target) {
-            gate.researched_in_high_research = ev.researched_in_high_research;
-        }
+        let mut bundle = MutantBundle::default();
+        bundle.position = ev.position;
+        bundle.replicated_id = ReplicatedUnitId(next_id.0);
+        next_id.0 = next_id.0.wrapping_add(1);
+        commands.spawn(bundle);
     }
 }
 
-pub fn mutant_recruitment_gate_system(
-    mut events: EventReader<SetMutantRecruitmentStateEvent>,
-    mut mutants: Query<&mut MutantRecruitmentGate, With<Mutant>>,
-) {
-    for ev in events.read() {
-        if let Ok(mut gate) = mutants.get_mut(ev.target) {
-            gate.engineering_center_online = ev.engineering_center_online;
-            gate.oil_income_non_negative = ev.oil_income_non_negative;
-        }
-    }
-}
-
-pub fn mutant_combat_state_system(
-    mut events: EventReader<SetMutantCombatStateEvent>,
-    mut mutants: Query<&mut MutantCombatState, With<Mutant>>,
-) {
-    for ev in events.read() {
-        if let Ok(mut state) = mutants.get_mut(ev.target) {
-            state.in_combat = ev.in_combat;
-            state.severely_injured = ev.severely_injured;
-        }
-    }
-}
-
-pub fn mutant_receive_damage_system(
-    mut events: EventReader<MutantDamageEvent>,
-    mut mutants: Query<(&mut Health, &MutantArmorProfile), With<Mutant>>,
-) {
-    for ev in events.read() {
-        if let Ok((mut health, armor)) = mutants.get_mut(ev.target) {
-            let reduction = match ev.damage_type {
-                DamageType::Standard => armor.standard_reduction,
-                DamageType::Fire => armor.fire_reduction,
-                DamageType::Venom => armor.venom_reduction,
-            };
-            let applied = ev.raw_damage * (I32F32::ONE - reduction);
-            health.current = (health.current - applied).max(I32F32::ZERO);
-        }
-    }
-}
-
-pub fn mutant_regeneration_system(
-    sim_hz: Res<SimHz>,
-    mut mutants: Query<(&mut Health, &MutantRegeneration, &MutantCombatState), With<Mutant>>,
-) {
-    for (mut health, regen, combat_state) in &mut mutants {
-        if health.current <= I32F32::ZERO || health.current >= health.max {
-            continue;
-        }
-        if !combat_state.severely_injured {
-            continue;
-        }
-
-        let regen_per_tick = regen.hp_per_second / sim_hz.0;
-        health.current = (health.current + regen_per_tick).min(health.max);
-    }
-}
-
-pub fn mutant_attack_tick_system(
-    sim_hz: Res<SimHz>,
-    mut mutants: Query<
+fn mutant_regeneration_system(
+    mut units: Query<
         (
-            Entity,
-            &SimPosition,
-            &UnitStats,
-            &mut MutantAttackCooldown,
-            &MutantResearchGate,
-            &MutantRecruitmentGate,
-            &MutantCombatState,
-            &Health,
+            &mut Health,
+            &RegenPerTick,
+            &SevereInjuryThreshold,
+            &HealthRegenerationPerSecond,
         ),
         With<Mutant>,
     >,
-    infected_positions: Query<(Entity, &SimPosition), With<Infected>>,
-    mut outgoing_damage: EventWriter<IncomingDamageEvent>,
 ) {
-    for (mutant, position, stats, mut cooldown, research, recruitment, combat, health) in &mut mutants {
-        if health.current <= I32F32::ZERO {
-            continue;
-        }
-        if !research.researched_in_high_research {
-            continue;
-        }
-        if !recruitment.engineering_center_online || !recruitment.oil_income_non_negative {
-            continue;
-        }
-        if !combat.in_combat {
+    for (mut health, regen_per_tick, severe_threshold, _regen_per_second) in &mut units {
+        if health.current >= health.max {
             continue;
         }
 
-        if cooldown.ticks_remaining > I32F32::ZERO {
-            cooldown.ticks_remaining -= I32F32::ONE;
+        let severe_cutoff = health.max * severe_threshold.0;
+        if health.current > severe_cutoff {
             continue;
         }
 
-        let range_sq = stats.attack_range * stats.attack_range;
-        let mut hit_any = false;
-
-        for (infected, infected_pos) in &infected_positions {
-            let dx = infected_pos.x - position.x;
-            let dy = infected_pos.y - position.y;
-            let dist_sq = dx * dx + dy * dy;
-            if dist_sq <= range_sq {
-                hit_any = true;
-                outgoing_damage.send(IncomingDamageEvent {
-                    target: infected,
-                    raw_amount: stats.attack_damage,
-                    damage_type: DamageType::Standard,
-                    source: mutant,
-                });
-            }
-        }
-
-        if hit_any {
-            cooldown.ticks_remaining = sim_hz.0 / stats.attack_speed;
-        }
+        let new_health = health.current + regen_per_tick.0;
+        health.current = if new_health > health.max {
+            health.max
+        } else {
+            new_health
+        };
     }
 }
 
-pub fn mutant_checksum_system(
+fn mutant_checksum_system(
     mut checksum: ResMut<SimChecksumState>,
-    mutants: Query<
+    units: Query<
         (
+            &ReplicatedUnitId,
+            &SimPosition,
             &Health,
             &UnitStats,
-            &MutantArmorProfile,
-            &MutantRegeneration,
-            &MutantAttackCooldown,
-            &MutantResearchGate,
-            &MutantRecruitmentGate,
-            &MutantCombatState,
-            &MutantEconomy,
+            &ArmorReduction,
+            &FireResistance,
+            &VenomResistance,
+            &HealthRegenerationPerSecond,
+            &RegenPerTick,
+            &SevereInjuryThreshold,
+            &AttackNoise,
+            &MeleeAoeRange,
         ),
         With<Mutant>,
     >,
 ) {
-    for (health, stats, armor, regen, cooldown, research, recruitment, combat, economy) in &mutants {
-        checksum.accumulate(health.current.to_bits() as u64);
-        checksum.accumulate(health.max.to_bits() as u64);
-
+    for (
+        replicated_id,
+        pos,
+        hp,
+        stats,
+        armor,
+        fire_resistance,
+        venom_resistance,
+        regen_per_second,
+        regen_per_tick,
+        severe_threshold,
+        noise,
+        aoe_range,
+    ) in &units
+    {
+        checksum.accumulate(replicated_id.0);
+        checksum.accumulate(pos.x.to_bits() as u64);
+        checksum.accumulate(pos.y.to_bits() as u64);
+        checksum.accumulate(hp.current.to_bits() as u64);
+        checksum.accumulate(hp.max.to_bits() as u64);
         checksum.accumulate(stats.move_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_range.to_bits() as u64);
         checksum.accumulate(stats.attack_damage.to_bits() as u64);
         checksum.accumulate(stats.attack_speed.to_bits() as u64);
         checksum.accumulate(stats.watch_range.to_bits() as u64);
-
-        checksum.accumulate(armor.standard_reduction.to_bits() as u64);
-        checksum.accumulate(armor.fire_reduction.to_bits() as u64);
-        checksum.accumulate(armor.venom_reduction.to_bits() as u64);
-
-        checksum.accumulate(regen.hp_per_second.to_bits() as u64);
-        checksum.accumulate(cooldown.ticks_remaining.to_bits() as u64);
-
-        checksum.accumulate(u64::from(research.researched_in_high_research));
-        checksum.accumulate(u64::from(recruitment.engineering_center_online));
-        checksum.accumulate(u64::from(recruitment.oil_income_non_negative));
-        checksum.accumulate(u64::from(combat.in_combat));
-        checksum.accumulate(u64::from(combat.severely_injured));
-
-        checksum.accumulate(economy.cost_gold as u64);
-        checksum.accumulate(economy.cost_food as u64);
-        checksum.accumulate(economy.cost_workers as u64);
-        checksum.accumulate(economy.cost_iron as u64);
-        checksum.accumulate(economy.cost_oil as u64);
-        checksum.accumulate(economy.maintenance_gold as u64);
-        checksum.accumulate(economy.maintenance_oil as u64);
-        checksum.accumulate(economy.build_time_seconds as u64);
-        checksum.accumulate(economy.research_cost_gold as u64);
-        checksum.accumulate(economy.first_unit_total_gold_cost as u64);
-        checksum.accumulate(economy.noise.to_bits() as u64);
+        checksum.accumulate(armor.0.to_bits() as u64);
+        checksum.accumulate(fire_resistance.0.to_bits() as u64);
+        checksum.accumulate(venom_resistance.0.to_bits() as u64);
+        checksum.accumulate(regen_per_second.0.to_bits() as u64);
+        checksum.accumulate(regen_per_tick.0.to_bits() as u64);
+        checksum.accumulate(severe_threshold.0.to_bits() as u64);
+        checksum.accumulate(noise.0.to_bits() as u64);
+        checksum.accumulate(aoe_range.0.to_bits() as u64);
     }
 }
 
@@ -345,19 +256,13 @@ pub struct MutantPlugin;
 
 impl Plugin for MutantPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<MutantDamageEvent>()
-            .add_event::<SetMutantResearchStateEvent>()
-            .add_event::<SetMutantRecruitmentStateEvent>()
-            .add_event::<SetMutantCombatStateEvent>()
+        app.init_resource::<NextReplicatedUnitId>()
+            .add_event::<SpawnMutantEvent>()
             .add_systems(
                 FixedUpdate,
                 (
-                    mutant_research_gate_system,
-                    mutant_recruitment_gate_system,
-                    mutant_combat_state_system,
-                    mutant_receive_damage_system,
+                    spawn_mutant_system,
                     mutant_regeneration_system,
-                    mutant_attack_tick_system,
                     mutant_checksum_system,
                 )
                     .chain(),

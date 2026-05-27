@@ -5,215 +5,125 @@ use fixed::types::I32F32;
 
 use crate::sim::{
     DamageType, EntityKilledEvent, Health, IncomingDamageEvent, NoiseEmittedEvent, SimChecksumState,
-    SimHz, SimPosition, UnitStats,
+    SimPosition, UnitStats,
 };
 
-pub const SOLDIER_GOLD_COST: u32 = 240;
-pub const SOLDIER_BUILD_TIME_SECONDS: u32 = 30;
-pub const SOLDIER_FOOD_COST: u32 = 1;
-pub const SOLDIER_WORKER_COST: u32 = 1;
-pub const SOLDIER_IRON_COST: u32 = 2;
-pub const SOLDIER_MAINTENANCE_GOLD: u32 = 3;
+const SOLDIER_HP: I32F32 = I32F32::lit("120");
+const SOLDIER_MOVE_SPEED: I32F32 = I32F32::lit("2.4");
+const SOLDIER_ATTACK_RANGE: I32F32 = I32F32::lit("5");
+const SOLDIER_ATTACK_SPEED: I32F32 = I32F32::lit("2");
+const SOLDIER_ATTACK_DAMAGE: I32F32 = I32F32::lit("16");
+const SOLDIER_WATCH_RANGE: I32F32 = I32F32::lit("6");
 
-pub const SOLDIER_HP: I32F32 = I32F32::lit("120");
-pub const SOLDIER_MOVE_SPEED: I32F32 = I32F32::lit("2.4");
-pub const SOLDIER_ATTACK_RANGE: I32F32 = I32F32::lit("5");
-pub const SOLDIER_ATTACK_SPEED: I32F32 = I32F32::lit("2");
-pub const SOLDIER_ATTACK_DAMAGE: I32F32 = I32F32::lit("16");
-pub const SOLDIER_WATCH_RANGE: I32F32 = I32F32::lit("6");
-pub const SOLDIER_NOISE_PER_ATTACK: I32F32 = I32F32::lit("3");
-pub const SOLDIER_EXP_REWARD: I32F32 = I32F32::lit("90");
+const SOLDIER_STANDARD_DAMAGE_MULTIPLIER: I32F32 = I32F32::lit("0.60");
+const SOLDIER_FIRE_DAMAGE_MULTIPLIER: I32F32 = I32F32::lit("0.50");
+const SOLDIER_VENOM_DAMAGE_MULTIPLIER: I32F32 = I32F32::lit("0.50");
+const SOLDIER_ATTACK_NOISE: I32F32 = I32F32::lit("3");
 
-pub const SOLDIER_STANDARD_REDUCTION: I32F32 = I32F32::lit("0.4");
-pub const SOLDIER_FIRE_REDUCTION: I32F32 = I32F32::lit("0.5");
-pub const SOLDIER_VENOM_REDUCTION: I32F32 = I32F32::lit("0.5");
-
-pub const SOLDIER_VETERAN_ATTACK_RANGE: I32F32 = I32F32::lit("5.5");
-pub const SOLDIER_VETERAN_ATTACK_SPEED: I32F32 = I32F32::lit("2.5");
-pub const SOLDIER_VETERAN_ATTACK_DAMAGE: I32F32 = I32F32::lit("26");
-
-pub const SOLDIER_EXP_GAIN_BASIC: I32F32 = I32F32::lit("0.0134");
-pub const SOLDIER_EXP_GAIN_MEDIUM: I32F32 = I32F32::lit("0.0268");
-pub const SOLDIER_EXP_GAIN_HARD: I32F32 = I32F32::lit("0.067");
-pub const SOLDIER_EXP_GAIN_ELITE: I32F32 = I32F32::lit("0.134");
+const SOLDIER_VETERAN_ATTACK_RANGE: I32F32 = I32F32::lit("5.5");
+const SOLDIER_VETERAN_ATTACK_SPEED: I32F32 = I32F32::lit("2.5");
+const SOLDIER_VETERAN_ATTACK_DAMAGE: I32F32 = I32F32::lit("26");
+const SOLDIER_VETERAN_XP_THRESHOLD: u32 = 90;
 
 #[derive(Component, Default)]
 pub struct Soldier;
 
-#[derive(Component, Clone, Copy)]
-pub struct SoldierArmor {
-    pub standard_reduction: I32F32,
-    pub fire_reduction: I32F32,
-    pub venom_reduction: I32F32,
-}
+#[derive(Component, Clone, Copy, Default)]
+pub struct ReplicatedUnitId(pub u64);
 
-impl Default for SoldierArmor {
-    fn default() -> Self {
-        Self {
-            standard_reduction: SOLDIER_STANDARD_REDUCTION,
-            fire_reduction: SOLDIER_FIRE_REDUCTION,
-            venom_reduction: SOLDIER_VENOM_REDUCTION,
-        }
-    }
+#[derive(Component, Clone, Copy, Default)]
+pub struct AttackNoise(pub I32F32);
+
+#[derive(Component, Clone, Copy, Default)]
+pub struct Experience {
+    pub value: u32,
 }
 
 #[derive(Component, Clone, Copy, Default)]
-pub struct SoldierAttackCooldown {
-    pub ticks_remaining: u32,
+pub struct Veteran(pub bool);
+
+#[derive(Bundle)]
+pub struct SoldierBundle {
+    pub unit: Soldier,
+    pub replicated_id: ReplicatedUnitId,
+    pub position: SimPosition,
+    pub health: Health,
+    pub stats: UnitStats,
+    pub attack_noise: AttackNoise,
+    pub experience: Experience,
+    pub veteran: Veteran,
 }
 
-#[derive(Component, Clone, Copy, Default)]
-pub struct SoldierVeteran {
-    pub is_veteran: bool,
-}
-
-#[derive(Component, Clone, Copy)]
-pub struct SoldierExperience {
-    pub accumulated: I32F32,
-}
-
-impl Default for SoldierExperience {
+impl Default for SoldierBundle {
     fn default() -> Self {
         Self {
-            accumulated: I32F32::ZERO,
+            unit: Soldier,
+            replicated_id: ReplicatedUnitId::default(),
+            position: SimPosition {
+                x: I32F32::ZERO,
+                y: I32F32::ZERO,
+            },
+            health: Health::full(SOLDIER_HP),
+            stats: UnitStats {
+                move_speed: SOLDIER_MOVE_SPEED,
+                attack_range: SOLDIER_ATTACK_RANGE,
+                attack_damage: SOLDIER_ATTACK_DAMAGE,
+                attack_speed: SOLDIER_ATTACK_SPEED,
+                watch_range: SOLDIER_WATCH_RANGE,
+            },
+            attack_noise: AttackNoise(SOLDIER_ATTACK_NOISE),
+            experience: Experience::default(),
+            veteran: Veteran::default(),
         }
     }
 }
 
-#[derive(Component, Clone, Copy)]
-pub struct SoldierProductionCost {
-    pub gold: u32,
-    pub food: u32,
-    pub workers: u32,
-    pub iron: u32,
-    pub maintenance_gold: u32,
-    pub build_time_seconds: u32,
-}
+#[derive(Resource, Default)]
+pub struct NextReplicatedUnitId(pub u64);
 
-impl Default for SoldierProductionCost {
-    fn default() -> Self {
-        Self {
-            gold: SOLDIER_GOLD_COST,
-            food: SOLDIER_FOOD_COST,
-            workers: SOLDIER_WORKER_COST,
-            iron: SOLDIER_IRON_COST,
-            maintenance_gold: SOLDIER_MAINTENANCE_GOLD,
-            build_time_seconds: SOLDIER_BUILD_TIME_SECONDS,
-        }
-    }
+#[derive(Event, Clone, Copy)]
+pub struct SpawnSoldierEvent {
+    pub position: SimPosition,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct SoldierAttackEvent {
-    pub soldier: Entity,
+pub struct GainSoldierExperienceEvent {
+    pub entity: Entity,
+    pub amount: u32,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct PromoteSoldierEvent {
-    pub soldier: Entity,
+pub struct SoldierFiredEvent {
+    pub entity: Entity,
 }
 
-pub fn soldier_base_health() -> Health {
-    Health::full(SOLDIER_HP)
-}
-
-pub fn soldier_base_stats() -> UnitStats {
-    UnitStats {
-        move_speed: SOLDIER_MOVE_SPEED,
-        attack_range: SOLDIER_ATTACK_RANGE,
-        attack_damage: SOLDIER_ATTACK_DAMAGE,
-        attack_speed: SOLDIER_ATTACK_SPEED,
-        watch_range: SOLDIER_WATCH_RANGE,
-    }
-}
-
-pub fn spawn_soldier(commands: &mut Commands, position: SimPosition) -> Entity {
-    commands
-        .spawn((
-            Soldier,
-            position,
-            soldier_base_health(),
-            soldier_base_stats(),
-            SoldierArmor::default(),
-            SoldierAttackCooldown::default(),
-            SoldierVeteran::default(),
-            SoldierExperience::default(),
-            SoldierProductionCost::default(),
-        ))
-        .id()
-}
-
-fn soldier_attack_system(
-    sim_hz: Res<SimHz>,
-    mut soldiers: Query<(Entity, &SimPosition, &UnitStats, &mut SoldierAttackCooldown), With<Soldier>>,
-    mut attack_events: EventWriter<SoldierAttackEvent>,
-    mut noise_events: EventWriter<NoiseEmittedEvent>,
+fn spawn_soldier_system(
+    mut commands: Commands,
+    mut events: EventReader<SpawnSoldierEvent>,
+    mut next_id: ResMut<NextReplicatedUnitId>,
 ) {
-    for (entity, position, stats, mut cooldown) in &mut soldiers {
-        if cooldown.ticks_remaining > 0 {
-            cooldown.ticks_remaining -= 1;
+    for ev in events.read() {
+        let mut bundle = SoldierBundle::default();
+        bundle.position = ev.position;
+        bundle.replicated_id = ReplicatedUnitId(next_id.0);
+        next_id.0 = next_id.0.wrapping_add(1);
+        commands.spawn(bundle);
+    }
+}
+
+fn gain_soldier_experience_system(
+    mut events: EventReader<GainSoldierExperienceEvent>,
+    mut units: Query<(&mut Experience, &mut Veteran, &mut UnitStats), With<Soldier>>,
+) {
+    for ev in events.read() {
+        let Ok((mut xp, mut veteran, mut stats)) = units.get_mut(ev.entity) else {
             continue;
-        }
+        };
 
-        attack_events.send(SoldierAttackEvent { soldier: entity });
-        noise_events.send(NoiseEmittedEvent {
-            source: entity,
-            position: *position,
-            amount: SOLDIER_NOISE_PER_ATTACK,
-        });
+        xp.value = xp.value.saturating_add(ev.amount);
 
-        let mut ticks = (sim_hz.0 / stats.attack_speed).to_num::<u32>();
-        if ticks == 0 {
-            ticks = 1;
-        }
-        cooldown.ticks_remaining = ticks;
-    }
-}
-
-fn soldier_apply_damage_system(
-    mut incoming_damage: EventReader<IncomingDamageEvent>,
-    mut soldiers: Query<(&mut Health, &SoldierArmor), With<Soldier>>,
-) {
-    for event in incoming_damage.read() {
-        if let Ok((mut health, armor)) = soldiers.get_mut(event.target) {
-            let reduction = match event.damage_type {
-                DamageType::Standard => armor.standard_reduction,
-                DamageType::Fire => armor.fire_reduction,
-                DamageType::Venom => armor.venom_reduction,
-            };
-            let effective_damage = event.raw_amount * (I32F32::ONE - reduction);
-            health.current = (health.current - effective_damage).max(I32F32::ZERO);
-        }
-    }
-}
-
-fn soldier_experience_system(
-    mut kills: EventReader<EntityKilledEvent>,
-    mut soldiers: Query<&mut SoldierExperience, With<Soldier>>,
-) {
-    for event in kills.read() {
-        if let Ok(mut experience) = soldiers.get_mut(event.killer) {
-            let gain_rate = match event.difficulty_tier {
-                0 => SOLDIER_EXP_GAIN_BASIC,
-                1 => SOLDIER_EXP_GAIN_MEDIUM,
-                2 => SOLDIER_EXP_GAIN_HARD,
-                _ => SOLDIER_EXP_GAIN_ELITE,
-            };
-            experience.accumulated += event.exp_reward * gain_rate;
-        }
-    }
-}
-
-fn soldier_promotion_system(
-    mut promotions: EventReader<PromoteSoldierEvent>,
-    mut soldiers: Query<(&mut UnitStats, &mut SoldierVeteran), With<Soldier>>,
-) {
-    for event in promotions.read() {
-        if let Ok((mut stats, mut veteran)) = soldiers.get_mut(event.soldier) {
-            if veteran.is_veteran {
-                continue;
-            }
-            veteran.is_veteran = true;
+        if !veteran.0 && xp.value >= SOLDIER_VETERAN_XP_THRESHOLD {
+            veteran.0 = true;
             stats.attack_range = SOLDIER_VETERAN_ATTACK_RANGE;
             stats.attack_speed = SOLDIER_VETERAN_ATTACK_SPEED;
             stats.attack_damage = SOLDIER_VETERAN_ATTACK_DAMAGE;
@@ -221,64 +131,88 @@ fn soldier_promotion_system(
     }
 }
 
-fn soldier_auto_promote_system(
-    mut soldiers: Query<(&SoldierExperience, &mut UnitStats, &mut SoldierVeteran), With<Soldier>>,
+fn soldier_fire_noise_system(
+    mut events: EventReader<SoldierFiredEvent>,
+    soldiers: Query<(&SimPosition, &AttackNoise), With<Soldier>>,
+    mut noise_writer: EventWriter<NoiseEmittedEvent>,
 ) {
-    for (experience, mut stats, mut veteran) in &mut soldiers {
-        if veteran.is_veteran || experience.accumulated < SOLDIER_EXP_REWARD {
+    for ev in events.read() {
+        let Ok((position, noise)) = soldiers.get(ev.entity) else {
+            continue;
+        };
+
+        noise_writer.send(NoiseEmittedEvent {
+            source: ev.entity,
+            position: *position,
+            amount: noise.0,
+        });
+    }
+}
+
+fn apply_soldier_damage_system(
+    mut damage_events: EventReader<IncomingDamageEvent>,
+    mut soldiers: Query<&mut Health, With<Soldier>>,
+    mut killed_writer: EventWriter<EntityKilledEvent>,
+) {
+    for ev in damage_events.read() {
+        let Ok(mut health) = soldiers.get_mut(ev.target) else {
+            continue;
+        };
+
+        if health.current <= I32F32::ZERO {
             continue;
         }
 
-        veteran.is_veteran = true;
-        stats.attack_range = SOLDIER_VETERAN_ATTACK_RANGE;
-        stats.attack_speed = SOLDIER_VETERAN_ATTACK_SPEED;
-        stats.attack_damage = SOLDIER_VETERAN_ATTACK_DAMAGE;
+        let multiplier = match ev.damage_type {
+            DamageType::Standard => SOLDIER_STANDARD_DAMAGE_MULTIPLIER,
+            DamageType::Fire => SOLDIER_FIRE_DAMAGE_MULTIPLIER,
+            DamageType::Venom => SOLDIER_VENOM_DAMAGE_MULTIPLIER,
+        };
+
+        let applied = ev.raw_amount * multiplier;
+        if applied >= health.current {
+            health.current = I32F32::ZERO;
+            killed_writer.send(EntityKilledEvent {
+                entity: ev.target,
+                killer: ev.source,
+                exp_reward: I32F32::ZERO,
+                difficulty_tier: 0,
+            });
+        } else {
+            health.current = health.current - applied;
+        }
     }
 }
 
 fn soldier_checksum_system(
     mut checksum: ResMut<SimChecksumState>,
-    soldiers: Query<
+    units: Query<
         (
+            &ReplicatedUnitId,
+            &SimPosition,
             &Health,
             &UnitStats,
-            &SoldierArmor,
-            &SoldierAttackCooldown,
-            &SoldierVeteran,
-            &SoldierExperience,
-            &SoldierProductionCost,
-            &SimPosition,
+            &AttackNoise,
+            &Experience,
+            &Veteran,
         ),
         With<Soldier>,
     >,
 ) {
-    for (health, stats, armor, cooldown, veteran, experience, production_cost, position) in &soldiers {
-        checksum.accumulate(health.current.to_bits() as u64);
-        checksum.accumulate(health.max.to_bits() as u64);
-
+    for (replicated_id, pos, hp, stats, noise, xp, veteran) in &units {
+        checksum.accumulate(replicated_id.0);
+        checksum.accumulate(pos.x.to_bits() as u64);
+        checksum.accumulate(pos.y.to_bits() as u64);
+        checksum.accumulate(hp.current.to_bits() as u64);
+        checksum.accumulate(hp.max.to_bits() as u64);
         checksum.accumulate(stats.move_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_range.to_bits() as u64);
         checksum.accumulate(stats.attack_damage.to_bits() as u64);
         checksum.accumulate(stats.attack_speed.to_bits() as u64);
         checksum.accumulate(stats.watch_range.to_bits() as u64);
-
-        checksum.accumulate(armor.standard_reduction.to_bits() as u64);
-        checksum.accumulate(armor.fire_reduction.to_bits() as u64);
-        checksum.accumulate(armor.venom_reduction.to_bits() as u64);
-
-        checksum.accumulate(cooldown.ticks_remaining as u64);
-        checksum.accumulate(veteran.is_veteran as u64);
-        checksum.accumulate(experience.accumulated.to_bits() as u64);
-
-        checksum.accumulate(production_cost.gold as u64);
-        checksum.accumulate(production_cost.food as u64);
-        checksum.accumulate(production_cost.workers as u64);
-        checksum.accumulate(production_cost.iron as u64);
-        checksum.accumulate(production_cost.maintenance_gold as u64);
-        checksum.accumulate(production_cost.build_time_seconds as u64);
-
-        checksum.accumulate(position.x.to_bits() as u64);
-        checksum.accumulate(position.y.to_bits() as u64);
+        checksum.accumulate(noise.0.to_bits() as u64);
+        checksum.accumulate(xp.value as u64);
+        checksum.accumulate(u64::from(veteran.0));
     }
 }
 
@@ -286,16 +220,17 @@ pub struct SoldierPlugin;
 
 impl Plugin for SoldierPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SoldierAttackEvent>()
-            .add_event::<PromoteSoldierEvent>()
+        app.init_resource::<NextReplicatedUnitId>()
+            .add_event::<SpawnSoldierEvent>()
+            .add_event::<GainSoldierExperienceEvent>()
+            .add_event::<SoldierFiredEvent>()
             .add_systems(
                 FixedUpdate,
                 (
-                    soldier_attack_system,
-                    soldier_apply_damage_system,
-                    soldier_experience_system,
-                    soldier_promotion_system,
-                    soldier_auto_promote_system,
+                    spawn_soldier_system,
+                    gain_soldier_experience_system,
+                    soldier_fire_noise_system,
+                    apply_soldier_damage_system,
                     soldier_checksum_system,
                 )
                     .chain(),

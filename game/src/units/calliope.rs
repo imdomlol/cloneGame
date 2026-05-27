@@ -1,98 +1,52 @@
-// Sources: vault/units/calliope.md, vault/game_mechanics/animation_canceling.md
+// Sources: vault/units/calliope.md
 
 use bevy::prelude::*;
 use fixed::types::I32F32;
 
-use crate::sim::{Health, IncomingDamageEvent, SimChecksumState, SimHz, SimPosition, UnitStats};
-use crate::units::Infected;
+use crate::sim::{Health, SimChecksumState, SimPosition, UnitStats};
 
-const CALLIOPE_BASE_HP: I32F32 = I32F32::lit("60");
-const CALLIOPE_BASE_MS: I32F32 = I32F32::lit("3.2");
-const CALLIOPE_BASE_AR: I32F32 = I32F32::lit("4.5");
-const CALLIOPE_BASE_AS: I32F32 = I32F32::lit("5");
-const CALLIOPE_BASE_AD: I32F32 = I32F32::lit("15");
-const CALLIOPE_BASE_WR: I32F32 = I32F32::lit("7");
+const CALLIOPE_HP: I32F32 = I32F32::lit("60");
+const CALLIOPE_MOVE_SPEED: I32F32 = I32F32::lit("3.2");
+const CALLIOPE_ATTACK_RANGE: I32F32 = I32F32::lit("4.5");
+const CALLIOPE_ATTACK_SPEED: I32F32 = I32F32::lit("5");
+const CALLIOPE_ATTACK_DAMAGE: I32F32 = I32F32::lit("15");
+const CALLIOPE_WATCH_RANGE: I32F32 = I32F32::lit("7");
 const CALLIOPE_BASE_ARMOR_REDUCTION: I32F32 = I32F32::lit("0.10");
-const CALLIOPE_BASE_ATTACK_NOISE: I32F32 = I32F32::lit("1");
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Calliope;
 
-#[derive(Component, Clone, Copy)]
-pub struct CalliopeCombatMods {
-    pub armor_reduction: I32F32,
-    pub attack_noise: I32F32,
-}
+#[derive(Component, Clone, Copy, Default)]
+pub struct ReplicatedUnitId(pub u64);
 
-impl Default for CalliopeCombatMods {
+#[derive(Component, Clone, Copy)]
+pub struct ArmorReduction(pub I32F32);
+
+impl Default for ArmorReduction {
     fn default() -> Self {
-        Self {
-            armor_reduction: CALLIOPE_BASE_ARMOR_REDUCTION,
-            attack_noise: CALLIOPE_BASE_ATTACK_NOISE,
-        }
+        Self(CALLIOPE_BASE_ARMOR_REDUCTION)
     }
 }
 
 #[derive(Component, Clone, Copy, Default)]
-pub struct CalliopeAttackCooldown {
-    pub ticks_remaining: I32F32,
-}
+pub struct AttackNoise(pub I32F32);
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum MissionState {
-    InProgress,
-    Completed,
-    Lost,
-    Reloaded,
-}
+#[derive(Component, Clone, Copy, Default)]
+pub struct ReloadSpeedBonus(pub I32F32);
 
-#[derive(Component, Clone, Copy)]
-pub struct CalliopePerkState {
-    pub perk_points_available: u8,
-    pub aim_tier: u8,
-    pub protection_tier: u8,
-    pub strength_tier: u8,
-    pub speed_tier: u8,
-    pub dexterity_tier: u8,
-    pub silent_tier: u8,
-    pub quick_reflexes_tier: u8,
-    pub improved_vision_tier: u8,
-    pub mission_state: MissionState,
-}
-
-impl Default for CalliopePerkState {
-    fn default() -> Self {
-        Self {
-            perk_points_available: 0,
-            aim_tier: 0,
-            protection_tier: 0,
-            strength_tier: 0,
-            speed_tier: 0,
-            dexterity_tier: 0,
-            silent_tier: 0,
-            quick_reflexes_tier: 0,
-            improved_vision_tier: 0,
-            mission_state: MissionState::InProgress,
-        }
-    }
+#[derive(Component, Clone, Copy, Default)]
+pub struct PerkPoints {
+    pub available: i32,
 }
 
 #[derive(Component, Clone, Copy, Default)]
-pub struct CalliopeLoadSpeedMultiplier(pub I32F32);
+pub struct PerkRefundLocked(pub bool);
 
-#[derive(Event, Clone, Copy)]
-pub struct CalliopeDamageEvent {
-    pub target: Entity,
-    pub raw_damage: I32F32,
-}
+#[derive(Component, Clone, Copy, Default)]
+pub struct ScoutingMissionRewarded(pub bool);
 
-#[derive(Event, Clone, Copy)]
-pub struct CalliopePerkPointAwardEvent {
-    pub target: Entity,
-    pub first_time_scouting_mission_completed: bool,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum CalliopePerk {
     AimI,
     AimII,
@@ -120,467 +74,416 @@ pub enum CalliopePerk {
     ImprovedVisionIII,
 }
 
+#[derive(Component, Clone, Default)]
+pub struct CalliopePerks {
+    pub purchased: Vec<CalliopePerk>,
+}
+
+#[derive(Bundle)]
+pub struct CalliopeBundle {
+    pub unit: Calliope,
+    pub replicated_id: ReplicatedUnitId,
+    pub position: SimPosition,
+    pub health: Health,
+    pub stats: UnitStats,
+    pub armor_reduction: ArmorReduction,
+    pub attack_noise: AttackNoise,
+    pub reload_speed_bonus: ReloadSpeedBonus,
+    pub perk_points: PerkPoints,
+    pub perks: CalliopePerks,
+    pub perk_refund_locked: PerkRefundLocked,
+    pub scouting_mission_rewarded: ScoutingMissionRewarded,
+}
+
+#[derive(Resource, Default)]
+pub struct NextReplicatedUnitId(pub u64);
+
 #[derive(Event, Clone, Copy)]
-pub struct AllocateCalliopePerkEvent {
-    pub target: Entity,
+pub struct SpawnCalliopeEvent {
+    pub position: SimPosition,
+}
+
+#[derive(Event, Clone, Copy)]
+pub struct CompleteScoutingMissionFirstTimeEvent {
+    pub entity: Entity,
+}
+
+#[derive(Event, Clone, Copy)]
+pub struct PurchaseCalliopePerkEvent {
+    pub entity: Entity,
     pub perk: CalliopePerk,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct RefundCalliopePerksEvent {
-    pub target: Entity,
+pub struct RefundCalliopePerkEvent {
+    pub entity: Entity,
+    pub perk: CalliopePerk,
 }
 
 #[derive(Event, Clone, Copy)]
-pub struct UpdateCalliopeMissionStateEvent {
-    pub target: Entity,
-    pub state: MissionState,
+pub struct LockCalliopePerkRefundEvent {
+    pub entity: Entity,
 }
 
-fn is_center_perk_unlocked(perks: &CalliopePerkState) -> bool {
-    perks.aim_tier > 0 || perks.protection_tier > 0 || perks.strength_tier > 0 || perks.speed_tier > 0
+#[derive(Event, Clone, Copy)]
+pub struct UnlockCalliopePerkRefundEvent {
+    pub entity: Entity,
 }
 
-fn can_unlock(perks: &CalliopePerkState, perk: CalliopePerk) -> bool {
+impl Default for CalliopeBundle {
+    fn default() -> Self {
+        Self {
+            unit: Calliope,
+            replicated_id: ReplicatedUnitId::default(),
+            position: SimPosition {
+                x: I32F32::ZERO,
+                y: I32F32::ZERO,
+            },
+            health: Health::full(CALLIOPE_HP),
+            stats: UnitStats {
+                move_speed: CALLIOPE_MOVE_SPEED,
+                attack_range: CALLIOPE_ATTACK_RANGE,
+                attack_damage: CALLIOPE_ATTACK_DAMAGE,
+                attack_speed: CALLIOPE_ATTACK_SPEED,
+                watch_range: CALLIOPE_WATCH_RANGE,
+            },
+            armor_reduction: ArmorReduction::default(),
+            attack_noise: AttackNoise(I32F32::ONE),
+            reload_speed_bonus: ReloadSpeedBonus::default(),
+            perk_points: PerkPoints::default(),
+            perks: CalliopePerks::default(),
+            perk_refund_locked: PerkRefundLocked::default(),
+            scouting_mission_rewarded: ScoutingMissionRewarded::default(),
+        }
+    }
+}
+
+fn perk_position(perk: CalliopePerk) -> (i32, i32) {
     match perk {
-        CalliopePerk::AimI
-        | CalliopePerk::ProtectionI
-        | CalliopePerk::StrengthI
-        | CalliopePerk::SpeedI => true,
-        _ => is_center_perk_unlocked(perks),
+        CalliopePerk::AimI => (-3, -1),
+        CalliopePerk::AimII => (-2, -1),
+        CalliopePerk::AimIII => (-1, -1),
+        CalliopePerk::AimIV => (0, -1),
+        CalliopePerk::ProtectionI => (2, -2),
+        CalliopePerk::ProtectionII => (2, -1),
+        CalliopePerk::ProtectionIII => (2, 0),
+        CalliopePerk::StrengthI => (-2, 2),
+        CalliopePerk::StrengthII => (-1, 2),
+        CalliopePerk::StrengthIII => (0, 2),
+        CalliopePerk::StrengthIV => (1, 2),
+        CalliopePerk::SpeedI => (-2, 0),
+        CalliopePerk::SpeedII => (-1, 0),
+        CalliopePerk::SpeedIII => (0, 0),
+        CalliopePerk::DexterityI => (-2, -2),
+        CalliopePerk::DexterityII => (-1, -2),
+        CalliopePerk::DexterityIII => (0, -2),
+        CalliopePerk::SilentI => (1, -1),
+        CalliopePerk::SilentII => (1, 0),
+        CalliopePerk::QuickReflexesI => (0, 1),
+        CalliopePerk::QuickReflexesII => (1, 1),
+        CalliopePerk::ImprovedVisionI => (-1, 1),
+        CalliopePerk::ImprovedVisionII => (-2, 1),
+        CalliopePerk::ImprovedVisionIII => (-3, 1),
     }
 }
 
-pub fn calliope_attack_tick_system(
-    sim_hz: Res<SimHz>,
-    mut attackers: Query<
-        (
-            Entity,
-            &SimPosition,
-            &mut CalliopeAttackCooldown,
-            &UnitStats,
-            &CalliopeLoadSpeedMultiplier,
-        ),
-        With<Calliope>,
-    >,
-    infected_positions: Query<(Entity, &SimPosition), With<Infected>>,
-    mut outgoing_damage: EventWriter<IncomingDamageEvent>,
+fn is_center_perk(perk: CalliopePerk) -> bool {
+    matches!(
+        perk,
+        CalliopePerk::SpeedII
+            | CalliopePerk::SpeedIII
+            | CalliopePerk::QuickReflexesI
+            | CalliopePerk::ImprovedVisionI
+    )
+}
+
+fn has_adjacent_unlocked_perk(target: CalliopePerk, purchased: &[CalliopePerk]) -> bool {
+    let (tx, ty) = perk_position(target);
+    for perk in purchased {
+        let (px, py) = perk_position(*perk);
+        let dx = (tx - px).abs();
+        let dy = (ty - py).abs();
+        if dx <= 1 && dy <= 1 {
+            return true;
+        }
+    }
+    false
+}
+
+fn can_purchase_perk(target: CalliopePerk, purchased: &[CalliopePerk]) -> bool {
+    if purchased.contains(&target) {
+        return false;
+    }
+
+    if purchased.is_empty() {
+        return is_center_perk(target);
+    }
+
+    has_adjacent_unlocked_perk(target, purchased)
+}
+
+fn apply_perk_effect(
+    stats: &mut UnitStats,
+    health: &mut Health,
+    armor: &mut ArmorReduction,
+    noise: &mut AttackNoise,
+    reload: &mut ReloadSpeedBonus,
+    perk: CalliopePerk,
 ) {
-    for (calliope_entity, calliope_pos, mut cooldown, stats, load_mult) in &mut attackers {
-        if cooldown.ticks_remaining > I32F32::ZERO {
-            cooldown.ticks_remaining -= I32F32::ONE;
-            continue;
+    match perk {
+        CalliopePerk::AimI => stats.attack_damage = stats.attack_damage * I32F32::lit("1.30"),
+        CalliopePerk::AimII => stats.attack_damage = stats.attack_damage * I32F32::lit("1.30"),
+        CalliopePerk::AimIII => stats.attack_damage = stats.attack_damage * I32F32::lit("1.40"),
+        CalliopePerk::AimIV => stats.attack_damage = stats.attack_damage * I32F32::lit("1.50"),
+        CalliopePerk::ProtectionI => armor.0 = armor.0 + I32F32::lit("0.15"),
+        CalliopePerk::ProtectionII => armor.0 = armor.0 + I32F32::lit("0.15"),
+        CalliopePerk::ProtectionIII => armor.0 = armor.0 + I32F32::lit("0.15"),
+        CalliopePerk::StrengthI => {
+            health.max = health.max * I32F32::lit("1.30");
+            health.current = health.current * I32F32::lit("1.30");
         }
-
-        let attack_range_sq = stats.attack_range * stats.attack_range;
-        let mut best_target: Option<(Entity, SimPosition, I32F32)> = None;
-
-        for (infected_entity, infected_pos) in &infected_positions {
-            let dx = infected_pos.x - calliope_pos.x;
-            let dy = infected_pos.y - calliope_pos.y;
-            let dist_sq = dx * dx + dy * dy;
-            if dist_sq > attack_range_sq {
-                continue;
-            }
-
-            match best_target {
-                None => {
-                    best_target = Some((infected_entity, *infected_pos, dist_sq));
-                }
-                Some((_, best_pos, best_dist_sq)) => {
-                    if dist_sq < best_dist_sq
-                        || (dist_sq == best_dist_sq
-                            && (infected_pos.x < best_pos.x
-                                || (infected_pos.x == best_pos.x && infected_pos.y < best_pos.y)))
-                    {
-                        best_target = Some((infected_entity, *infected_pos, dist_sq));
-                    }
-                }
-            }
+        CalliopePerk::StrengthII => {
+            health.max = health.max * I32F32::lit("1.30");
+            health.current = health.current * I32F32::lit("1.30");
         }
+        CalliopePerk::StrengthIII => {
+            health.max = health.max * I32F32::lit("1.40");
+            health.current = health.current * I32F32::lit("1.40");
+        }
+        CalliopePerk::StrengthIV => {
+            health.max = health.max * I32F32::lit("1.50");
+            health.current = health.current * I32F32::lit("1.50");
+        }
+        CalliopePerk::SpeedI => stats.move_speed = stats.move_speed * I32F32::lit("1.20"),
+        CalliopePerk::SpeedII => stats.move_speed = stats.move_speed * I32F32::lit("1.20"),
+        CalliopePerk::SpeedIII => stats.move_speed = stats.move_speed * I32F32::lit("1.30"),
+        CalliopePerk::DexterityI => stats.attack_speed = stats.attack_speed * I32F32::lit("1.20"),
+        CalliopePerk::DexterityII => stats.attack_speed = stats.attack_speed * I32F32::lit("1.20"),
+        CalliopePerk::DexterityIII => stats.attack_speed = stats.attack_speed * I32F32::lit("1.25"),
+        CalliopePerk::SilentI => noise.0 = noise.0 * I32F32::lit("0.60"),
+        CalliopePerk::SilentII => noise.0 = noise.0 * I32F32::lit("0.60"),
+        CalliopePerk::QuickReflexesI => reload.0 = reload.0 + I32F32::lit("0.40"),
+        CalliopePerk::QuickReflexesII => reload.0 = reload.0 + I32F32::lit("0.40"),
+        CalliopePerk::ImprovedVisionI => {
+            stats.attack_range = stats.attack_range + I32F32::ONE;
+            stats.watch_range = stats.watch_range + I32F32::ONE;
+        }
+        CalliopePerk::ImprovedVisionII => {
+            stats.attack_range = stats.attack_range + I32F32::ONE;
+            stats.watch_range = stats.watch_range + I32F32::ONE;
+        }
+        CalliopePerk::ImprovedVisionIII => {
+            stats.attack_range = stats.attack_range + I32F32::ONE;
+            stats.watch_range = stats.watch_range + I32F32::ONE;
+        }
+    }
+}
 
-        let Some((target, _, _)) = best_target else {
+fn reset_to_base_stats(
+    stats: &mut UnitStats,
+    health: &mut Health,
+    armor: &mut ArmorReduction,
+    noise: &mut AttackNoise,
+    reload: &mut ReloadSpeedBonus,
+) {
+    *stats = UnitStats {
+        move_speed: CALLIOPE_MOVE_SPEED,
+        attack_range: CALLIOPE_ATTACK_RANGE,
+        attack_damage: CALLIOPE_ATTACK_DAMAGE,
+        attack_speed: CALLIOPE_ATTACK_SPEED,
+        watch_range: CALLIOPE_WATCH_RANGE,
+    };
+    *health = Health::full(CALLIOPE_HP);
+    *armor = ArmorReduction::default();
+    *noise = AttackNoise(I32F32::ONE);
+    *reload = ReloadSpeedBonus::default();
+}
+
+fn spawn_calliope_system(
+    mut commands: Commands,
+    mut events: EventReader<SpawnCalliopeEvent>,
+    mut next_id: ResMut<NextReplicatedUnitId>,
+) {
+    for ev in events.read() {
+        let mut bundle = CalliopeBundle::default();
+        bundle.position = ev.position;
+        bundle.replicated_id = ReplicatedUnitId(next_id.0);
+        next_id.0 = next_id.0.wrapping_add(1);
+        commands.spawn(bundle);
+    }
+}
+
+fn award_scouting_mission_perk_point_system(
+    mut events: EventReader<CompleteScoutingMissionFirstTimeEvent>,
+    mut units: Query<(&mut PerkPoints, &mut ScoutingMissionRewarded), With<Calliope>>,
+) {
+    for ev in events.read() {
+        let Ok((mut points, mut rewarded)) = units.get_mut(ev.entity) else {
             continue;
         };
 
-        outgoing_damage.send(IncomingDamageEvent {
-            target,
-            raw_amount: stats.attack_damage,
-            damage_type: crate::sim::DamageType::Standard,
-            source: calliope_entity,
-        });
-
-        let load_speed = if load_mult.0 <= I32F32::ZERO {
-            I32F32::ONE
-        } else {
-            load_mult.0
-        };
-        cooldown.ticks_remaining = (sim_hz.0 / stats.attack_speed) / load_speed;
-    }
-}
-
-pub fn calliope_receive_damage_system(
-    mut events: EventReader<CalliopeDamageEvent>,
-    mut units: Query<(&mut Health, &CalliopeCombatMods), With<Calliope>>,
-) {
-    for ev in events.read() {
-        if let Ok((mut hp, mods)) = units.get_mut(ev.target) {
-            let applied = ev.raw_damage * (I32F32::ONE - mods.armor_reduction);
-            hp.current = (hp.current - applied).max(I32F32::ZERO);
+        if !rewarded.0 {
+            points.available += 1;
+            rewarded.0 = true;
         }
     }
 }
 
-pub fn calliope_perk_point_award_system(
-    mut events: EventReader<CalliopePerkPointAwardEvent>,
-    mut units: Query<&mut CalliopePerkState, With<Calliope>>,
-) {
-    for ev in events.read() {
-        if !ev.first_time_scouting_mission_completed {
-            continue;
-        }
-        if let Ok(mut perks) = units.get_mut(ev.target) {
-            perks.perk_points_available = perks.perk_points_available.saturating_add(1);
-        }
-    }
-}
-
-pub fn calliope_update_mission_state_system(
-    mut events: EventReader<UpdateCalliopeMissionStateEvent>,
-    mut units: Query<&mut CalliopePerkState, With<Calliope>>,
-) {
-    for ev in events.read() {
-        if let Ok(mut perks) = units.get_mut(ev.target) {
-            perks.mission_state = ev.state;
-        }
-    }
-}
-
-pub fn calliope_allocate_perk_system(
-    mut events: EventReader<AllocateCalliopePerkEvent>,
-    mut units: Query<&mut CalliopePerkState, With<Calliope>>,
-) {
-    for ev in events.read() {
-        if let Ok(mut perks) = units.get_mut(ev.target) {
-            if perks.perk_points_available == 0 || !can_unlock(&perks, ev.perk) {
-                continue;
-            }
-
-            let allocated = match ev.perk {
-                CalliopePerk::AimI if perks.aim_tier == 0 => {
-                    perks.aim_tier = 1;
-                    true
-                }
-                CalliopePerk::AimII if perks.aim_tier == 1 => {
-                    perks.aim_tier = 2;
-                    true
-                }
-                CalliopePerk::AimIII if perks.aim_tier == 2 => {
-                    perks.aim_tier = 3;
-                    true
-                }
-                CalliopePerk::AimIV if perks.aim_tier == 3 => {
-                    perks.aim_tier = 4;
-                    true
-                }
-                CalliopePerk::ProtectionI if perks.protection_tier == 0 => {
-                    perks.protection_tier = 1;
-                    true
-                }
-                CalliopePerk::ProtectionII if perks.protection_tier == 1 => {
-                    perks.protection_tier = 2;
-                    true
-                }
-                CalliopePerk::ProtectionIII if perks.protection_tier == 2 => {
-                    perks.protection_tier = 3;
-                    true
-                }
-                CalliopePerk::StrengthI if perks.strength_tier == 0 => {
-                    perks.strength_tier = 1;
-                    true
-                }
-                CalliopePerk::StrengthII if perks.strength_tier == 1 => {
-                    perks.strength_tier = 2;
-                    true
-                }
-                CalliopePerk::StrengthIII if perks.strength_tier == 2 => {
-                    perks.strength_tier = 3;
-                    true
-                }
-                CalliopePerk::StrengthIV if perks.strength_tier == 3 => {
-                    perks.strength_tier = 4;
-                    true
-                }
-                CalliopePerk::SpeedI if perks.speed_tier == 0 => {
-                    perks.speed_tier = 1;
-                    true
-                }
-                CalliopePerk::SpeedII if perks.speed_tier == 1 => {
-                    perks.speed_tier = 2;
-                    true
-                }
-                CalliopePerk::SpeedIII if perks.speed_tier == 2 => {
-                    perks.speed_tier = 3;
-                    true
-                }
-                CalliopePerk::DexterityI if perks.dexterity_tier == 0 => {
-                    perks.dexterity_tier = 1;
-                    true
-                }
-                CalliopePerk::DexterityII if perks.dexterity_tier == 1 => {
-                    perks.dexterity_tier = 2;
-                    true
-                }
-                CalliopePerk::DexterityIII if perks.dexterity_tier == 2 => {
-                    perks.dexterity_tier = 3;
-                    true
-                }
-                CalliopePerk::SilentI if perks.silent_tier == 0 => {
-                    perks.silent_tier = 1;
-                    true
-                }
-                CalliopePerk::SilentII if perks.silent_tier == 1 => {
-                    perks.silent_tier = 2;
-                    true
-                }
-                CalliopePerk::QuickReflexesI if perks.quick_reflexes_tier == 0 => {
-                    perks.quick_reflexes_tier = 1;
-                    true
-                }
-                CalliopePerk::QuickReflexesII if perks.quick_reflexes_tier == 1 => {
-                    perks.quick_reflexes_tier = 2;
-                    true
-                }
-                CalliopePerk::ImprovedVisionI if perks.improved_vision_tier == 0 => {
-                    perks.improved_vision_tier = 1;
-                    true
-                }
-                CalliopePerk::ImprovedVisionII if perks.improved_vision_tier == 1 => {
-                    perks.improved_vision_tier = 2;
-                    true
-                }
-                CalliopePerk::ImprovedVisionIII if perks.improved_vision_tier == 2 => {
-                    perks.improved_vision_tier = 3;
-                    true
-                }
-                _ => false,
-            };
-
-            if allocated {
-                perks.perk_points_available = perks.perk_points_available.saturating_sub(1);
-            }
-        }
-    }
-}
-
-pub fn calliope_refund_perks_system(
-    mut events: EventReader<RefundCalliopePerksEvent>,
-    mut units: Query<(&mut CalliopePerkState, &mut UnitStats, &mut CalliopeCombatMods, &mut Health), With<Calliope>>,
-) {
-    for ev in events.read() {
-        if let Ok((mut perks, mut stats, mut combat_mods, mut hp)) = units.get_mut(ev.target) {
-            let can_refund = matches!(perks.mission_state, MissionState::InProgress | MissionState::Lost);
-            if !can_refund {
-                continue;
-            }
-
-            let spent_points = perks.aim_tier
-                + perks.protection_tier
-                + perks.strength_tier
-                + perks.speed_tier
-                + perks.dexterity_tier
-                + perks.silent_tier
-                + perks.quick_reflexes_tier
-                + perks.improved_vision_tier;
-
-            perks.perk_points_available = perks.perk_points_available.saturating_add(spent_points);
-            perks.aim_tier = 0;
-            perks.protection_tier = 0;
-            perks.strength_tier = 0;
-            perks.speed_tier = 0;
-            perks.dexterity_tier = 0;
-            perks.silent_tier = 0;
-            perks.quick_reflexes_tier = 0;
-            perks.improved_vision_tier = 0;
-
-            *stats = UnitStats {
-                move_speed: CALLIOPE_BASE_MS,
-                attack_range: CALLIOPE_BASE_AR,
-                attack_damage: CALLIOPE_BASE_AD,
-                attack_speed: CALLIOPE_BASE_AS,
-                watch_range: CALLIOPE_BASE_WR,
-            };
-            *combat_mods = CalliopeCombatMods::default();
-            hp.max = CALLIOPE_BASE_HP;
-            if hp.current > hp.max {
-                hp.current = hp.max;
-            }
-        }
-    }
-}
-
-pub fn calliope_apply_perks_system(
+fn purchase_calliope_perk_system(
+    mut events: EventReader<PurchaseCalliopePerkEvent>,
     mut units: Query<
         (
-            &CalliopePerkState,
+            &mut PerkPoints,
+            &mut CalliopePerks,
             &mut UnitStats,
-            &mut CalliopeCombatMods,
             &mut Health,
-            &mut CalliopeLoadSpeedMultiplier,
+            &mut ArmorReduction,
+            &mut AttackNoise,
+            &mut ReloadSpeedBonus,
         ),
         With<Calliope>,
     >,
 ) {
-    for (perks, mut stats, mut combat_mods, mut hp, mut load_mult) in &mut units {
-        let mut damage_mult = I32F32::ONE;
-        if perks.aim_tier >= 1 {
-            damage_mult += I32F32::lit("0.30");
-        }
-        if perks.aim_tier >= 2 {
-            damage_mult += I32F32::lit("0.30");
-        }
-        if perks.aim_tier >= 3 {
-            damage_mult += I32F32::lit("0.40");
-        }
-        if perks.aim_tier >= 4 {
-            damage_mult += I32F32::lit("0.50");
+    for ev in events.read() {
+        let Ok((mut points, mut perks, mut stats, mut health, mut armor, mut noise, mut reload)) =
+            units.get_mut(ev.entity)
+        else {
+            continue;
+        };
+
+        if points.available <= 0 || !can_purchase_perk(ev.perk, &perks.purchased) {
+            continue;
         }
 
-        let mut hp_mult = I32F32::ONE;
-        if perks.strength_tier >= 1 {
-            hp_mult += I32F32::lit("0.30");
-        }
-        if perks.strength_tier >= 2 {
-            hp_mult += I32F32::lit("0.30");
-        }
-        if perks.strength_tier >= 3 {
-            hp_mult += I32F32::lit("0.40");
-        }
-        if perks.strength_tier >= 4 {
-            hp_mult += I32F32::lit("0.50");
-        }
-
-        let mut as_mult = I32F32::ONE;
-        if perks.dexterity_tier >= 1 {
-            as_mult += I32F32::lit("0.20");
-        }
-        if perks.dexterity_tier >= 2 {
-            as_mult += I32F32::lit("0.20");
-        }
-        if perks.dexterity_tier >= 3 {
-            as_mult += I32F32::lit("0.25");
-        }
-
-        let mut ls_mult = I32F32::ONE;
-        if perks.quick_reflexes_tier >= 1 {
-            ls_mult += I32F32::lit("0.40");
-        }
-        if perks.quick_reflexes_tier >= 2 {
-            ls_mult += I32F32::lit("0.40");
-        }
-
-        let mut armor = CALLIOPE_BASE_ARMOR_REDUCTION;
-        if perks.protection_tier >= 1 {
-            armor += I32F32::lit("0.15");
-        }
-        if perks.protection_tier >= 2 {
-            armor += I32F32::lit("0.15");
-        }
-        if perks.protection_tier >= 3 {
-            armor += I32F32::lit("0.15");
-        }
-        if armor > I32F32::lit("0.95") {
-            armor = I32F32::lit("0.95");
-        }
-
-        let mut move_mult = I32F32::ONE;
-        if perks.speed_tier >= 1 {
-            move_mult += I32F32::lit("0.20");
-        }
-        if perks.speed_tier >= 2 {
-            move_mult += I32F32::lit("0.20");
-        }
-        if perks.speed_tier >= 3 {
-            move_mult += I32F32::lit("0.30");
-        }
-
-        let range_bonus = I32F32::from_num(perks.improved_vision_tier);
-
-        let mut noise_mult = I32F32::ONE;
-        if perks.silent_tier >= 1 {
-            noise_mult -= I32F32::lit("0.40");
-        }
-        if perks.silent_tier >= 2 {
-            noise_mult -= I32F32::lit("0.40");
-        }
-        if noise_mult < I32F32::ZERO {
-            noise_mult = I32F32::ZERO;
-        }
-
-        stats.move_speed = CALLIOPE_BASE_MS * move_mult;
-        stats.attack_range = CALLIOPE_BASE_AR + range_bonus;
-        stats.attack_speed = CALLIOPE_BASE_AS * as_mult;
-        stats.attack_damage = CALLIOPE_BASE_AD * damage_mult;
-        stats.watch_range = CALLIOPE_BASE_WR + range_bonus;
-
-        combat_mods.armor_reduction = armor;
-        combat_mods.attack_noise = CALLIOPE_BASE_ATTACK_NOISE * noise_mult;
-
-        hp.max = CALLIOPE_BASE_HP * hp_mult;
-        if hp.current > hp.max {
-            hp.current = hp.max;
-        }
-
-        load_mult.0 = ls_mult;
+        points.available -= 1;
+        perks.purchased.push(ev.perk);
+        apply_perk_effect(&mut stats, &mut health, &mut armor, &mut noise, &mut reload, ev.perk);
     }
 }
 
-pub fn calliope_checksum_system(
+fn refund_calliope_perk_system(
+    mut events: EventReader<RefundCalliopePerkEvent>,
+    mut units: Query<
+        (
+            &mut PerkPoints,
+            &mut CalliopePerks,
+            &mut UnitStats,
+            &mut Health,
+            &mut ArmorReduction,
+            &mut AttackNoise,
+            &mut ReloadSpeedBonus,
+            &PerkRefundLocked,
+        ),
+        With<Calliope>,
+    >,
+) {
+    for ev in events.read() {
+        let Ok((
+            mut points,
+            mut perks,
+            mut stats,
+            mut health,
+            mut armor,
+            mut noise,
+            mut reload,
+            locked,
+        )) = units.get_mut(ev.entity)
+        else {
+            continue;
+        };
+
+        if locked.0 {
+            continue;
+        }
+
+        let mut removed = false;
+        perks.purchased.retain(|perk| {
+            if !removed && *perk == ev.perk {
+                removed = true;
+                false
+            } else {
+                true
+            }
+        });
+
+        if !removed {
+            continue;
+        }
+
+        points.available += 1;
+        reset_to_base_stats(&mut stats, &mut health, &mut armor, &mut noise, &mut reload);
+        for perk in perks.purchased.iter().copied() {
+            apply_perk_effect(&mut stats, &mut health, &mut armor, &mut noise, &mut reload, perk);
+        }
+    }
+}
+
+fn lock_refund_system(
+    mut events: EventReader<LockCalliopePerkRefundEvent>,
+    mut units: Query<&mut PerkRefundLocked, With<Calliope>>,
+) {
+    for ev in events.read() {
+        let Ok(mut locked) = units.get_mut(ev.entity) else {
+            continue;
+        };
+        locked.0 = true;
+    }
+}
+
+fn unlock_refund_system(
+    mut events: EventReader<UnlockCalliopePerkRefundEvent>,
+    mut units: Query<&mut PerkRefundLocked, With<Calliope>>,
+) {
+    for ev in events.read() {
+        let Ok(mut locked) = units.get_mut(ev.entity) else {
+            continue;
+        };
+        locked.0 = false;
+    }
+}
+
+fn calliope_checksum_system(
     mut checksum: ResMut<SimChecksumState>,
     units: Query<
         (
+            &ReplicatedUnitId,
+            &SimPosition,
             &Health,
             &UnitStats,
-            &CalliopeCombatMods,
-            &CalliopeAttackCooldown,
-            &CalliopePerkState,
-            &CalliopeLoadSpeedMultiplier,
+            &ArmorReduction,
+            &AttackNoise,
+            &ReloadSpeedBonus,
+            &PerkPoints,
+            &CalliopePerks,
+            &PerkRefundLocked,
+            &ScoutingMissionRewarded,
         ),
         With<Calliope>,
     >,
 ) {
-    for (hp, stats, combat_mods, cooldown, perks, load_mult) in &units {
+    for (replicated_id, pos, hp, stats, armor, noise, reload, points, perks, locked, rewarded) in
+        &units
+    {
+        checksum.accumulate(replicated_id.0);
+        checksum.accumulate(pos.x.to_bits() as u64);
+        checksum.accumulate(pos.y.to_bits() as u64);
         checksum.accumulate(hp.current.to_bits() as u64);
         checksum.accumulate(hp.max.to_bits() as u64);
-
         checksum.accumulate(stats.move_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_range.to_bits() as u64);
-        checksum.accumulate(stats.attack_speed.to_bits() as u64);
         checksum.accumulate(stats.attack_damage.to_bits() as u64);
+        checksum.accumulate(stats.attack_speed.to_bits() as u64);
         checksum.accumulate(stats.watch_range.to_bits() as u64);
-
-        checksum.accumulate(combat_mods.armor_reduction.to_bits() as u64);
-        checksum.accumulate(combat_mods.attack_noise.to_bits() as u64);
-
-        checksum.accumulate(cooldown.ticks_remaining.to_bits() as u64);
-        checksum.accumulate(load_mult.0.to_bits() as u64);
-
-        checksum.accumulate(perks.perk_points_available as u64);
-        checksum.accumulate(perks.aim_tier as u64);
-        checksum.accumulate(perks.protection_tier as u64);
-        checksum.accumulate(perks.strength_tier as u64);
-        checksum.accumulate(perks.speed_tier as u64);
-        checksum.accumulate(perks.dexterity_tier as u64);
-        checksum.accumulate(perks.silent_tier as u64);
-        checksum.accumulate(perks.quick_reflexes_tier as u64);
-        checksum.accumulate(perks.improved_vision_tier as u64);
-        let mission_state_bits = match perks.mission_state {
-            MissionState::InProgress => 0_u64,
-            MissionState::Completed => 1_u64,
-            MissionState::Lost => 2_u64,
-            MissionState::Reloaded => 3_u64,
-        };
-        checksum.accumulate(mission_state_bits);
+        checksum.accumulate(armor.0.to_bits() as u64);
+        checksum.accumulate(noise.0.to_bits() as u64);
+        checksum.accumulate(reload.0.to_bits() as u64);
+        checksum.accumulate(points.available as u64);
+        checksum.accumulate(perks.purchased.len() as u64);
+        for perk in &perks.purchased {
+            checksum.accumulate(*perk as u64);
+        }
+        checksum.accumulate(u64::from(locked.0));
+        checksum.accumulate(u64::from(rewarded.0));
     }
 }
 
@@ -588,21 +491,22 @@ pub struct CalliopePlugin;
 
 impl Plugin for CalliopePlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<CalliopeDamageEvent>()
-            .add_event::<CalliopePerkPointAwardEvent>()
-            .add_event::<AllocateCalliopePerkEvent>()
-            .add_event::<RefundCalliopePerksEvent>()
-            .add_event::<UpdateCalliopeMissionStateEvent>()
+        app.init_resource::<NextReplicatedUnitId>()
+            .add_event::<SpawnCalliopeEvent>()
+            .add_event::<CompleteScoutingMissionFirstTimeEvent>()
+            .add_event::<PurchaseCalliopePerkEvent>()
+            .add_event::<RefundCalliopePerkEvent>()
+            .add_event::<LockCalliopePerkRefundEvent>()
+            .add_event::<UnlockCalliopePerkRefundEvent>()
             .add_systems(
                 FixedUpdate,
                 (
-                    calliope_attack_tick_system,
-                    calliope_receive_damage_system,
-                    calliope_perk_point_award_system,
-                    calliope_update_mission_state_system,
-                    calliope_allocate_perk_system,
-                    calliope_refund_perks_system,
-                    calliope_apply_perks_system,
+                    spawn_calliope_system,
+                    award_scouting_mission_perk_point_system,
+                    purchase_calliope_perk_system,
+                    refund_calliope_perk_system,
+                    lock_refund_system,
+                    unlock_refund_system,
                     calliope_checksum_system,
                 )
                     .chain(),
