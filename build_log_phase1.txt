@@ -1,0 +1,1493 @@
+
+========== ITEM 001 ==========
+001 NEXT       Advanced Farm
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Advanced_Farm
+  cancel     Ctrl+C skips this page and continues
+001 DONE       Advanced Farm
+  result     cached
+  path       vault\building\advanced_farm.md
+  wikitext   1278 chars -> 1234 chars
+---------- END ITEM 001 ----------
+
+========== ITEM 002 ==========
+002 NEXT       Advanced Mill
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Advanced_Mill
+  cancel     Ctrl+C skips this page and continues
+002 QUARANTINE Advanced Mill
+  result     validation errors
+  path       vault\_quarantine\advanced_mill.md
+  wikitext   1576 chars -> 1553 chars
+  error      [['foundry']] is not of type 'string', 'integer', 'number', 'boolean', 'null'
+---------- END ITEM 002 ----------
+
+========== ITEM 003 ==========
+003 NEXT       Advanced Quarry
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Advanced_Quarry
+  cancel     Ctrl+C skips this page and continues
+003 QUARANTINE Advanced Quarry
+  result     validation errors
+  path       vault\_quarantine\advanced_quarry.md
+  wikitext   6280 chars -> 6208 chars
+  error      ['stone', 'iron', 'gold'] is not of type 'string', 'integer', 'number', 'boolean', 'null'
+  error      {'direct_build': True, 'upgrade_from_quarry': True, 'output_multiplier_vs_basic_quarry': 2.0} is not of type 'string', 'integer', 'number', 'boolean', 'null'
+  error      {'energy': 15} is not of type 'string', 'integer', 'number', 'boolean', 'null'
+  error      {'footprint_width': 2, 'footprint_height': 2, 'mining_field_width': 6, 'mining_field_height': 6} is not of type 'string', 'integer', 'number', 'boolean', 'null'
+  error      {'stone_per_cycle_per_tile': 1, 'iron_per_cycle_per_tile': 1, 'gold_per_cycle_per_tile': 20} is not of type 'string', 'integer', 'number', 'boolean', 'null'
+  error      {'wood': 30, 'iron': 20, 'oil': 20, 'gold': 1200} is not of type 'string', 'integer', 'number', 'boolean', 'null'
+---------- END ITEM 003 ----------
+
+========== ITEM 004 ==========
+004 NEXT       Bank
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Bank
+  cancel     Ctrl+C skips this page and continues
+004 DONE       Bank
+  result     cached
+  path       vault\building\bank.md
+  wikitext   2517 chars -> 2474 chars
+---------- END ITEM 004 ----------
+
+========== ITEM 005 ==========
+005 NEXT       Buildings
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Buildings
+  cancel     Ctrl+C skips this page and continues
+005 SKIP       Buildings
+  reason     already completed for this kind
+  path       vault\building\buildings.md
+---------- END ITEM 005 ----------
+
+========== ITEM 006 ==========
+006 NEXT       Command Center
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Command_Center
+  cancel     Ctrl+C skips this page and continues
+006 DONE       Command Center
+  result     cached
+  path       vault\building\command_center.md
+  wikitext   2630 chars -> 2607 chars
+---------- END ITEM 006 ----------
+
+========== ITEM 007 ==========
+007 NEXT       Cottage
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Cottage
+  cancel     Ctrl+C skips this page and continues
+007 DONE       Cottage
+  result     cached
+  path       vault\building\cottage.md
+  wikitext   1904 chars -> 1861 chars
+---------- END ITEM 007 ----------
+
+========== ITEM 008 ==========
+008 NEXT       Engineering Center
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Engineering_Center
+  cancel     Ctrl+C skips this page and continues
+008 DONE       Engineering Center
+  result     cached
+  path       vault\building\engineering_center.md
+  wikitext   1340 chars -> 1297 chars
+---------- END ITEM 008 ----------
+
+========== ITEM 009 ==========
+009 NEXT       Executor
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Executor
+  cancel     Ctrl+C skips this page and continues
+009 DONE       Executor
+  result     cached
+  path       vault\building\executor.md
+  wikitext   1769 chars -> 1746 chars
+---------- END ITEM 009 ----------
+
+========== ITEM 010 ==========
+010 NEXT       Farm
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Farm
+  cancel     Ctrl+C skips this page and continues
+010 DONE       Farm
+  result     cached
+  path       vault\building\farm.md
+  wikitext   1667 chars -> 1606 chars
+---------- END ITEM 010 ----------
+
+========== ITEM 011 ==========
+011 NEXT       Fisherman Cottage
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Fisherman_Cottage
+  cancel     Ctrl+C skips this page and continues
+011 DONE       Fisherman Cottage
+  result     cached
+  path       vault\building\fisherman_cottage.md
+  wikitext   795 chars -> 751 chars
+---------- END ITEM 011 ----------
+
+========== ITEM 012 ==========
+012 NEXT       Foundry
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Foundry
+  cancel     Ctrl+C skips this page and continues
+012 DONE       Foundry
+  result     cached
+  path       vault\building\foundry.md
+  wikitext   2266 chars -> 1926 chars
+---------- END ITEM 012 ----------
+
+========== ITEM 013 ==========
+013 NEXT       Great Ballista
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Great_Ballista
+  cancel     Ctrl+C skips this page and continues
+013 DONE       Great Ballista
+  result     cached
+  path       vault\building\great_ballista.md
+  wikitext   1593 chars -> 1550 chars
+---------- END ITEM 013 ----------
+
+========== ITEM 014 ==========
+014 NEXT       Hunter Cottage
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Hunter_Cottage
+  cancel     Ctrl+C skips this page and continues
+014 DONE       Hunter Cottage
+  result     cached
+  path       vault\building\hunter_cottage.md
+  wikitext   2030 chars -> 1986 chars
+---------- END ITEM 014 ----------
+
+========== ITEM 015 ==========
+015 NEXT       Inn
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Inn
+  cancel     Ctrl+C skips this page and continues
+015 DONE       Inn
+  result     cached
+  path       vault\building\inn.md
+  wikitext   2553 chars -> 2510 chars
+---------- END ITEM 015 ----------
+
+========== ITEM 016 ==========
+016 NEXT       Land Mine
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Land_Mine
+  cancel     Ctrl+C skips this page and continues
+016 SKIP       Land Mine
+  reason     already completed for this kind
+  path       vault\building\land_mine.md
+---------- END ITEM 016 ----------
+
+========== ITEM 017 ==========
+017 NEXT       Lookout Tower
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Lookout_Tower
+  cancel     Ctrl+C skips this page and continues
+017 DONE       Lookout Tower
+  result     cached
+  path       vault\building\lookout_tower.md
+  wikitext   1108 chars -> 985 chars
+---------- END ITEM 017 ----------
+
+========== ITEM 018 ==========
+018 NEXT       Market
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Market
+  cancel     Ctrl+C skips this page and continues
+018 DONE       Market
+  result     cached
+  path       vault\building\market.md
+  wikitext   3623 chars -> 3580 chars
+---------- END ITEM 018 ----------
+
+========== ITEM 019 ==========
+019 NEXT       Mill
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Mill
+  cancel     Ctrl+C skips this page and continues
+019 DONE       Mill
+  result     cached
+  path       vault\building\mill.md
+  wikitext   1481 chars -> 1458 chars
+---------- END ITEM 019 ----------
+
+========== ITEM 020 ==========
+020 NEXT       Oil Platform
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Oil_Platform
+  cancel     Ctrl+C skips this page and continues
+020 DONE       Oil Platform
+  result     cached
+  path       vault\building\oil_platform.md
+  wikitext   1781 chars -> 1758 chars
+---------- END ITEM 020 ----------
+
+========== ITEM 021 ==========
+021 NEXT       Outpost
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Outpost
+  cancel     Ctrl+C skips this page and continues
+021 DONE       Outpost
+  result     cached
+  path       vault\building\outpost.md
+  wikitext   1398 chars -> 1190 chars
+---------- END ITEM 021 ----------
+
+========== ITEM 022 ==========
+022 NEXT       Power Plant
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Power_Plant
+  cancel     Ctrl+C skips this page and continues
+022 DONE       Power Plant
+  result     cached
+  path       vault\building\power_plant.md
+  wikitext   1576 chars -> 1553 chars
+---------- END ITEM 022 ----------
+
+========== ITEM 023 ==========
+023 NEXT       Quarry
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Quarry
+  cancel     Ctrl+C skips this page and continues
+023 DONE       Quarry
+  result     cached
+  path       vault\building\quarry.md
+  wikitext   4678 chars -> 4615 chars
+---------- END ITEM 023 ----------
+
+========== ITEM 024 ==========
+024 NEXT       Radar Tower
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Radar_Tower
+  cancel     Ctrl+C skips this page and continues
+024 SKIP       Radar Tower
+  reason     already completed for this kind
+  path       vault\building\radar_tower.md
+---------- END ITEM 024 ----------
+
+========== ITEM 025 ==========
+025 NEXT       Sawmill
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Sawmill
+  cancel     Ctrl+C skips this page and continues
+025 DONE       Sawmill
+  result     cached
+  path       vault\building\sawmill.md
+  wikitext   4561 chars -> 4497 chars
+---------- END ITEM 025 ----------
+
+========== ITEM 026 ==========
+026 NEXT       Shocking Tower
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Shocking_Tower
+  cancel     Ctrl+C skips this page and continues
+026 DONE       Shocking Tower
+  result     cached
+  path       vault\building\shocking_tower.md
+  wikitext   2428 chars -> 2179 chars
+---------- END ITEM 026 ----------
+
+========== ITEM 027 ==========
+027 NEXT       Soldiers Center
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Soldiers_Center
+  cancel     Ctrl+C skips this page and continues
+027 DONE       Soldiers Center
+  result     cached
+  path       vault\building\soldiers_center.md
+  wikitext   1814 chars -> 1634 chars
+---------- END ITEM 027 ----------
+
+========== ITEM 028 ==========
+028 NEXT       Stakes Trap
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Stakes_Trap
+  cancel     Ctrl+C skips this page and continues
+028 DONE       Stakes Trap
+  result     cached
+  path       vault\building\stakes_trap.md
+  wikitext   2601 chars -> 2556 chars
+---------- END ITEM 028 ----------
+
+========== ITEM 029 ==========
+029 NEXT       Stone Gate
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Stone_Gate
+  cancel     Ctrl+C skips this page and continues
+029 DONE       Stone Gate
+  result     cached
+  path       vault\building\stone_gate.md
+  wikitext   1910 chars -> 1866 chars
+---------- END ITEM 029 ----------
+
+========== ITEM 030 ==========
+030 NEXT       Stone House
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Stone_House
+  cancel     Ctrl+C skips this page and continues
+030 DONE       Stone House
+  result     cached
+  path       vault\building\stone_house.md
+  wikitext   2934 chars -> 2891 chars
+---------- END ITEM 030 ----------
+
+========== ITEM 031 ==========
+031 NEXT       Stone Tower
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Stone_Tower
+  cancel     Ctrl+C skips this page and continues
+031 DONE       Stone Tower
+  result     cached
+  path       vault\building\stone_tower.md
+  wikitext   2063 chars -> 2040 chars
+---------- END ITEM 031 ----------
+
+========== ITEM 032 ==========
+032 NEXT       Stone Wall
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Stone_Wall
+  cancel     Ctrl+C skips this page and continues
+032 DONE       Stone Wall
+  result     cached
+  path       vault\building\stone_wall.md
+  wikitext   1539 chars -> 1496 chars
+---------- END ITEM 032 ----------
+
+========== ITEM 033 ==========
+033 NEXT       Stone Workshop
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Stone_Workshop
+  cancel     Ctrl+C skips this page and continues
+033 SKIP       Stone Workshop
+  reason     already completed for this kind
+  path       vault\building\stone_workshop.md
+---------- END ITEM 033 ----------
+
+========== ITEM 034 ==========
+034 NEXT       Tent
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Tent
+  cancel     Ctrl+C skips this page and continues
+034 DONE       Tent
+  result     cached
+  path       vault\building\tent.md
+  wikitext   2299 chars -> 2237 chars
+---------- END ITEM 034 ----------
+
+========== ITEM 035 ==========
+035 NEXT       Tesla Tower
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Tesla_Tower
+  cancel     Ctrl+C skips this page and continues
+035 DONE       Tesla Tower
+  result     cached
+  path       vault\building\tesla_tower.md
+  wikitext   1836 chars -> 1792 chars
+---------- END ITEM 035 ----------
+
+========== ITEM 036 ==========
+036 NEXT       Warehouse
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Warehouse
+  cancel     Ctrl+C skips this page and continues
+036 SKIP       Warehouse
+  reason     already completed for this kind
+  path       vault\building\warehouse.md
+---------- END ITEM 036 ----------
+
+========== ITEM 037 ==========
+037 NEXT       Wasp
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Wasp
+  cancel     Ctrl+C skips this page and continues
+037 DONE       Wasp
+  result     cached
+  path       vault\building\wasp.md
+  wikitext   2185 chars -> 2141 chars
+---------- END ITEM 037 ----------
+
+========== ITEM 038 ==========
+038 NEXT       Wire Fence Trap
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Wire_Fence_Trap
+  cancel     Ctrl+C skips this page and continues
+038 DONE       Wire Fence Trap
+  result     cached
+  path       vault\building\wire_fence_trap.md
+  wikitext   1759 chars -> 1715 chars
+---------- END ITEM 038 ----------
+
+========== ITEM 039 ==========
+039 NEXT       Wood Gate
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Wood_Gate
+  cancel     Ctrl+C skips this page and continues
+039 DONE       Wood Gate
+  result     cached
+  path       vault\building\wood_gate.md
+  wikitext   2300 chars -> 2256 chars
+---------- END ITEM 039 ----------
+
+========== ITEM 040 ==========
+040 NEXT       Wood Tower
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Wood_Tower
+  cancel     Ctrl+C skips this page and continues
+040 DONE       Wood Tower
+  result     cached
+  path       vault\building\wood_tower.md
+  wikitext   4579 chars -> 4556 chars
+---------- END ITEM 040 ----------
+
+========== ITEM 041 ==========
+041 NEXT       Wood Wall
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Wood_Wall
+  cancel     Ctrl+C skips this page and continues
+041 DONE       Wood Wall
+  result     cached
+  path       vault\building\wood_wall.md
+  wikitext   5989 chars -> 5946 chars
+---------- END ITEM 041 ----------
+
+========== ITEM 042 ==========
+042 NEXT       Wood Workshop
+  category   Buildings
+  kind       building
+  source     https://they-are-billions.fandom.com/wiki/Wood_Workshop
+  cancel     Ctrl+C skips this page and continues
+042 SKIP       Wood Workshop
+  reason     already completed for this kind
+  path       vault\building\wood_workshop.md
+---------- END ITEM 042 ----------
+
+========== ITEM 043 ==========
+043 NEXT       Campaign Maps
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/Campaign_Maps
+  cancel     Ctrl+C skips this page and continues
+043 SKIP       Campaign Maps
+  reason     already completed for this kind
+  path       vault\campaign_map\campaign_maps_the_new_empire.md
+---------- END ITEM 043 ----------
+
+========== ITEM 044 ==========
+044 NEXT       Cape Storm
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/Cape_Storm
+  cancel     Ctrl+C skips this page and continues
+044 SKIP       Cape Storm
+  reason     already completed for this kind
+  path       vault\campaign_map\cape_storm.md
+---------- END ITEM 044 ----------
+
+========== ITEM 045 ==========
+045 NEXT       El Dorado
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/El_Dorado
+  cancel     Ctrl+C skips this page and continues
+045 DONE       El Dorado
+  result     cached
+  path       vault\campaign_map\el_dorado.md
+  wikitext   1242 chars -> 1215 chars
+---------- END ITEM 045 ----------
+
+========== ITEM 046 ==========
+046 NEXT       The Broken Land
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Broken_Land
+  cancel     Ctrl+C skips this page and continues
+046 DONE       The Broken Land
+  result     cached
+  path       vault\campaign_map\the_broken_land.md
+  wikitext   1379 chars -> 1352 chars
+---------- END ITEM 046 ----------
+
+========== ITEM 047 ==========
+047 NEXT       The Coast of Bones
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Coast_of_Bones
+  cancel     Ctrl+C skips this page and continues
+047 DONE       The Coast of Bones
+  result     cached
+  path       vault\campaign_map\coast_of_bones.md
+  wikitext   1214 chars -> 1171 chars
+---------- END ITEM 047 ----------
+
+========== ITEM 048 ==========
+048 NEXT       The Crossroads
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Crossroads
+  cancel     Ctrl+C skips this page and continues
+048 DONE       The Crossroads
+  result     cached
+  path       vault\campaign_map\the_crossroads.md
+  wikitext   879 chars -> 836 chars
+---------- END ITEM 048 ----------
+
+========== ITEM 049 ==========
+049 NEXT       The Forbidden Forest
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Forbidden_Forest
+  cancel     Ctrl+C skips this page and continues
+049 DONE       The Forbidden Forest
+  result     cached
+  path       vault\campaign_map\the_forbidden_forest.md
+  wikitext   7694 chars -> 7650 chars
+---------- END ITEM 049 ----------
+
+========== ITEM 050 ==========
+050 NEXT       The Frozen Lake
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Frozen_Lake
+  cancel     Ctrl+C skips this page and continues
+050 DONE       The Frozen Lake
+  result     cached
+  path       vault\campaign_map\frozen_lake.md
+  wikitext   1211 chars -> 1168 chars
+---------- END ITEM 050 ----------
+
+========== ITEM 051 ==========
+051 NEXT       The Goddess of Destiny
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Goddess_of_Destiny
+  cancel     Ctrl+C skips this page and continues
+051 DONE       The Goddess of Destiny
+  result     cached
+  path       vault\campaign_map\the_goddess_of_destiny.md
+  wikitext   6150 chars -> 6107 chars
+---------- END ITEM 051 ----------
+
+========== ITEM 052 ==========
+052 NEXT       The Hidden Valley
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Hidden_Valley
+  cancel     Ctrl+C skips this page and continues
+052 DONE       The Hidden Valley
+  result     cached
+  path       vault\campaign_map\the_hidden_valley.md
+  wikitext   533 chars -> 489 chars
+---------- END ITEM 052 ----------
+
+========== ITEM 053 ==========
+053 NEXT       The Highlands
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Highlands
+  cancel     Ctrl+C skips this page and continues
+053 DONE       The Highlands
+  result     cached
+  path       vault\campaign_map\the_highlands.md
+  wikitext   1024 chars -> 981 chars
+---------- END ITEM 053 ----------
+
+========== ITEM 054 ==========
+054 NEXT       The Hunter's Meadow
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Hunter%27s_Meadow
+  cancel     Ctrl+C skips this page and continues
+054 DONE       The Hunter's Meadow
+  result     cached
+  path       vault\campaign_map\the_hunters_meadow.md
+  wikitext   1111 chars -> 1068 chars
+---------- END ITEM 054 ----------
+
+========== ITEM 055 ==========
+055 NEXT       The Lands of the Giant
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Lands_of_the_Giant
+  cancel     Ctrl+C skips this page and continues
+055 SKIP       The Lands of the Giant
+  reason     already completed for this kind
+  path       vault\campaign_map\lands_of_the_giant.md
+---------- END ITEM 055 ----------
+
+========== ITEM 056 ==========
+056 NEXT       The Lonely Forest
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Lonely_Forest
+  cancel     Ctrl+C skips this page and continues
+056 SKIP       The Lonely Forest
+  reason     already completed for this kind
+  path       vault\campaign_map\the_lonely_forest.md
+---------- END ITEM 056 ----------
+
+========== ITEM 057 ==========
+057 NEXT       The Lowlands
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Lowlands
+  cancel     Ctrl+C skips this page and continues
+057 DONE       The Lowlands
+  result     cached
+  path       vault\campaign_map\the_lowlands.md
+  wikitext   2094 chars -> 2050 chars
+---------- END ITEM 057 ----------
+
+========== ITEM 058 ==========
+058 NEXT       The Mines of the Raven
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Mines_of_the_Raven
+  cancel     Ctrl+C skips this page and continues
+058 DONE       The Mines of the Raven
+  result     cached
+  path       vault\campaign_map\the_mines_of_the_raven.md
+  wikitext   1241 chars -> 1214 chars
+---------- END ITEM 058 ----------
+
+========== ITEM 059 ==========
+059 NEXT       The Narrow Pass
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Narrow_Pass
+  cancel     Ctrl+C skips this page and continues
+059 DONE       The Narrow Pass
+  result     cached
+  path       vault\campaign_map\narrow_pass.md
+  wikitext   3680 chars -> 3637 chars
+---------- END ITEM 059 ----------
+
+========== ITEM 060 ==========
+060 NEXT       The Nest of the Harpy
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Nest_of_the_Harpy
+  cancel     Ctrl+C skips this page and continues
+060 DONE       The Nest of the Harpy
+  result     cached
+  path       vault\campaign_map\the_nest_of_the_harpy.md
+  wikitext   5554 chars -> 5511 chars
+---------- END ITEM 060 ----------
+
+========== ITEM 061 ==========
+061 NEXT       The Noxious Swamp
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Noxious_Swamp
+  cancel     Ctrl+C skips this page and continues
+061 DONE       The Noxious Swamp
+  result     cached
+  path       vault\campaign_map\the_noxious_swamp.md
+  wikitext   1771 chars -> 1728 chars
+---------- END ITEM 061 ----------
+
+========== ITEM 062 ==========
+062 NEXT       The Oasis
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Oasis
+  cancel     Ctrl+C skips this page and continues
+062 DONE       The Oasis
+  result     cached
+  path       vault\campaign_map\the_oasis.md
+  wikitext   1387 chars -> 1344 chars
+---------- END ITEM 062 ----------
+
+========== ITEM 063 ==========
+063 NEXT       The Resistance
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Resistance
+  cancel     Ctrl+C skips this page and continues
+063 SKIP       The Resistance
+  reason     already completed for this kind
+  path       vault\campaign_map\the_resistance.md
+---------- END ITEM 063 ----------
+
+========== ITEM 064 ==========
+064 NEXT       The Valley of Death
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Valley_of_Death
+  cancel     Ctrl+C skips this page and continues
+064 DONE       The Valley of Death
+  result     cached
+  path       vault\campaign_map\the_valley_of_death.md
+  wikitext   1002 chars -> 975 chars
+---------- END ITEM 064 ----------
+
+========== ITEM 065 ==========
+065 NEXT       The Villa of Terror
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Villa_of_Terror
+  cancel     Ctrl+C skips this page and continues
+065 DONE       The Villa of Terror
+  result     cached
+  path       vault\campaign_map\the_villa_of_terror.md
+  wikitext   698 chars -> 654 chars
+---------- END ITEM 065 ----------
+
+========== ITEM 066 ==========
+066 NEXT       The Wasteland of the Giants
+  category   Campaign Maps
+  kind       campaign_map
+  source     https://they-are-billions.fandom.com/wiki/The_Wasteland_of_the_Giants
+  cancel     Ctrl+C skips this page and continues
+066 DONE       The Wasteland of the Giants
+  result     cached
+  path       vault\campaign_map\the_wasteland_of_the_giants.md
+  wikitext   1540 chars -> 1497 chars
+---------- END ITEM 066 ----------
+
+========== ITEM 067 ==========
+067 NEXT       Infected
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected
+  cancel     Ctrl+C skips this page and continues
+  related    enemy -> vault\infected\infected.md
+067 MIGRATE    Infected
+  reason     reused completed source from another kind
+  from       enemy -> vault\infected\infected.md
+  path       vault\infected\infected.md
+---------- END ITEM 067 ----------
+
+========== ITEM 068 ==========
+068 NEXT       Infected Aged
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Aged
+  cancel     Ctrl+C skips this page and continues
+068 SKIP       Infected Aged
+  reason     already completed for this kind
+  path       vault\infected\infected_aged.md
+---------- END ITEM 068 ----------
+
+========== ITEM 069 ==========
+069 NEXT       Infected Behemoth
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Behemoth
+  cancel     Ctrl+C skips this page and continues
+069 DONE       Infected Behemoth
+  result     cached
+  path       vault\infected\infected_behemoth.md
+  wikitext   4006 chars -> 3652 chars
+---------- END ITEM 069 ----------
+
+========== ITEM 070 ==========
+070 NEXT       Infected Chubby
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Chubby
+  cancel     Ctrl+C skips this page and continues
+070 SKIP       Infected Chubby
+  reason     already completed for this kind
+  path       vault\infected\infected_chubby.md
+---------- END ITEM 070 ----------
+
+========== ITEM 071 ==========
+071 NEXT       Infected Colonist
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Colonist
+  cancel     Ctrl+C skips this page and continues
+071 DONE       Infected Colonist
+  result     cached
+  path       vault\infected\infected_colonists.md
+  wikitext   1192 chars -> 1131 chars
+---------- END ITEM 071 ----------
+
+========== ITEM 072 ==========
+072 NEXT       Infected Decrepit
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Decrepit
+  cancel     Ctrl+C skips this page and continues
+072 SKIP       Infected Decrepit
+  reason     already completed for this kind
+  path       vault\infected\infected_decrepit.md
+---------- END ITEM 072 ----------
+
+========== ITEM 073 ==========
+073 NEXT       Infected Executive
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Executive
+  cancel     Ctrl+C skips this page and continues
+073 DONE       Infected Executive
+  result     cached
+  path       vault\infected\infected_executive.md
+  wikitext   1032 chars -> 940 chars
+---------- END ITEM 073 ----------
+
+========== ITEM 074 ==========
+074 NEXT       Infected Fresh
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Fresh
+  cancel     Ctrl+C skips this page and continues
+074 DONE       Infected Fresh
+  result     cached
+  path       vault\infected\infected_fresh.md
+  wikitext   978 chars -> 935 chars
+---------- END ITEM 074 ----------
+
+========== ITEM 075 ==========
+075 NEXT       Infected Giant
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Giant
+  cancel     Ctrl+C skips this page and continues
+075 DONE       Infected Giant
+  result     cached
+  path       vault\infected\infected_giant.md
+  wikitext   3938 chars -> 3635 chars
+---------- END ITEM 075 ----------
+
+========== ITEM 076 ==========
+076 NEXT       Infected Harpy
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Harpy
+  cancel     Ctrl+C skips this page and continues
+076 DONE       Infected Harpy
+  result     cached
+  path       vault\infected\infected_harpy.md
+  wikitext   2705 chars -> 2599 chars
+---------- END ITEM 076 ----------
+
+========== ITEM 077 ==========
+077 NEXT       Infected Venom
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Venom
+  cancel     Ctrl+C skips this page and continues
+077 DONE       Infected Venom
+  result     cached
+  path       vault\infected\infected_venom.md
+  wikitext   2835 chars -> 2730 chars
+---------- END ITEM 077 ----------
+
+========== ITEM 078 ==========
+078 NEXT       Infected Young
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Infected_Young
+  cancel     Ctrl+C skips this page and continues
+078 DONE       Infected Young
+  result     cached
+  path       vault\infected\infected_young.md
+  wikitext   1322 chars -> 1244 chars
+---------- END ITEM 078 ----------
+
+========== ITEM 079 ==========
+079 NEXT       Rabies Z
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/Rabies_Z
+  cancel     Ctrl+C skips this page and continues
+079 SKIP       Rabies Z
+  reason     already completed for this kind
+  path       vault\infected\rabies_z.md
+---------- END ITEM 079 ----------
+
+========== ITEM 080 ==========
+080 NEXT       V9
+  category   Infected
+  kind       infected
+  source     https://they-are-billions.fandom.com/wiki/V9
+  cancel     Ctrl+C skips this page and continues
+080 SKIP       V9
+  reason     already completed for this kind
+  path       vault\infected\v9.md
+---------- END ITEM 080 ----------
+
+========== ITEM 081 ==========
+081 NEXT       Animation Canceling
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Animation_Canceling
+  cancel     Ctrl+C skips this page and continues
+081 SKIP       Animation Canceling
+  reason     already completed for this kind
+  path       vault\game_mechanic\animation_canceling.md
+---------- END ITEM 081 ----------
+
+========== ITEM 082 ==========
+082 NEXT       Explosive barrel
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Explosive_barrel
+  cancel     Ctrl+C skips this page and continues
+082 SKIP       Explosive barrel
+  reason     already completed for this kind
+  path       vault\game_mechanic\explosive_barrel.md
+---------- END ITEM 082 ----------
+
+========== ITEM 083 ==========
+083 NEXT       Flat Mode
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Flat_Mode
+  cancel     Ctrl+C skips this page and continues
+083 SKIP       Flat Mode
+  reason     already completed for this kind
+  path       vault\game_mechanic\flat_mode.md
+---------- END ITEM 083 ----------
+
+========== ITEM 084 ==========
+084 NEXT       Noise
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Noise
+  cancel     Ctrl+C skips this page and continues
+084 SKIP       Noise
+  reason     already completed for this kind
+  path       vault\game_mechanic\noise.md
+---------- END ITEM 084 ----------
+
+========== ITEM 085 ==========
+085 NEXT       Resources
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Resources
+  cancel     Ctrl+C skips this page and continues
+085 SKIP       Resources
+  reason     already completed for this kind
+  path       vault\game_mechanic\resources.md
+---------- END ITEM 085 ----------
+
+========== ITEM 086 ==========
+086 NEXT       Swarms
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Swarms
+  cancel     Ctrl+C skips this page and continues
+086 SKIP       Swarms
+  reason     already completed for this kind
+  path       vault\game_mechanic\swarms.md
+---------- END ITEM 086 ----------
+
+========== ITEM 087 ==========
+087 NEXT       Technology Tree
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Technology_Tree
+  cancel     Ctrl+C skips this page and continues
+087 SKIP       Technology Tree
+  reason     already completed for this kind
+  path       vault\game_mechanic\technology_tree.md
+---------- END ITEM 087 ----------
+
+========== ITEM 088 ==========
+088 NEXT       Time
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Time
+  cancel     Ctrl+C skips this page and continues
+088 SKIP       Time
+  reason     already completed for this kind
+  path       vault\game_mechanic\time.md
+---------- END ITEM 088 ----------
+
+========== ITEM 089 ==========
+089 NEXT       Villages of Doom
+  category   Mechanics
+  kind       game_mechanic
+  source     https://they-are-billions.fandom.com/wiki/Villages_of_Doom
+  cancel     Ctrl+C skips this page and continues
+089 SKIP       Villages of Doom
+  reason     already completed for this kind
+  path       vault\game_mechanic\villages_of_doom.md
+---------- END ITEM 089 ----------
+
+========== ITEM 090 ==========
+090 NEXT       Caelus
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Caelus
+  cancel     Ctrl+C skips this page and continues
+090 DONE       Caelus
+  result     cached
+  path       vault\unit\caelus.md
+  wikitext   2992 chars -> 2847 chars
+---------- END ITEM 090 ----------
+
+========== ITEM 091 ==========
+091 NEXT       Calliope
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Calliope
+  cancel     Ctrl+C skips this page and continues
+091 SKIP       Calliope
+  reason     already completed for this kind
+  path       vault\unit\calliope.md
+---------- END ITEM 091 ----------
+
+========== ITEM 092 ==========
+092 NEXT       Lucifer
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Lucifer
+  cancel     Ctrl+C skips this page and continues
+092 DONE       Lucifer
+  result     cached
+  path       vault\unit\lucifer.md
+  wikitext   7425 chars -> 7256 chars
+---------- END ITEM 092 ----------
+
+========== ITEM 093 ==========
+093 NEXT       Mutant
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Mutant
+  cancel     Ctrl+C skips this page and continues
+093 DONE       Mutant
+  result     cached
+  path       vault\unit\mutant.md
+  wikitext   4352 chars -> 4271 chars
+---------- END ITEM 093 ----------
+
+========== ITEM 094 ==========
+094 NEXT       Ranger
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Ranger
+  cancel     Ctrl+C skips this page and continues
+094 DONE       Ranger
+  result     cached
+  path       vault\unit\ranger.md
+  wikitext   6554 chars -> 6518 chars
+---------- END ITEM 094 ----------
+
+========== ITEM 095 ==========
+095 NEXT       Sniper
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Sniper
+  cancel     Ctrl+C skips this page and continues
+095 SKIP       Sniper
+  reason     already completed for this kind
+  path       vault\unit\sniper.md
+---------- END ITEM 095 ----------
+
+========== ITEM 096 ==========
+096 NEXT       Soldier
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Soldier
+  cancel     Ctrl+C skips this page and continues
+096 DONE       Soldier
+  result     cached
+  path       vault\unit\soldier.md
+  wikitext   7531 chars -> 7495 chars
+---------- END ITEM 096 ----------
+
+========== ITEM 097 ==========
+097 NEXT       Thanatos
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Thanatos
+  cancel     Ctrl+C skips this page and continues
+097 DONE       Thanatos
+  result     cached
+  path       vault\unit\thanatos.md
+  wikitext   5808 chars -> 5758 chars
+---------- END ITEM 097 ----------
+
+========== ITEM 098 ==========
+098 NEXT       Titan
+  category   Units
+  kind       unit
+  source     https://they-are-billions.fandom.com/wiki/Titan
+  cancel     Ctrl+C skips this page and continues
+098 DONE       Titan
+  result     cached
+  path       vault\unit\titan.md
+  wikitext   3955 chars -> 3892 chars
+---------- END ITEM 098 ----------
+
+========== ITEM 099 ==========
+099 NEXT       Caelus
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/Caelus
+  cancel     Ctrl+C skips this page and continues
+  related    unit -> vault\unit\caelus.md
+099 MIGRATE    Caelus
+  reason     reused completed source from another kind
+  from       unit -> vault\unit\caelus.md
+  path       vault\campaign_content\caelus.md
+---------- END ITEM 099 ----------
+
+========== ITEM 100 ==========
+100 NEXT       Calliope
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/Calliope
+  cancel     Ctrl+C skips this page and continues
+  related    unit -> vault\unit\calliope.md
+100 MIGRATE    Calliope
+  reason     reused completed source from another kind
+  from       unit -> vault\unit\calliope.md
+  path       vault\campaign_content\calliope.md
+---------- END ITEM 100 ----------
+
+========== ITEM 101 ==========
+101 NEXT       Campaign Maps
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/Campaign_Maps
+  cancel     Ctrl+C skips this page and continues
+  related    campaign_map -> vault\campaign_map\campaign_maps_the_new_empire.md
+101 MIGRATE    Campaign Maps
+  reason     reused completed source from another kind
+  from       campaign_map -> vault\campaign_map\campaign_maps_the_new_empire.md
+  path       vault\campaign_content\campaign_maps_the_new_empire.md
+---------- END ITEM 101 ----------
+
+========== ITEM 102 ==========
+102 NEXT       New Empire
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/New_Empire
+  cancel     Ctrl+C skips this page and continues
+102 DONE       New Empire
+  result     compiled
+  path       vault\campaign_content\new_empire.md
+  wikitext   695 chars -> 409 chars
+---------- END ITEM 102 ----------
+
+========== ITEM 103 ==========
+103 NEXT       Outpost
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/Outpost
+  cancel     Ctrl+C skips this page and continues
+  related    building -> vault\building\outpost.md
+103 MIGRATE    Outpost
+  reason     reused completed source from another kind
+  from       building -> vault\building\outpost.md
+  path       vault\campaign_content\outpost.md
+---------- END ITEM 103 ----------
+
+========== ITEM 104 ==========
+104 NEXT       Rabies Z
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/Rabies_Z
+  cancel     Ctrl+C skips this page and continues
+  related    infected -> vault\infected\rabies_z.md
+104 MIGRATE    Rabies Z
+  reason     reused completed source from another kind
+  from       infected -> vault\infected\rabies_z.md
+  path       vault\campaign_content\rabies_z.md
+---------- END ITEM 104 ----------
+
+========== ITEM 105 ==========
+105 NEXT       Technology Tree
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/Technology_Tree
+  cancel     Ctrl+C skips this page and continues
+  related    game_mechanic -> vault\game_mechanic\technology_tree.md
+105 MIGRATE    Technology Tree
+  reason     reused completed source from another kind
+  from       game_mechanic -> vault\game_mechanic\technology_tree.md
+  path       vault\campaign_content\technology_tree.md
+---------- END ITEM 105 ----------
+
+========== ITEM 106 ==========
+106 NEXT       The New Empire
+  category   Campaign
+  kind       campaign_content
+  source     https://they-are-billions.fandom.com/wiki/The_New_Empire
+  cancel     Ctrl+C skips this page and continues
+106 DONE       The New Empire
+  result     compiled
+  path       vault\campaign_content\the_new_empire.md
+  wikitext   5685 chars -> 5378 chars
+---------- END ITEM 106 ----------
+
+========== ITEM 107 ==========
+107 NEXT       The Academy of Immortals
+  category   Wonders
+  kind       wonder
+  source     https://they-are-billions.fandom.com/wiki/The_Academy_of_Immortals
+  cancel     Ctrl+C skips this page and continues
+107 DONE       The Academy of Immortals
+  result     compiled
+  path       vault\wonder\academy_of_immortals.md
+  wikitext   891 chars -> 849 chars
+---------- END ITEM 107 ----------
+
+========== ITEM 108 ==========
+108 NEXT       The Atlas Transmutator
+  category   Wonders
+  kind       wonder
+  source     https://they-are-billions.fandom.com/wiki/The_Atlas_Transmutator
+  cancel     Ctrl+C skips this page and continues
+108 DONE       The Atlas Transmutator
+  result     compiled
+  path       vault\wonder\atlas_transmutator.md
+  wikitext   955 chars -> 913 chars
+---------- END ITEM 108 ----------
+
+========== ITEM 109 ==========
+109 NEXT       The Crystal Palace
+  category   Wonders
+  kind       wonder
+  source     https://they-are-billions.fandom.com/wiki/The_Crystal_Palace
+  cancel     Ctrl+C skips this page and continues
+109 DONE       The Crystal Palace
+  result     compiled
+  path       vault\wonder\crystal_palace.md
+  wikitext   1457 chars -> 1415 chars
+---------- END ITEM 109 ----------
+
+========== ITEM 110 ==========
+110 NEXT       The Lightning Spire
+  category   Wonders
+  kind       wonder
+  source     https://they-are-billions.fandom.com/wiki/The_Lightning_Spire
+  cancel     Ctrl+C skips this page and continues
+110 DONE       The Lightning Spire
+  result     compiled
+  path       vault\wonder\the_lightning_spire.md
+  wikitext   1925 chars -> 1904 chars
+---------- END ITEM 110 ----------
+
+========== ITEM 111 ==========
+111 NEXT       The Silent Beholder
+  category   Wonders
+  kind       wonder
+  source     https://they-are-billions.fandom.com/wiki/The_Silent_Beholder
+  cancel     Ctrl+C skips this page and continues
+111 DONE       The Silent Beholder
+  result     compiled
+  path       vault\wonder\silent_beholder.md
+  wikitext   1837 chars -> 1711 chars
+---------- END ITEM 111 ----------
+
+========== ITEM 112 ==========
+112 NEXT       The Victorious
+  category   Wonders
+  kind       wonder
+  source     https://they-are-billions.fandom.com/wiki/The_Victorious
+  cancel     Ctrl+C skips this page and continues
+112 DONE       The Victorious
+  result     compiled
+  path       vault\wonder\the_victorious.md
+  wikitext   2178 chars -> 2137 chars
+---------- END ITEM 112 ----------
+
+========== ITEM 113 ==========
+113 NEXT       Caelus
+  category   Characters
+  kind       character
+  source     https://they-are-billions.fandom.com/wiki/Caelus
+  cancel     Ctrl+C skips this page and continues
+  related    campaign_content -> vault\campaign_content\caelus.md
+113 MIGRATE    Caelus
+  reason     reused completed source from another kind
+  from       campaign_content -> vault\campaign_content\caelus.md
+  path       vault\character\caelus.md
+---------- END ITEM 113 ----------
+
+========== ITEM 114 ==========
+114 NEXT       Calliope
+  category   Characters
+  kind       character
+  source     https://they-are-billions.fandom.com/wiki/Calliope
+  cancel     Ctrl+C skips this page and continues
+  related    campaign_content -> vault\campaign_content\calliope.md
+114 MIGRATE    Calliope
+  reason     reused completed source from another kind
+  from       campaign_content -> vault\campaign_content\calliope.md
+  path       vault\character\calliope.md
+---------- END ITEM 114 ----------
+
+========== ITEM 115 ==========
+115 NEXT       Quintus Crane
+  category   Characters
+  kind       character
+  source     https://they-are-billions.fandom.com/wiki/Quintus_Crane
+  cancel     Ctrl+C skips this page and continues
+115 DONE       Quintus Crane
+  result     compiled
+  path       vault\character\quintus_crane.md
+  wikitext   482 chars -> 390 chars
+---------- END ITEM 115 ----------
+
+========== ITEM 116 ==========
+116 NEXT       New Empire
+  category   Organizations
+  kind       organization
+  source     https://they-are-billions.fandom.com/wiki/New_Empire
+  cancel     Ctrl+C skips this page and continues
+  related    campaign_content -> vault\campaign_content\new_empire.md
+116 MIGRATE    New Empire
+  reason     reused completed source from another kind
+  from       campaign_content -> vault\campaign_content\new_empire.md
+  path       vault\organization\new_empire.md
+---------- END ITEM 116 ----------
+
+========== ITEM 117 ==========
+117 NEXT       Rebels
+  category   Organizations
+  kind       organization
+  source     https://they-are-billions.fandom.com/wiki/Rebels
+  cancel     Ctrl+C skips this page and continues
+117 QUARANTINE Rebels
+  result     validation errors
+  path       vault\_quarantine\rebels.md
+  wikitext   197 chars -> 170 chars
+  error      [['new_empire']] is not of type 'string', 'integer', 'number', 'boolean', 'null'
+---------- END ITEM 117 ----------
+
+========== ITEM 118 ==========
+118 NEXT       Research
+  category   Research
+  kind       research
+  source     https://they-are-billions.fandom.com/wiki/Research
+  cancel     Ctrl+C skips this page and continues
+118 DONE       Research
+  result     compiled
+  path       vault\research\research.md
+  wikitext   7122 chars -> 5994 chars
+---------- END ITEM 118 ----------
+
+========== ITEM 119 ==========
+119 NEXT       Technology Tree
+  category   Research
+  kind       research
+  source     https://they-are-billions.fandom.com/wiki/Technology_Tree
+  cancel     Ctrl+C skips this page and continues
+  related    campaign_content -> vault\campaign_content\technology_tree.md
+119 MIGRATE    Technology Tree
+  reason     reused completed source from another kind
+  from       campaign_content -> vault\campaign_content\technology_tree.md
+  path       vault\research\technology_tree.md
+---------- END ITEM 119 ----------
+
+========== ITEM 120 ==========
+120 NEXT       Update:Update 1 Glad you're here!
+  category   Updates
+  kind       update_log
+  source     https://they-are-billions.fandom.com/wiki/Update%3AUpdate_1_Glad_you%27re_here%21
+  cancel     Ctrl+C skips this page and continues
+120 DONE       Update:Update 1 Glad you're here!
+  result     compiled
+  path       vault\update_log\update_1_glad_you_re_here.md
+  wikitext   3422 chars -> 3382 chars
+---------- END ITEM 120 ----------
+
+========== ITEM 121 ==========
+121 NEXT       Updates
+  category   Updates
+  kind       update_log
+  source     https://they-are-billions.fandom.com/wiki/Updates
+  cancel     Ctrl+C skips this page and continues
+121 DONE       Updates
+  result     compiled
+  path       vault\update_log\updates.md
+  wikitext   1098 chars -> 1077 chars
+---------- END ITEM 121 ----------
+
+========== ITEM 122 ==========
+122 NEXT       The Great Crater
+  category   Locations
+  kind       location
+  source     https://they-are-billions.fandom.com/wiki/The_Great_Crater
+  cancel     Ctrl+C skips this page and continues
+122 DONE       The Great Crater
+  result     compiled
+  path       vault\location\the_great_crater.md
+  wikitext   183 chars -> 160 chars
+---------- END ITEM 122 ----------
+
+========== ITEM 123 ==========
+123 NEXT       Mayors
+  category   Mayors
+  kind       mayor
+  source     https://they-are-billions.fandom.com/wiki/Mayors
+  cancel     Ctrl+C skips this page and continues
+123 DONE       Mayors
+  result     compiled
+  path       vault\mayor\mayors.md
+  wikitext   24658 chars -> 24638 chars
+---------- END ITEM 123 ----------
+
+========== ITEM 124 ==========
+124 NEXT       Quintus Crane
+  category   New Empire
+  kind       new_empire_character
+  source     https://they-are-billions.fandom.com/wiki/Quintus_Crane
+  cancel     Ctrl+C skips this page and continues
+  related    character -> vault\character\quintus_crane.md
+124 MIGRATE    Quintus Crane
+  reason     reused completed source from another kind
+  from       character -> vault\character\quintus_crane.md
+  path       vault\new_empire_character\quintus_crane.md
+---------- END ITEM 124 ----------
+
+========== ITEM 125 ==========
+125 NEXT       Survival Maps
+  category   Survival Maps
+  kind       survival_map
+  source     https://they-are-billions.fandom.com/wiki/Survival_Maps
+  cancel     Ctrl+C skips this page and continues
+125 DONE       Survival Maps
+  result     compiled
+  path       vault\survival_map\survival_maps.md
+  wikitext   11707 chars -> 10721 chars
+---------- END ITEM 125 ----------

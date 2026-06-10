@@ -1,0 +1,34 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 5932.54it/s]
+[FAIL] advanced_farm: implement the advanced farm building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.3-codex
+)
+[FAIL] advanced_mill: implement the advanced mill building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.3-codex
+)
+[FAIL] advanced_quarry: implement the advanced quarry building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.3-codex
+)
+[FAIL] bank: implement the bank building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.3-codex
+)
+[FAIL] buildings: implement the buildings building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.3-codex
+)
+[FAIL] command_center: implement the command center building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.3-codex
+)
+
+summary: {'pending': 6}

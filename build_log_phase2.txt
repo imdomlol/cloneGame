@@ -1,0 +1,179 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 6162.72it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[SKIP] advanced_farm: implement the advanced farm building
+[SKIP] advanced_mill: implement the advanced mill building
+[SKIP] advanced_quarry: implement the advanced quarry building
+[SKIP] bank: implement the bank building
+[SKIP] buildings: implement the buildings building
+[SKIP] command_center: implement the command center building
+[OK  ] cottage: implement the cottage building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] engineering_center: implement the engineering center building  -> 1 files
+[OK  ] executor: implement the executor building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] farm: implement the farm building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] fisherman_cottage: implement the fisherman cottage building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] foundry: implement the foundry building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] great_ballista: implement the great ballista building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] hunter_cottage: implement the hunter cottage building  -> 1 files
+[OK  ] inn: implement the inn building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] land_mine: implement the land mine building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] lookout_tower: implement the lookout tower building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] market: implement the market building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] mill: implement the mill building  -> 1 files
+[OK  ] oil_platform: implement the oil platform building  -> 1 files
+[OK  ] power_plant: implement the power plant building  -> 1 files  (skipped: src/buildings/mod.rs)
+[OK  ] quarry: implement the quarry building  -> 2 files  (skipped: src/building/mod.rs)
+[OK  ] radar_tower: implement the radar tower building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] sawmill: implement the sawmill building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] shocking_tower: implement the shocking tower building  -> 1 files
+[OK  ] soldiers_center: implement the soldiers center building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] stakes_trap: implement the stakes trap building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] stone_gate: implement the stone gate building  -> 1 files  (skipped: src/buildings/mod.rs)
+[OK  ] stone_house: implement the stone house building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] stone_tower: implement the stone tower building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] stone_wall: implement the stone wall building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] stone_workshop: implement the stone workshop building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] tent: implement the tent building  -> 1 files  (skipped: src/buildings/mod.rs)
+[OK  ] tesla_tower: implement the tesla tower building  -> 1 files
+[OK  ] warehouse: implement the warehouse building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] wasp: implement the wasp building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] wire_fence_trap: implement the wire fence trap building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] wood_gate: implement the wood gate building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] wood_tower: implement the wood tower building  -> 2 files  (skipped: src/buildings/mod.rs)
+[FAIL] wood_wall: implement the wood wall building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] wood_workshop: implement the wood workshop building  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] campaign_maps_the_new_empire: implement the campaign maps the new empire campaign_content  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] outpost: implement the outpost campaign_content  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] rabies_z: implement the rabies z campaign_content  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_new_empire: implement the the new empire campaign_content  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] cape_storm: implement the cape storm campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] coast_of_bones: implement the coast of bones campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] el_dorado: implement the el dorado campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] frozen_lake: implement the frozen lake campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] lands_of_the_giant: implement the lands of the giant campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] narrow_pass: implement the narrow pass campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_broken_land: implement the the broken land campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_crossroads: implement the the crossroads campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_forbidden_forest: implement the the forbidden forest campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_goddess_of_destiny: implement the the goddess of destiny campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_hidden_valley: implement the the hidden valley campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_highlands: implement the the highlands campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_hunters_meadow: implement the the hunters meadow campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+[FAIL] the_lonely_forest: implement the the lonely forest campaign_map  (codegen_error: OpenAI Codex v0.133.0
+--------
+workdir: C:\Users\dominic\Documents\GitHub\cloneGame
+model: gpt-5.5
+provid)
+
+summary: {'skipped': 6, 'implemented': 33, 'pending': 20}

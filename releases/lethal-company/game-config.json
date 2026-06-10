@@ -1,0 +1,1704 @@
+{
+  "version": 1,
+  "game": {
+    "name": "Lethal Company",
+    "wiki_base_url": "https://lethal-company.fandom.com/wiki/"
+  },
+  "human_approved": true,
+  "kinds": {
+    "scrap_items": {
+      "minWikilinks": 1,
+      "description": "Pages for lootable junk items that can be scavenged and sold for credits.",
+      "frontmatter_schema": {
+        "properties": {
+          "effects": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "conductive": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "sell": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "min": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "two_handed": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          }
+        }
+      },
+      "codegen": true
+    },
+    "store_items": {
+      "minWikilinks": 1,
+      "description": "Pages for purchasable store catalog items and decorations.",
+      "frontmatter_schema": {
+        "properties": {
+          "effects": {
+            "type": "string"
+          },
+          "buy": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "sell": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "weight": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "battery_life": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "conductive": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "two_handed": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "codegen": true
+    },
+    "entity_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for the game's creatures and other encounterable beings.",
+      "frontmatter_schema": {
+        "properties": {
+          "behavior": {
+            "type": "array"
+          },
+          "dwells": {
+            "type": "string"
+          },
+          "danger": {
+            "type": "string"
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "power_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max_spawned": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "dps": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_grenade": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "shock_response": {
+            "type": "string"
+          },
+          "radar_pip_size": {
+            "type": "string"
+          },
+          "shovel_hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "can_see_through_fog": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "spawn_delay": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_speed_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_open_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "zap_gun_difficulty": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "internal_name": {
+            "type": "string"
+          },
+          "pip_size": {
+            "type": "string"
+          },
+          "contact_damage": {
+            "type": "string"
+          },
+          "leave_time": {
+            "type": "string"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "gameplay_mechanics": {
+      "minWikilinks": 1,
+      "description": "Pages describing core mechanics, systems, and rules.",
+      "frontmatter_schema": {
+        "properties": {
+          "overview": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array"
+          },
+          "modifiers": {
+            "type": "array"
+          },
+          "strategy": {
+            "type": "array"
+          },
+          "notes": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "version_pages": {
+      "minWikilinks": 1,
+      "description": "Pages documenting specific game versions and patch history.",
+      "frontmatter_schema": {
+        "properties": {
+          "release_date": {
+            "type": "string"
+          },
+          "added_content": {
+            "type": "array"
+          },
+          "gameplay_changes": {
+            "type": "array"
+          },
+          "bug_fixes": {
+            "type": "array"
+          },
+          "notable_differences": {
+            "type": "array"
+          },
+          "company_greeting": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": false
+    },
+    "indoor_entity_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for entities that primarily spawn inside facilities.",
+      "frontmatter_schema": {
+        "properties": {
+          "behavior": {
+            "type": "array"
+          },
+          "dwells": {
+            "type": "string"
+          },
+          "danger": {
+            "type": "string"
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "power_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max_spawned": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "dps": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_grenade": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "shock_response": {
+            "type": "string"
+          },
+          "radar_pip_size": {
+            "type": "string"
+          },
+          "shovel_hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "can_see_through_fog": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "spawn_delay": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_speed_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_open_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "zap_gun_difficulty": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "internal_name": {
+            "type": "string"
+          },
+          "pip_size": {
+            "type": "string"
+          },
+          "contact_damage": {
+            "type": "string"
+          },
+          "leave_time": {
+            "type": "string"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "destination_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for moons and other travel destinations.",
+      "frontmatter_schema": {
+        "properties": {
+          "risk_level": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string"
+          },
+          "cost": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "map_layout": {
+            "type": "object"
+          },
+          "map_size_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "weather": {
+            "type": "array"
+          },
+          "min_scrap": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max_scrap": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "turrets": {
+            "type": "string"
+          },
+          "landmines": {
+            "type": "string"
+          },
+          "spike_traps": {
+            "type": "string"
+          },
+          "power_count": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "outside_power_count": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "daytime_power_count": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "indoor_spawn_deviation": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "outdoor_spawn_deviation": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "daytime_spawn_deviation": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "diversity_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "outside_diversity_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          }
+        }
+      },
+      "codegen": false
+    },
+    "weapon_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for player-use combat and utility weapons.",
+      "frontmatter_schema": {
+        "properties": {
+          "effects": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "conductive": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "sell": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "min": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "two_handed": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "cooldown": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "battery_life": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          }
+        }
+      },
+      "codegen": true
+    },
+    "item_index_pages": {
+      "minWikilinks": 1,
+      "description": "Pages that index or categorize in-game item families.",
+      "frontmatter_schema": {
+        "properties": {
+          "item_families": {
+            "type": "array"
+          },
+          "categories": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": false
+    },
+    "outdoor_entity_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for entities that primarily appear outside.",
+      "frontmatter_schema": {
+        "properties": {
+          "behavior": {
+            "type": "array"
+          },
+          "dwells": {
+            "type": "string"
+          },
+          "danger": {
+            "type": "string"
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "power_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max_spawned": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "dps": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_grenade": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "shock_response": {
+            "type": "string"
+          },
+          "radar_pip_size": {
+            "type": "string"
+          },
+          "shovel_hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "can_see_through_fog": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "spawn_delay": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_speed_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_open_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "zap_gun_difficulty": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "internal_name": {
+            "type": "string"
+          },
+          "pip_size": {
+            "type": "string"
+          },
+          "contact_damage": {
+            "type": "string"
+          },
+          "leave_time": {
+            "type": "string"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "scrapped_content_pages": {
+      "minWikilinks": 1,
+      "description": "Pages about cut or unused content removed from the game.",
+      "frontmatter_schema": {
+        "properties": {
+          "effects": {
+            "type": "string"
+          },
+          "weight": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "conductive": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "buy": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "sell": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "min": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "two_handed": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "cooldown": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "battery_life": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "introduced_in_version": {
+            "type": "string"
+          }
+        }
+      },
+      "codegen": false
+    },
+    "daytime_entity_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for entities active during daylight.",
+      "frontmatter_schema": {
+        "properties": {
+          "behavior": {
+            "type": "array"
+          },
+          "dwells": {
+            "type": "string"
+          },
+          "danger": {
+            "type": "string"
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "power_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max_spawned": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "dps": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_grenade": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "shock_response": {
+            "type": "string"
+          },
+          "radar_pip_size": {
+            "type": "string"
+          },
+          "shovel_hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "can_see_through_fog": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "spawn_delay": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_speed_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_open_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "zap_gun_difficulty": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "internal_name": {
+            "type": "string"
+          },
+          "pip_size": {
+            "type": "string"
+          },
+          "contact_damage": {
+            "type": "string"
+          },
+          "leave_time": {
+            "type": "string"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "harmless_entity_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for non-hostile or low-threat entities.",
+      "frontmatter_schema": {
+        "properties": {
+          "behavior": {
+            "type": "array"
+          },
+          "dwells": {
+            "type": "string"
+          },
+          "danger": {
+            "type": "string"
+          },
+          "scientific_name": {
+            "type": "string"
+          },
+          "hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "power_level": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "max_spawned": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "attack_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "dps": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "stun_grenade": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "shock_response": {
+            "type": "string"
+          },
+          "radar_pip_size": {
+            "type": "string"
+          },
+          "shovel_hp": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "can_see_through_fog": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "spawn_delay": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_speed_multiplier": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "door_open_speed": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "zap_gun_difficulty": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "internal_name": {
+            "type": "string"
+          },
+          "pip_size": {
+            "type": "string"
+          },
+          "contact_damage": {
+            "type": "string"
+          },
+          "leave_time": {
+            "type": "string"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "map_hazard_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for environmental hazards and defensive map objects.",
+      "frontmatter_schema": {
+        "properties": {
+          "damage": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "damage_type": {
+            "type": "string"
+          },
+          "trigger_conditions": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "ship_furniture_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for ship interior furnishings and placed furniture.",
+      "frontmatter_schema": {
+        "properties": {
+          "effects": {
+            "type": "string"
+          },
+          "buy": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "sell": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "weight": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "conductive": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "two_handed": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "codegen": true
+    },
+    "guide_pages": {
+      "minWikilinks": 1,
+      "description": "Pages that explain how to perform specific tasks or roles.",
+      "frontmatter_schema": {
+        "properties": {
+          "overview": {
+            "type": "string"
+          },
+          "tasks": {
+            "type": "array"
+          },
+          "strategy": {
+            "type": "array"
+          },
+          "notes": {
+            "type": "array"
+          },
+          "tips": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": false
+    },
+    "franchise_pages": {
+      "minWikilinks": 1,
+      "description": "Pages about the game itself, its creator, or franchise-level topics.",
+      "frontmatter_schema": {
+        "properties": {
+          "developer": {
+            "type": "string"
+          },
+          "publisher": {
+            "type": "string"
+          },
+          "engine": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "release_date": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "array"
+          },
+          "genre": {
+            "type": "array"
+          },
+          "mode": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": false
+    },
+    "ship_upgrade_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for ship-mounted upgrades and support equipment.",
+      "frontmatter_schema": {
+        "properties": {
+          "effects": {
+            "type": "string"
+          },
+          "buy": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "sell": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "weight": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "cooldown": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "battery_life": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "conductive": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          },
+          "two_handed": {
+            "type": [
+              "string",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "codegen": true
+    },
+    "event_pages": {
+      "minWikilinks": 1,
+      "description": "Pages for limited-time or special in-game events.",
+      "frontmatter_schema": {
+        "properties": {
+          "chance": {
+            "type": [
+              "string",
+              "integer",
+              "number"
+            ]
+          },
+          "effects": {
+            "type": "string"
+          },
+          "introduced_in_version": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": true
+    },
+    "wiki_homepage_pages": {
+      "minWikilinks": 1,
+      "description": "Pages that serve as wiki landing or site-level navigation content.",
+      "frontmatter_schema": {
+        "properties": {
+          "main_topics": {
+            "type": "array"
+          },
+          "additional_information": {
+            "type": "array"
+          },
+          "most_visited": {
+            "type": "array"
+          }
+        }
+      },
+      "codegen": false
+    },
+    "maintenance_tracking_pages": {
+      "minWikilinks": 1,
+      "description": "Pages flagged by the wiki for citation or reference problems.",
+      "frontmatter_schema": {
+        "properties": {}
+      },
+      "codegen": false
+    }
+  },
+  "categories": [
+    {
+      "name": "Scrap",
+      "kind": "scrap_items",
+      "member_count": 70
+    },
+    {
+      "name": "Store items",
+      "kind": "store_items",
+      "member_count": 37
+    },
+    {
+      "name": "Entities",
+      "kind": "entity_pages",
+      "member_count": 35
+    },
+    {
+      "name": "Gameplay",
+      "kind": "gameplay_mechanics",
+      "member_count": 35
+    },
+    {
+      "name": "Version",
+      "kind": "version_pages",
+      "member_count": 22
+    },
+    {
+      "name": "Indoor Entities",
+      "kind": "indoor_entity_pages",
+      "member_count": 19
+    },
+    {
+      "name": "Destinations",
+      "kind": "destination_pages",
+      "member_count": 15
+    },
+    {
+      "name": "Weapons",
+      "kind": "weapon_pages",
+      "member_count": 10
+    },
+    {
+      "name": "Items",
+      "kind": "item_index_pages",
+      "member_count": 9
+    },
+    {
+      "name": "Outdoor Entities",
+      "kind": "outdoor_entity_pages",
+      "member_count": 8
+    },
+    {
+      "name": "Scrapped Content",
+      "kind": "scrapped_content_pages",
+      "member_count": 8
+    },
+    {
+      "name": "Daytime Entities",
+      "kind": "daytime_entity_pages",
+      "member_count": 6
+    },
+    {
+      "name": "Harmless Entities",
+      "kind": "harmless_entity_pages",
+      "member_count": 5
+    },
+    {
+      "name": "Map Hazard",
+      "kind": "map_hazard_pages",
+      "member_count": 4
+    },
+    {
+      "name": "Ship Furniture",
+      "kind": "ship_furniture_pages",
+      "member_count": 3
+    },
+    {
+      "name": "Guides",
+      "kind": "guide_pages",
+      "member_count": 2
+    },
+    {
+      "name": "Lethal Company",
+      "kind": "franchise_pages",
+      "member_count": 2
+    },
+    {
+      "name": "Ship Upgrades",
+      "kind": "ship_upgrade_pages",
+      "member_count": 2
+    },
+    {
+      "name": "Events",
+      "kind": "event_pages",
+      "member_count": 1
+    },
+    {
+      "name": "Lethal Company Wiki",
+      "kind": "wiki_homepage_pages",
+      "member_count": 1
+    },
+    {
+      "name": "Pages with reference errors",
+      "kind": "maintenance_tracking_pages",
+      "member_count": 1
+    }
+  ],
+  "dropped_categories": [],
+  "seedPages": [],
+  "engine_candidates": [
+    {
+      "name": "Unity",
+      "language": "C#",
+      "pros": [
+        "Strong fit for a first-person 3D co-op game with many interactable item pages: scrap, store items, weapons, ship furniture, and ship upgrades.",
+        "Good tooling for rapid content iteration across the large set of gameplay mechanics, entities, destinations, and versioned live updates.",
+        "Broad networking ecosystem for multiplayer session flow, synchronized pickups, enemy AI, and co-op traversal."
+      ],
+      "cons": [
+        "Deterministic simulation is not automatic, so replayable enemy behavior and item interactions need deliberate engineering.",
+        "Can become complex to maintain if the project grows into a heavy content pipeline with many data-driven categories."
+      ],
+      "fit_score": 0.92,
+      "links": [
+        "https://unity.com/"
+      ]
+    },
+    {
+      "name": "Unreal Engine",
+      "language": "C++",
+      "pros": [
+        "Very strong for atmospheric 3D presentation, which fits a game centered on destinations, entities, hazards, and indoor/outdoor encounters.",
+        "Good support for authoritative multiplayer architecture and replication for co-op gameplay.",
+        "Robust tooling for complex AI, physics, and first-person interaction systems."
+      ],
+      "cons": [
+        "Heavier workflow than needed for a smaller content-heavy indie-style game.",
+        "Content iteration and data-driven item catalogs can be more cumbersome than in lighter engines."
+      ],
+      "fit_score": 0.86,
+      "links": [
+        "https://www.unrealengine.com/"
+      ]
+    },
+    {
+      "name": "Godot Engine",
+      "language": "GDScript or C#",
+      "pros": [
+        "Flexible for building data-driven systems for scrap, entities, mechanics, and destination content.",
+        "Faster to prototype than heavier AAA engines, which helps when iterating on many wiki-defined gameplay rules.",
+        "Open workflow can suit a compact team building a clone from structured wiki data."
+      ],
+      "cons": [
+        "Less proven for large-scale 3D multiplayer and complex AI-heavy games than Unity or Unreal.",
+        "Tooling and ecosystem depth are weaker for demanding networking and production-scale content pipelines."
+      ],
+      "fit_score": 0.68,
+      "links": [
+        "https://godotengine.org/"
+      ]
+    },
+    {
+      "name": "Bevy",
+      "language": "Rust",
+      "pros": [
+        "ECS architecture can map cleanly to many entity categories, hazards, items, and mechanics pulled from wiki data.",
+        "Rust offers strong safety properties and can support deterministic gameplay code if carefully designed."
+      ],
+      "cons": [
+        "Still immature for turnkey 3D multiplayer, editor tooling, and content authoring compared with mainstream game engines.",
+        "Would require much more custom work for UI, level authoring, networking, and asset pipeline needs."
+      ],
+      "fit_score": 0.54,
+      "links": [
+        "https://bevyengine.org/"
+      ]
+    }
+  ],
+  "chosen_engine": {
+    "name": "Bevy",
+    "language": "Rust",
+    "selected_from": "engine_candidates[3]",
+    "selected_on": "2026-06-07",
+    "networking_model": "deterministic lockstep",
+    "architecture": "fixed-tick sim (20-30Hz) decoupled from interpolated render tick; only inputs cross the wire",
+    "notes": "Selected for Lethal Company target-game pipeline validation. See docs/MEMORY.md.",
+    "module_registration": {
+      "aggregator": "{dir}/mod.rs",
+      "declaration": "pub mod {stem};",
+      "crate_root": "src/lib.rs"
+    },
+    "entrypoint": {
+      "aggregator_file": "src/app_plugins.rs",
+      "aggregator_module": "app_plugins",
+      "tuple_chunk_size": 14,
+      "main_file": "src/main.rs",
+      "excluded_plugins": {
+        "GameStateMachinePlugin": "Generated plugin adds StatesPlugin which DefaultPlugins already includes; smoke test uses MinimalPlugins so this went undetected. Will be fixed when bevy.md S1 rule update flows through next regen."
+      }
+    },
+    "systems": [
+      {
+        "name": "game_state_machine",
+        "description": "Tracks and transitions between menu, playing, paused, win, and lose game states.",
+        "depends_on": [],
+        "produces": [
+          "game_state_changed",
+          "game_won",
+          "game_lost"
+        ]
+      },
+      {
+        "name": "input_handler",
+        "description": "Maps keyboard and mouse input to player actions like movement, weapon firing, and item pickup.",
+        "depends_on": [
+          "weapon_pages"
+        ],
+        "produces": [
+          "player_input",
+          "action_triggered"
+        ]
+      },
+      {
+        "name": "hud",
+        "description": "Renders UI showing quota progress, scrap inventory, equipped weapons, active upgrades, and time remaining.",
+        "depends_on": [
+          "scrap_items",
+          "weapon_pages",
+          "ship_upgrade_pages"
+        ],
+        "produces": []
+      },
+      {
+        "name": "entity_spawner",
+        "description": "Spawns hostile creatures on the map based on elapsed time, location, and difficulty.",
+        "depends_on": [
+          "entity_pages",
+          "indoor_entity_pages",
+          "outdoor_entity_pages",
+          "daytime_entity_pages"
+        ],
+        "produces": [
+          "entity_spawned",
+          "wave_triggered"
+        ]
+      },
+      {
+        "name": "scrap_economy",
+        "description": "Tracks collected scrap items, manages player inventory, and updates progress toward the profit quota.",
+        "depends_on": [
+          "scrap_items"
+        ],
+        "produces": [
+          "scrap_collected",
+          "quota_progress",
+          "inventory_changed"
+        ]
+      },
+      {
+        "name": "combat_system",
+        "description": "Resolves weapon attacks against creatures, applies damage, and handles creature death.",
+        "depends_on": [
+          "weapon_pages",
+          "entity_pages",
+          "harmless_entity_pages"
+        ],
+        "produces": [
+          "damage_applied",
+          "creature_killed",
+          "weapon_fired"
+        ]
+      },
+      {
+        "name": "facility_timer",
+        "description": "Manages time pressure on exploration; triggers entity spawning waves and enforces mission time limits.",
+        "depends_on": [
+          "gameplay_mechanics"
+        ],
+        "produces": [
+          "time_elapsed",
+          "time_warning",
+          "time_expired"
+        ]
+      },
+      {
+        "name": "hazard_system",
+        "description": "Detects and triggers environmental hazards, applies damage when players interact with them.",
+        "depends_on": [
+          "map_hazard_pages"
+        ],
+        "produces": [
+          "hazard_triggered",
+          "hazard_damage"
+        ]
+      },
+      {
+        "name": "creature_ai",
+        "description": "Controls hostile creature behavior including movement, aggression, and targeting of nearby players.",
+        "depends_on": [
+          "entity_pages",
+          "outdoor_entity_pages",
+          "indoor_entity_pages"
+        ],
+        "produces": [
+          "creature_moved",
+          "creature_attacked"
+        ]
+      },
+      {
+        "name": "ship_system",
+        "description": "Manages ship docking, loads scrap cargo, applies purchased upgrades, and determines mission completion.",
+        "depends_on": [
+          "ship_furniture_pages",
+          "ship_upgrade_pages",
+          "scrap_items"
+        ],
+        "produces": [
+          "upgrade_applied",
+          "mission_complete",
+          "quota_met"
+        ]
+      }
+    ]
+  }
+}

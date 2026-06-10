@@ -332,12 +332,41 @@ def _build_schema_prompt(
 ) -> str:
     category_json = json.dumps(_trim_categories_for_proposals(categories), ensure_ascii=False)
     sample_json = json.dumps(_trim_sample_pages(sample_pages_by_category), ensure_ascii=False)
+    # Type-emission guidance: wikitext tables surround everything with prose, so it's
+    # tempting to label every field as "string". But the downstream compile LLM
+    # correctly extracts numbers as integers, lists as arrays, cost tables as
+    # objects, and a per-kind schema that says "string" will reject those — which
+    # has cost us ~70% quarantine rates in real runs. Tell the proposer explicitly
+    # to emit unions for numeric fields and structural types when the wikitext
+    # shows a list / nested map. The validator widens scalars as a safety net,
+    # but this prompt-side guidance is the real fix.
     return (
         "You are proposing per-kind frontmatter schemas for a wiki-to-code pipeline.\n"
         "Use the taxonomy, category assignments, and sample page text. Create only"
         " game-specific sub-fields. Universal fields are handled elsewhere. Every input kind"
-        " key must appear exactly once. Return ONLY raw JSON shaped as "
-        '{"<kind>":{"properties":{"field":{"type":"string"}}}}\n\n'
+        " key must appear exactly once.\n\n"
+        "TYPE EMISSION RULES (CRITICAL):\n"
+        '- For a field whose wikitext value is a NUMBER (e.g. "Hit Points: 125", '
+        '"Build Time: 60s", "Range: 5.5"), emit '
+        '{"type": ["string", "integer", "number"]}. '
+        "Never label numeric fields as bare string.\n"
+        '- For a field whose wikitext shows a LIST '
+        '(e.g. "Produces: stone, iron, gold" or '
+        'a bullet list of dependencies), emit {"type": "array"}.\n'
+        '- For a field whose wikitext shows a NESTED MAP '
+        '(e.g. cost broken down per resource, '
+        'or footprint with width+height), emit {"type": "object"}.\n'
+        '- For a field that is genuinely free text '
+        '(descriptions, lore, single keyword), emit '
+        '{"type": "string"}.\n'
+        '- For a field that could appear as boolean OR text '
+        '(e.g. "Requires Energy: yes / no"), emit '
+        '{"type": ["string", "boolean"]}.\n'
+        "When in doubt about scalar vs numeric, prefer the union over "
+        '{"type": "string"}. The downstream extractor is allowed to return any of '
+        "the listed types; a too-narrow schema causes the page to be quarantined.\n\n"
+        "Return ONLY raw JSON shaped as "
+        '{"<kind>":{"properties":{"field":{"type":["string","integer","number"]}}}}\n\n'
         f"Kinds JSON:\n{json.dumps(kinds, ensure_ascii=False)}\n\n"
         f"Categories JSON:\n{category_json}\n\n"
         f"Sample pages by category JSON:\n{sample_json}"
@@ -455,6 +484,204 @@ def propose_engine_candidates(
     prompt = _build_engine_prompt(kinds, categories)
     raw = _parse_json_with_retry(prompt, mode, model)
     return _validate_engine_output(raw)
+
+
+def _build_codegen_classification_prompt(
+    kinds: dict[str, Any],
+    categories: list[dict[str, Any]],
+    sample_pages_by_category: dict[str, list[str]],
+) -> str:
+    """Prompt: classify each kind as code-target (true) or runtime data (false).
+
+    The pipeline can either generate code for a kind (units, buildings,
+    mechanics, AI behaviours) or treat it as runtime data loaded later
+    (maps, lore-only entities, release notes, fluff text). The classifier
+    answers that question per kind so the loop driver skips data kinds and
+    saves codegen budget. Engine-agnostic by construction: the LLM looks at
+    the wiki shape alone, not at any specific engine.
+    """
+    kind_summary = _summarize_kind_counts(kinds, categories)
+    sample_json = json.dumps(_trim_sample_pages(sample_pages_by_category), ensure_ascii=False)
+    return (
+        "You are classifying each wiki KIND as code-generated (true) "
+        "or runtime data (false) for an automated game-codegen pipeline.\n\n"
+        "Classify a kind as codegen=true when its wiki notes describe behavior, "
+        "stats, or systems that translate to game CODE: units, buildings, "
+        "enemies, abilities, mechanics, AI, items with effects, factions with "
+        "rules.\n"
+        "Classify a kind as codegen=false when its wiki notes are runtime DATA "
+        "or pure lore that the engine loads as assets rather than synthesizes: "
+        "maps, missions, campaign scenarios, patch notes / changelogs / "
+        "release notes / 'updates', soundtrack listings, lore-only locations "
+        "with no mechanical effect, named characters with no gameplay role.\n"
+        "When in doubt, prefer codegen=true (a wasted code module is cheaper "
+        "than a missing system).\n\n"
+        "Return ONLY raw JSON shaped as "
+        '{"codegen_flags": {"<kind>": true|false, ...}}. '
+        "Every input kind must appear exactly once.\n\n"
+        f"Kind summary JSON:\n{json.dumps(kind_summary, ensure_ascii=False)}\n\n"
+        f"Sample pages by category JSON:\n{sample_json}"
+    )
+
+
+def _validate_codegen_flags(result: dict[str, Any], kinds: dict[str, Any]) -> dict[str, bool]:
+    """Validate codegen classifier output; raise on any missing or non-bool."""
+    if not isinstance(result, dict):
+        raise ValueError("Expected codegen-flags proposal to be a JSON object.")
+    flags = result.get("codegen_flags")
+    if not isinstance(flags, dict):
+        raise ValueError('Expected top-level "codegen_flags" object.')
+    out: dict[str, bool] = {}
+    for kind in kinds:
+        if kind not in flags:
+            raise ValueError(f'Missing codegen flag for kind "{kind}".')
+        value = flags[kind]
+        if not isinstance(value, bool):
+            raise ValueError(f"codegen flag for '{kind}' must be bool, got {type(value).__name__}.")
+        out[kind] = value
+    extras = sorted(set(flags) - set(kinds))
+    if extras:
+        raise ValueError(f"Codegen flags included unknown kinds: {extras}.")
+    return out
+
+
+def propose_codegen_flags(
+    kinds: dict,
+    categories: list[dict],
+    sample_pages_by_category: dict[str, list[str]],
+    mode: str = DEFAULT_MODE,
+    model: str | None = None,
+) -> dict[str, bool]:
+    """Classify each kind as `codegen=true` (code) or `codegen=false` (data).
+
+    Pairs with ``kinds.<kind>.codegen`` in ``game-config.json`` which
+    ``phase2.loop_driver.load_valid_kinds`` reads to skip data-only kinds.
+    """
+    prompt = _build_codegen_classification_prompt(kinds, categories, sample_pages_by_category)
+    raw = _parse_json_with_retry(prompt, mode, model)
+    return _validate_codegen_flags(raw, kinds)
+
+
+def _build_systems_prompt(
+    kinds: dict[str, Any],
+    sample_pages_by_category: dict[str, list[str]],
+) -> str:
+    """Prompt: propose the per-game gameplay SYSTEM list for Phase 3 codegen.
+
+    Phase 2 produces per-entity leaves (one plugin per soldier, infected,
+    farm). The leaves don't compose into a gameplay loop on their own — that
+    needs systems that read multiple kinds at once (combat resolver, wave
+    spawner, state machine, HUD, input handler). The wiki rarely describes
+    these systems directly; they're inferred from the game's shape.
+
+    The proposer reads the kind list + sample wikitext and lists the systems
+    needed to turn the leaves into a playable round of this game.
+    Engine-agnostic by design: the system names + dependencies are about
+    game logic, not Rust / Bevy specifics. Per-engine codegen rules for
+    *how* to write a system live in ``prompts/engine_determinism/<engine>.md``.
+    """
+    code_kinds = {
+        name: data for name, data in kinds.items()
+        if not isinstance(data, dict) or data.get("codegen", True) is not False
+    }
+    sample_json = json.dumps(_trim_sample_pages(sample_pages_by_category), ensure_ascii=False)
+    kinds_summary = {
+        name: data.get("description", "") if isinstance(data, dict) else ""
+        for name, data in code_kinds.items()
+    }
+    return (
+        "You are proposing the GAMEPLAY SYSTEMS this game needs to be "
+        "playable. Phase 2 of an upstream codegen pipeline has produced one "
+        "leaf plugin per wiki entity (units, buildings, enemies, items). "
+        "Your job is to list the SYSTEM plugins that compose those leaves "
+        "into a playable round: state machine, input, HUD, win/lose, plus "
+        "per-game logic (wave spawner, combat resolver, scrap collector, "
+        "etc.).\n\n"
+        "Each system entry must have:\n"
+        "- `name`: snake_case identifier (e.g. `wave_spawner`, `game_state_machine`).\n"
+        "- `description`: ONE sentence describing what the system does.\n"
+        "- `depends_on`: list of kind names this system READS from "
+        "(units, infected, buildings, etc.). Use the kind names exactly as "
+        "given in the input.\n"
+        "- `produces`: optional list of resource / event names this system "
+        "INTRODUCES into the engine (empty list is fine).\n\n"
+        "Always include three universal systems (every game has these, "
+        "regardless of theme):\n"
+        "- `game_state_machine`: tracks menu/playing/paused/win/lose.\n"
+        "- `input_handler`: maps keyboard + mouse to entity commands.\n"
+        "- `hud`: top-level UI showing game state.\n\n"
+        "Then propose 4-10 per-game systems that compose the leaves into "
+        "actual gameplay. Examples for different genres: 'wave_spawner' "
+        "(RTS waves), 'creature_aggro' (horror), 'quota_tracker' "
+        "(roguelike economy), 'combat_resolver' (any combat game), "
+        "'resource_economy' (any base-builder).\n\n"
+        "Return ONLY raw JSON shaped as "
+        '{"systems": [{"name": "...", "description": "...", "depends_on": [], "produces": []}]}\n\n'
+        f"Code-target kinds JSON:\n{json.dumps(kinds_summary, ensure_ascii=False)}\n\n"
+        f"Sample pages by category JSON:\n{sample_json}"
+    )
+
+
+def _validate_systems_entry(entry: Any, index: int, code_kinds: set[str]) -> dict[str, Any]:
+    if not isinstance(entry, dict):
+        raise ValueError(f"System entry {index} must be an object.")
+    name = entry.get("name")
+    description = entry.get("description")
+    depends_on = entry.get("depends_on")
+    produces = entry.get("produces", [])
+    if not isinstance(name, str) or not name:
+        raise ValueError(f"System entry {index} needs a non-empty name.")
+    if not isinstance(description, str) or not description:
+        raise ValueError(f'System "{name}" needs a description.')
+    deps = _assert_string_list(depends_on, f'system "{name}".depends_on')
+    bad_deps = sorted(set(deps) - code_kinds)
+    if bad_deps:
+        raise ValueError(
+            f'System "{name}" depends_on unknown kinds: {bad_deps}'
+        )
+    return {
+        "name": name,
+        "description": description,
+        "depends_on": deps,
+        "produces": _assert_string_list(produces, f'system "{name}".produces'),
+    }
+
+
+def _validate_systems_output(result: dict[str, Any], code_kinds: set[str]) -> list[dict[str, Any]]:
+    if not isinstance(result, dict) or not isinstance(result.get("systems"), list):
+        raise ValueError('Expected top-level "systems" array.')
+    systems = result["systems"]
+    if not systems:
+        raise ValueError("Expected at least one system.")
+    seen: set[str] = set()
+    validated: list[dict[str, Any]] = []
+    for i, entry in enumerate(systems):
+        s = _validate_systems_entry(entry, i, code_kinds)
+        if s["name"] in seen:
+            raise ValueError(f"Duplicate system name: {s['name']}")
+        seen.add(s["name"])
+        validated.append(s)
+    return validated
+
+
+def propose_gameplay_systems(
+    kinds: dict,
+    sample_pages_by_category: dict[str, list[str]],
+    mode: str = DEFAULT_MODE,
+    model: str | None = None,
+) -> list[dict[str, Any]]:
+    """Propose the per-game gameplay system list for Phase 3 codegen.
+
+    Output lands at ``chosen_engine.systems`` in ``game-config.json`` and is
+    consumed by ``phase2.loop_driver.derive_goals_from_systems``.
+    """
+    code_kinds = {
+        name for name, data in kinds.items()
+        if not isinstance(data, dict) or data.get("codegen", True) is not False
+    }
+    prompt = _build_systems_prompt(kinds, sample_pages_by_category)
+    raw = _parse_json_with_retry(prompt, mode, model)
+    return _validate_systems_output(raw, code_kinds)
 
 
 def analyze_taxonomy(

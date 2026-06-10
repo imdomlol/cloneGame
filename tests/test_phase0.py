@@ -5,7 +5,12 @@ from scripts.phase0 import (
     _kinds_missing_frontmatter_schema,
     _merge_proposals,
 )
-from scripts.phase0_analyze import IncompleteCoverageError, _validate_output
+from scripts.phase0_analyze import (
+    IncompleteCoverageError,
+    _validate_codegen_flags,
+    _validate_output,
+    _validate_systems_output,
+)
 
 
 class Phase0CompletenessGateTests(unittest.TestCase):
@@ -114,6 +119,131 @@ class Phase0StabilityTests(unittest.TestCase):
         )
 
         self.assertEqual(set(missing), {"unit", "technology"})
+
+
+class CodegenFlagClassifierTests(unittest.TestCase):
+    KINDS: ClassVar[dict[str, Any]] = {
+        "unit": {"description": "controllable units"},
+        "campaign_map": {"description": "scenario maps"},
+        "update_log": {"description": "patch notes"},
+    }
+
+    def test_valid_flags_pass_through(self) -> None:
+        result = {
+            "codegen_flags": {"unit": True, "campaign_map": False, "update_log": False}
+        }
+        flags = _validate_codegen_flags(result, self.KINDS)
+        self.assertEqual(flags, {"unit": True, "campaign_map": False, "update_log": False})
+
+    def test_missing_kind_raises(self) -> None:
+        result = {"codegen_flags": {"unit": True, "campaign_map": False}}
+        with self.assertRaisesRegex(ValueError, "update_log"):
+            _validate_codegen_flags(result, self.KINDS)
+
+    def test_extra_kind_raises(self) -> None:
+        result = {
+            "codegen_flags": {
+                "unit": True,
+                "campaign_map": False,
+                "update_log": False,
+                "phantom": True,
+            }
+        }
+        with self.assertRaisesRegex(ValueError, "phantom"):
+            _validate_codegen_flags(result, self.KINDS)
+
+    def test_non_bool_value_raises(self) -> None:
+        result = {
+            "codegen_flags": {"unit": "yes", "campaign_map": False, "update_log": False}
+        }
+        with self.assertRaisesRegex(ValueError, "must be bool"):
+            _validate_codegen_flags(result, self.KINDS)
+
+    def test_merge_proposal_inherits_hand_set_codegen_flag(self) -> None:
+        """Operator hand-set `codegen: false` survives a Phase 0 re-run that
+        proposes `codegen: true` (no surprise flips)."""
+        current = {
+            "kinds": {
+                "unit": {"codegen": False, "description": "demoted by hand"},
+            }
+        }
+        proposal = _merge_proposals(
+            current,
+            {"unit": {"description": "controllable units"}},
+            {},
+            [],
+            [],
+            codegen_flags={"unit": True},
+        )
+        self.assertEqual(proposal["kinds"]["unit"]["codegen"], False)
+
+    def test_merge_proposal_applies_classifier_when_no_prior(self) -> None:
+        proposal = _merge_proposals(
+            {},
+            {"campaign_map": {"description": "scenario maps"}},
+            {},
+            [],
+            [],
+            codegen_flags={"campaign_map": False},
+        )
+        self.assertEqual(proposal["kinds"]["campaign_map"]["codegen"], False)
+
+
+class GameplaySystemsValidatorTests(unittest.TestCase):
+    CODE_KINDS: ClassVar[set[str]] = {"unit", "infected", "building"}
+
+    def test_valid_systems_pass_through(self) -> None:
+        result = {
+            "systems": [
+                {
+                    "name": "wave_spawner",
+                    "description": "spawns waves on a timer",
+                    "depends_on": ["infected"],
+                    "produces": ["WaveTimer"],
+                },
+                {
+                    "name": "game_state_machine",
+                    "description": "tracks menu/playing/paused/win/lose",
+                    "depends_on": [],
+                },
+            ]
+        }
+        systems = _validate_systems_output(result, self.CODE_KINDS)
+        self.assertEqual(len(systems), 2)
+        self.assertEqual(systems[0]["name"], "wave_spawner")
+        self.assertEqual(systems[1]["produces"], [])
+
+    def test_empty_systems_list_raises(self) -> None:
+        with self.assertRaisesRegex(ValueError, "at least one system"):
+            _validate_systems_output({"systems": []}, self.CODE_KINDS)
+
+    def test_duplicate_name_raises(self) -> None:
+        result = {
+            "systems": [
+                {"name": "hud", "description": "x", "depends_on": []},
+                {"name": "hud", "description": "y", "depends_on": []},
+            ]
+        }
+        with self.assertRaisesRegex(ValueError, "Duplicate system name: hud"):
+            _validate_systems_output(result, self.CODE_KINDS)
+
+    def test_depends_on_unknown_kind_raises(self) -> None:
+        result = {
+            "systems": [
+                {
+                    "name": "wave_spawner",
+                    "description": "x",
+                    "depends_on": ["phantom_kind"],
+                }
+            ]
+        }
+        with self.assertRaisesRegex(ValueError, "phantom_kind"):
+            _validate_systems_output(result, self.CODE_KINDS)
+
+    def test_missing_description_raises(self) -> None:
+        result = {"systems": [{"name": "hud", "depends_on": []}]}
+        with self.assertRaisesRegex(ValueError, "description"):
+            _validate_systems_output(result, self.CODE_KINDS)
 
 
 if __name__ == "__main__":

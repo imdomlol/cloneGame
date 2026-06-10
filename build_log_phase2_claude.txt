@@ -1,0 +1,76 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 5891.21it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+warn: generated output missing or invalid `// Sources:` header (offending paths: <none listed>)
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[SKIP] advanced_farm: implement the advanced farm building
+[SKIP] advanced_mill: implement the advanced mill building
+[SKIP] advanced_quarry: implement the advanced quarry building
+[SKIP] bank: implement the bank building
+[SKIP] buildings: implement the buildings building
+[SKIP] command_center: implement the command center building
+[SKIP] cottage: implement the cottage building
+[SKIP] engineering_center: implement the engineering center building
+[SKIP] executor: implement the executor building
+[SKIP] farm: implement the farm building
+[SKIP] fisherman_cottage: implement the fisherman cottage building
+[SKIP] foundry: implement the foundry building
+[SKIP] great_ballista: implement the great ballista building
+[SKIP] hunter_cottage: implement the hunter cottage building
+[SKIP] inn: implement the inn building
+[SKIP] land_mine: implement the land mine building
+[SKIP] lookout_tower: implement the lookout tower building
+[SKIP] market: implement the market building
+[SKIP] mill: implement the mill building
+[SKIP] oil_platform: implement the oil platform building
+[SKIP] power_plant: implement the power plant building
+[SKIP] quarry: implement the quarry building
+[SKIP] radar_tower: implement the radar tower building
+[SKIP] sawmill: implement the sawmill building
+[SKIP] shocking_tower: implement the shocking tower building
+[SKIP] soldiers_center: implement the soldiers center building
+[SKIP] stakes_trap: implement the stakes trap building
+[SKIP] stone_gate: implement the stone gate building
+[SKIP] stone_house: implement the stone house building
+[SKIP] stone_tower: implement the stone tower building
+[SKIP] stone_wall: implement the stone wall building
+[SKIP] stone_workshop: implement the stone workshop building
+[SKIP] tent: implement the tent building
+[SKIP] tesla_tower: implement the tesla tower building
+[SKIP] warehouse: implement the warehouse building
+[SKIP] wasp: implement the wasp building
+[SKIP] wire_fence_trap: implement the wire fence trap building
+[SKIP] wood_gate: implement the wood gate building
+[SKIP] wood_tower: implement the wood tower building
+[FAIL] wood_wall: implement the wood wall building  (no_file_blocks)
+[OK  ] wood_workshop: implement the wood workshop building  -> 1 files
+[FAIL] campaign_maps_the_new_empire: implement the campaign maps the new empire campaign_content  (invalid_source_header)
+[OK  ] outpost: implement the outpost campaign_content  -> 1 files  (skipped: src/campaign_content/mod.rs)
+[OK  ] rabies_z: implement the rabies z campaign_content  -> 1 files
+[FAIL] the_new_empire: implement the the new empire campaign_content  (skipped: src/campaign_content/mod.rs)  (cargo_build_failed: error[E0308]: mismatched types
+   --> src\campaign_content\the_new_empire.rs:197:18
+    |
+197 |     )
+[FAIL] cape_storm: implement the cape storm campaign_map  (codegen_error: claude exited 1)
+[FAIL] coast_of_bones: implement the coast of bones campaign_map  (codegen_error: claude exited 1)
+[FAIL] el_dorado: implement the el dorado campaign_map  (codegen_error: claude exited 1)
+[FAIL] frozen_lake: implement the frozen lake campaign_map  (codegen_error: claude exited 1)
+[FAIL] lands_of_the_giant: implement the lands of the giant campaign_map  (codegen_error: claude exited 1)
+[FAIL] narrow_pass: implement the narrow pass campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_broken_land: implement the the broken land campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_crossroads: implement the the crossroads campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_forbidden_forest: implement the the forbidden forest campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_goddess_of_destiny: implement the the goddess of destiny campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_hidden_valley: implement the the hidden valley campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_highlands: implement the the highlands campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_hunters_meadow: implement the the hunters meadow campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_lonely_forest: implement the the lonely forest campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_lowlands: implement the the lowlands campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_mines_of_the_raven: implement the the mines of the raven campaign_map  (codegen_error: claude exited 1)
+[FAIL] the_nest_of_the_harpy: implement the the nest of the harpy campaign_map  (codegen_error: claude exited 1)
+
+summary: {'skipped': 39, 'pending': 20, 'implemented': 3}

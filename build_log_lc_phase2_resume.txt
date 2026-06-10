@@ -1,0 +1,218 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 3176.75it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+warn: generated output missing or invalid `// Sources:` header (offending paths: ['vault/outdoor_entity_pages/baboon_hawk.md'])
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[SKIP] circuit_bee: implement the circuit bee daytime_entity_pages
+[SKIP] giant_sapsucker: implement the giant sapsucker daytime_entity_pages
+[SKIP] bestiary: implement the bestiary entity_pages
+[SKIP] entity: implement the entity entity_pages
+[SKIP] the_company_monster: implement the the company monster entity_pages
+[SKIP] single_item_day: implement the single item day event_pages
+[SKIP] cause_of_death: implement the cause of death gameplay_mechanics
+[SKIP] company_ranks: implement the company ranks gameplay_mechanics
+[SKIP] credits: implement the credits gameplay_mechanics
+[SKIP] dropship: implement the dropship gameplay_mechanics
+[SKIP] electric_coil: implement the electric coil gameplay_mechanics
+[SKIP] employee: implement the employee gameplay_mechanics
+[SKIP] entity_targeting: implement the entity targeting gameplay_mechanics
+[SKIP] fear: implement the fear gameplay_mechanics
+[SKIP] fire_exit: implement the fire exit gameplay_mechanics
+[SKIP] global_game_variables: implement the global game variables gameplay_mechanics
+[SKIP] interior: implement the interior gameplay_mechanics
+[SKIP] item_bar: implement the item bar gameplay_mechanics
+[SKIP] lore: implement the lore gameplay_mechanics
+[SKIP] monitors: implement the monitors gameplay_mechanics
+[SKIP] orbit: implement the orbit gameplay_mechanics
+[SKIP] profit_quota: implement the profit quota gameplay_mechanics
+[SKIP] scanner: implement the scanner gameplay_mechanics
+[SKIP] terminal: implement the terminal gameplay_mechanics
+[SKIP] the_ship: implement the the ship gameplay_mechanics
+[SKIP] weather: implement the weather gameplay_mechanics
+[SKIP] backwater_gunkfish: implement the backwater gunkfish harmless_entity_pages
+[SKIP] manticoil: implement the manticoil harmless_entity_pages
+[SKIP] roaming_locust: implement the roaming locust harmless_entity_pages
+[SKIP] tulip_snake: implement the tulip snake harmless_entity_pages
+[SKIP] vain_shroud: implement the vain shroud harmless_entity_pages
+[SKIP] barber: implement the barber indoor_entity_pages
+[SKIP] bracken: implement the bracken indoor_entity_pages
+[SKIP] bunker_spider: implement the bunker spider indoor_entity_pages
+[SKIP] butler: implement the butler indoor_entity_pages
+[SKIP] cadaver: implement the cadaver indoor_entity_pages
+[SKIP] coil_head: implement the coil head indoor_entity_pages
+[SKIP] ghost_girl: implement the ghost girl indoor_entity_pages
+[SKIP] hoarding_bug: implement the hoarding bug indoor_entity_pages
+[SKIP] hygrodere: implement the hygrodere indoor_entity_pages
+[SKIP] jester: implement the jester indoor_entity_pages
+[SKIP] maneater: implement the maneater indoor_entity_pages
+[SKIP] mask_hornets: implement the mask hornets indoor_entity_pages
+[SKIP] masked: implement the masked indoor_entity_pages
+[SKIP] nutcrackers: implement the nutcrackers indoor_entity_pages
+[SKIP] snare_flea: implement the snare flea indoor_entity_pages
+[SKIP] spore_lizard: implement the spore lizard indoor_entity_pages
+[SKIP] thumper: implement the thumper indoor_entity_pages
+[SKIP] landmine: implement the landmine map_hazard_pages
+[SKIP] map_hazards: implement the map hazards map_hazard_pages
+[OK  ] spike_trap: implement the spike trap map_hazard_pages  -> 1 files
+[OK  ] turret: implement the turret map_hazard_pages  -> 1 files
+[FAIL] baboon_hawk: implement the baboon hawk outdoor_entity_pages  (invalid_source_header)
+[OK  ] cadaver_bloom: implement the cadaver bloom outdoor_entity_pages  -> 1 files
+[OK  ] earth_leviathan: implement the earth leviathan outdoor_entity_pages  -> 1 files
+[OK  ] eyeless_dog: implement the eyeless dog outdoor_entity_pages  -> 1 files
+[OK  ] feiopar: implement the feiopar outdoor_entity_pages  -> 1 files
+[OK  ] forest_keeper: implement the forest keeper outdoor_entity_pages  -> 1 files
+[OK  ] kidnapper_fox: implement the kidnapper fox outdoor_entity_pages  -> 1 files
+[OK  ] old_bird: implement the old bird outdoor_entity_pages  -> 1 files
+[OK  ] airhorn: implement the airhorn scrap_items  -> 1 files
+[OK  ] apparatus: implement the apparatus scrap_items  -> 1 files
+[OK  ] bee_hive: implement the bee hive scrap_items  -> 1 files
+[OK  ] bone: implement the bone scrap_items  -> 1 files
+[OK  ] brass_bell: implement the brass bell scrap_items  -> 1 files
+[OK  ] cash_register: implement the cash register scrap_items  -> 1 files
+[OK  ] chemical_jug: implement the chemical jug scrap_items  -> 1 files
+[OK  ] clock: implement the clock scrap_items  -> 1 files
+[OK  ] clown_horn: implement the clown horn scrap_items  -> 1 files
+[OK  ] coffee_mug: implement the coffee mug scrap_items  -> 1 files
+[OK  ] control_pad: implement the control pad scrap_items  -> 1 files
+[OK  ] cookie_pan: implement the cookie pan scrap_items  -> 1 files
+[OK  ] dramatic_mask: implement the dramatic mask scrap_items  -> 1 files
+[OK  ] dust_pan: implement the dust pan scrap_items  -> 1 files
+[OK  ] ear: implement the ear scrap_items  -> 1 files
+[OK  ] egg: implement the egg scrap_items  -> 1 files
+[OK  ] egg_beater: implement the egg beater scrap_items  -> 1 files
+[OK  ] fancy_lamp: implement the fancy lamp scrap_items  -> 1 files
+[OK  ] foot: implement the foot scrap_items  -> 1 files
+[OK  ] garbage_lid: implement the garbage lid scrap_items  -> 1 files
+[OK  ] golden_cup: implement the golden cup scrap_items  -> 1 files
+[OK  ] hairdryer: implement the hairdryer scrap_items  -> 1 files
+[OK  ] hand: implement the hand scrap_items  -> 1 files
+[OK  ] heart: implement the heart scrap_items  -> 1 files
+[OK  ] knee: implement the knee scrap_items  -> 1 files
+[OK  ] laser_pointer: implement the laser pointer scrap_items  -> 1 files
+[OK  ] magic_7_ball: implement the magic 7 ball scrap_items  -> 1 files
+[OK  ] magnifying_glass: implement the magnifying glass scrap_items  -> 1 files
+[FAIL] old_phone: implement the old phone scrap_items  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the old phone scra)
+[FAIL] painting: implement the painting scrap_items  (codegen_error: ching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the painting scra)
+[FAIL] player_body: implement the player body scrap_items  (codegen_error: ng the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the player body scra)
+[FAIL] red_soda: implement the red soda scrap_items  (codegen_error: ching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the red soda scra)
+[FAIL] remote: implement the remote scrap_items  (codegen_error: atching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the remote scra)
+[FAIL] ribcage: implement the ribcage scrap_items  (codegen_error: tching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the ribcage scra)
+[FAIL] robot_toy: implement the robot toy scrap_items  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the robot toy scra)
+[OK  ] rubber_ducky: implement the rubber ducky scrap_items  -> 1 files
+[FAIL] soccer_ball: implement the soccer ball scrap_items  (codegen_error: ng the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the soccer ball scra)
+[FAIL] steering_wheel: implement the steering wheel scrap_items  (codegen_error: the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the steering wheel scra)
+[FAIL] tattered_metal_sheet: implement the tattered metal sheet scrap_items  (codegen_error: ANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the tattered metal sheet scra)
+[FAIL] teeth: implement the teeth scrap_items  (codegen_error: matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the teeth scra)
+[FAIL] toilet_paper: implement the toilet paper scrap_items  (codegen_error: g the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the toilet paper scra)
+[FAIL] toy_cube: implement the toy cube scrap_items  (codegen_error: ching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the toy cube scra)
+[FAIL] toy_train: implement the toy train scrap_items  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the toy train scra)
+[FAIL] v_type_engine: implement the v type engine scrap_items  (codegen_error:  the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the v type engine scra)
+[FAIL] wedding_ring: implement the wedding ring scrap_items  (codegen_error: g the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the wedding ring scra)
+[FAIL] zed_dog: implement the zed dog scrap_items  (codegen_error: tching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the zed dog scra)
+[FAIL] bunkbeds: implement the bunkbeds ship_furniture_pages  (codegen_error:  [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the bunkbeds ship_furnitur)
+[FAIL] cupboard: implement the cupboard ship_furniture_pages  (codegen_error:  [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the cupboard ship_furnitur)
+
+summary: {'skipped': 50, 'implemented': 38, 'pending': 20}

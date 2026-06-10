@@ -135,7 +135,6 @@ def render_baseline(
         "networking_model": chosen.get("networking_model", ""),
         "determinism_rules": rules,
         "universal_fields": _format_universal_fields(universal_schema),
-        "kinds_section": _format_kinds(game_config.get("kinds", {})),
     }
     return _fill_template(template, values)
 

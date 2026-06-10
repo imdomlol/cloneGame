@@ -685,6 +685,65 @@ class DeriveGoalsFromVaultTests(unittest.TestCase):
     def test_load_valid_kinds_absent_returns_none(self) -> None:
         self.assertIsNone(loop_driver.load_valid_kinds(Path("/no/such/config.json")))
 
+    def test_derive_goals_from_systems_basic(self) -> None:
+        systems = [
+            {"name": "wave_spawner", "description": "spawns waves", "depends_on": ["infected"]},
+            {"name": "hud", "description": "ui", "depends_on": []},
+        ]
+        goals = loop_driver.derive_goals_from_systems(systems)
+        self.assertEqual(
+            goals,
+            [
+                ("wave_spawner", "implement the wave spawner system: spawns waves"),
+                ("hud", "implement the hud system: ui"),
+            ],
+        )
+
+    def test_derive_goals_from_systems_filter(self) -> None:
+        systems = [
+            {"name": "wave_spawner", "description": "x", "depends_on": []},
+            {"name": "hud", "description": "y", "depends_on": []},
+        ]
+        goals = loop_driver.derive_goals_from_systems(systems, names=["hud"])
+        self.assertEqual([g[0] for g in goals], ["hud"])
+
+    def test_load_systems_reads_chosen_engine_block(self) -> None:
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text(
+                '{"chosen_engine": {"systems": [{"name": "hud", "description": "ui"}]}}',
+                encoding="utf-8",
+            )
+            systems = loop_driver.load_systems(cfg)
+            self.assertEqual([s["name"] for s in systems], ["hud"])
+
+    def test_load_systems_falls_back_to_top_level(self) -> None:
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text(
+                '{"systems": [{"name": "hud", "description": "ui"}]}',
+                encoding="utf-8",
+            )
+            systems = loop_driver.load_systems(cfg)
+            self.assertEqual([s["name"] for s in systems], ["hud"])
+
+    def test_load_systems_returns_empty_when_absent(self) -> None:
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text("{}", encoding="utf-8")
+            self.assertEqual(loop_driver.load_systems(cfg), [])
+
+    def test_load_valid_kinds_excludes_codegen_false(self) -> None:
+        with TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "game-config.json"
+            cfg.write_text(
+                '{"kinds": {"units": {}, "buildings": {"codegen": true}, '
+                '"campaign_maps": {"codegen": false}, '
+                '"updates": {"codegen": false, "description": "release notes"}}}',
+                encoding="utf-8",
+            )
+            self.assertEqual(loop_driver.load_valid_kinds(cfg), {"units", "buildings"})
+
 
 class MaxTurnsTests(unittest.TestCase):
     def test_limit_counts_only_attempted_not_skipped(self) -> None:

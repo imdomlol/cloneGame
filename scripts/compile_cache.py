@@ -12,6 +12,8 @@ import json
 import os
 import re
 import subprocess
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +35,17 @@ def cache_key(rendered_prompt: str, model: str) -> str:
     return h.hexdigest()
 
 
+# Codex CLI's init phase writes to `~/.codex/skills/` and `~/.codex/.tmp/plugins/`
+# to refresh its skill catalog (172 plugins as of codex 0.133.0). When N codex
+# processes spawn concurrently they race on these writes and one or more crash
+# with `failed to install system skills: io error`. Holding this lock around
+# `Popen` + a short sleep guarantees each codex spawn gets the init window to
+# itself; the reasoning phase that dominates wall-clock then runs concurrently.
+# claude and the SDK have no equivalent race and ignore the lock.
+_CODEX_SPAWN_LOCK = threading.Lock()
+_CODEX_STARTUP_DELAY_SECS = 3.0
+
+
 def run_llm(prompt: str, mode: str, model: str) -> str:
     if mode == "claude":
         # --tools "" disables all built-in tools. Without it, `claude -p` behaves
@@ -52,14 +65,26 @@ def run_llm(prompt: str, mode: str, model: str) -> str:
         cmd = [codex_cmd, "exec", "--sandbox", "read-only", "--model", model, "-"]
     else:
         raise ValueError(f"unsupported [compile] llm_mode: {mode}")
-    proc = subprocess.Popen(
-        cmd,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-    )
+    if mode == "codex":
+        with _CODEX_SPAWN_LOCK:
+            proc = subprocess.Popen(
+                cmd,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+            )
+            time.sleep(_CODEX_STARTUP_DELAY_SECS)
+    else:
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
     try:
         stdout, stderr = proc.communicate(prompt)
     except KeyboardInterrupt:

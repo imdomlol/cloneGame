@@ -1,0 +1,16 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 5805.73it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[OK  ] game_state_machine: implement the game state machine system: Tracks and transitions between menu, playing, paused, win, and lose game states.  -> 1 files
+[OK  ] input_handler: implement the input handler system: Maps keyboard and mouse input to player actions like movement, weapon firing, and item pickup.  -> 1 files
+[FAIL] hud: implement the hud system: Renders UI showing quota progress, scrap inventory, equipped weapons, active upgrades, and time remaining.  (cargo_build_failed: error: unused import: `crate::gameplay_mechanics::employee::EmployeeRunState`
+ --> src\system\hud.rs)
+
+summary: {'implemented': 2, 'pending': 1}

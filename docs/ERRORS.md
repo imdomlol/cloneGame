@@ -1,3 +1,73 @@
+## 2026-06-09 — Phase 3 first run: StatesPlugin double-add + smoke gate scope gap
+
+**Context:** first Phase 3 run on Lethal Company. Phase 0's `propose_gameplay_systems` produced 10 systems; the loop generated `GameStateMachinePlugin` and `InputHandlerPlugin`. cargo build passed, smoke test passed, but `cargo run --bin clone-game` panicked at startup: `Error adding plugin bevy_state::app::StatesPlugin: : plugin was already added`.
+
+**Why the smoke gate missed it:** `game/tests/app_smoke.rs` constructs the app with `MinimalPlugins`, which does NOT include Bevy's `StatesPlugin`. `main.rs` uses `DefaultPlugins`, which DOES include it. The generated `GameStateMachinePlugin` called `app.add_plugins(bevy::state::app::StatesPlugin)` AND `app.init_state::<GameState>()`. With MinimalPlugins, only one registration → smoke passes. With DefaultPlugins, two registrations → runtime panic.
+
+**Fix (immediate):** Added `GameStateMachinePlugin` to `chosen_engine.entrypoint.excluded_plugins` with a reason note. Regenerated `app_plugins.rs` aggregator. Build and run clean again.
+
+**Fix (architectural):** Updated `prompts/engine_determinism/bevy.md` rule S1: "Do NOT call `app.add_plugins(StatesPlugin)` — `DefaultPlugins` already registers it, and a second registration panics at runtime." Future regenerations of GameStateMachinePlugin will not redo the add.
+
+**Note for next time:**
+- The smoke gate is necessarily incomplete because adding `DefaultPlugins` to the smoke would pull in winit / wgpu / a real window, which is unwanted in CI. Hence smoke uses MinimalPlugins and accepts that some `DefaultPlugins`-only conflicts slip through.
+- The pattern to watch for: any system plugin that calls `add_plugins(<a Bevy stock plugin>)`. The bevy.md S1-S7 rules now explicitly call this out for `StatesPlugin`; future stock plugins re-added similarly will also need a rule.
+- Operators who hit "plugin was already added" at runtime should: (a) check `app_plugins.rs` for which generated plugin re-added it, (b) add that plugin name to `excluded_plugins` with a reason, (c) update bevy.md if the offending pattern isn't already documented.
+
+---
+
+## 2026-06-06 — Codex CLI: invalid model id + concurrent init race + tail-truncation hid both
+
+**Context:** fresh-run Phase 2 codegen. Every codex turn returned `codegen_error`. The truncated error message looked like a concurrency race ("failed to install system skills"), so the first fix attempt was a serialization workaround.
+
+**What didn't work:**
+1. **Running codex at `--concurrency 1`** to avoid the race — turns still failed every call. The race wasn't the root cause; it was a single-turn failure that happened to coincide with concurrency-time experiments.
+2. **Adding a `--fallback-llm-mode claude`** safety net — claude DID kick in but produced `invalid_source_header` and `no_file_blocks` validation errors at a high rate. Useful as a fallback but not the right primary.
+3. **Truncating exception text with `str(exc)[:240]`** — captured only the codex banner (model id, workdir, sandbox, session id) and discarded the actual error after the banner. Made every codex failure look identical regardless of root cause; took 90+ minutes to discover the real reason because I trusted the truncated message.
+
+**What worked instead:**
+1. **Reading the FULL exception in a standalone test** — `python -c "from compile_cache import run_llm; print(run_llm('say hi', 'codex', 'gpt-5.3-codex'))"` immediately surfaced `"The 'gpt-5.3-codex' model is not supported when using Codex with a ChatGPT account"`. Should have been the first diagnostic.
+2. **Switching `pipeline.config.toml -> [phase2_codegen.models].codex` from `gpt-5.3-codex` to `gpt-5.5`.** Phase 0 and Phase 1 used `gpt-5.4-mini` and worked all along — only Phase 2 codegen had the bad id.
+3. **A `threading.Lock` + 3-second hold around codex `Popen`** in `scripts/compile_cache.run_llm` to serialize spawn (not reasoning). Catches the real concurrency race that would surface once the model id was fixed and concurrent codex calls actually ran. Engine- and game-agnostic.
+4. **Tail-truncation in `_format_backend_error`** — keeps the last 480 chars of the primary exception (and 240 of any fallback exception). Backend CLIs always banner-then-error; the tail is the signal.
+
+**Note for next time:**
+- When a CLI subprocess fails, **read the full stderr/stdout BEFORE trusting any truncation**. The pipeline now does this automatically via `_format_backend_error`, but during ad-hoc debugging, always extract the full exception.
+- Codex hit its daily ChatGPT-account usage limit at ~1:30 AM PDT after 39 successful turns + repair attempts (50 LLM calls). The error surfaces as `"You've hit your usage limit. Try again at X:XX AM."` — pipeline now records this as `codegen_error` and the loop's error budget catches it. Quota resets on a rolling basis; resume the loop later with the same command and it'll pick up at the pending entries.
+- Test new model ids with a single one-line CLI call before changing the pipeline config: `codex exec --model gpt-X "say hi"`. Catches "model not supported" in seconds.
+
+---
+
+## 2026-06-05 — Fresh-run Phase 1 quarantined 70%+ of pages on string-vs-integer type mismatch
+
+**Context:** running the fresh Phase 0 → Phase 1 → Phase 2 pipeline on a wiped repo, code-agnostic goal.
+
+**What didn't work:** Phase 0's schema proposer typed every per-kind frontmatter property as `{"type": "string"}` (because wikitext tables present numbers in string-y context). The compile LLM correctly extracted numeric fields as integers (`hit_points: 125`, `build_time: 60`, `defense_life: 50`). Phase 1's validator then rejected every page that had any numeric field: 69 of ~97 pages quarantined with `"125 is not of type 'string'"` and the like. After a few minutes of running it was clear the pipeline was producing 28% usable output — unusable for any practical game.
+
+**What worked instead:** added `_widen_property_type` in `scripts/validation.py` to widen any leaf scalar declaration (`type: "string"` / `"integer"` / `"number"` / `"boolean"`) to accept the full YAML scalar set when assembling the per-kind validation schema. The fix is **engine- and game-agnostic** by construction: it operates on the schema shape, not on field names or property semantics. Object and array shape constraints are preserved (so a property declared as `object` still has to arrive as a dict); only scalar typing is widened. The same code path runs for any game's `chosen_engine`.
+
+**Why this is the right tactical fix, not a long-term one:** the real bug is in Phase 0's proposer prompt — it should emit `["string", "integer", "number"]` for numeric fields, not `"string"`. The validator widening is a permissive coercion that papers over noisy schema proposals. The 2026-05-19 decision said per-kind validation "enforces types as a sanity check" — that intent stands; widening just acknowledges that LLM-proposed types are noisier than hand-authored ones and the validator must tolerate that. When a stricter schema is genuinely needed (categorical enums, structured objects), the validator's `_widen_property_type` only acts on scalar types — those constraints survive.
+
+**Note for next time:** if Phase 1 quarantine rate is >10%, look at quarantine `validation_errors:` blocks first. The pattern `"N is not of type 'string'"` is the proposer-over-types case and the validator fix handles it. If the quarantine reasons are about missing fields or shape (object/array), the universal schema's `required` list is the right knob, not the per-kind schema. The right long-term fix is in `scripts/phase0_analyze.py` `propose_frontmatter_schemas` — instruct the LLM to use union types for numeric fields. Until that lands, the lenient validator catches the drift downstream.
+
+---
+
+## 2026-06-04 — Backlog loop run: codex CLI init crash + low-confidence lore slug unrecoverable
+
+**Context:** running `--from-vault --kinds infected,...,locations,organizations` with the default codex backend to close the backlog.
+
+**What didn't work:**
+1. **codex CLI bailed before generating** on 3 turns (the_great_crater, rebels, the_new_empire). Error: `failed to install system skills: io error w`. Not a model output issue — the CLI itself crashed during init, so the codegen.py `_dispatch` recorded `codegen_error` with no source. Re-running serially (c=1) reproduced exactly the same crash on each of the three. This is a codex 0.133.0 install-skill path issue, not a transient.
+2. **Falling back to `--llm-mode claude` landed 2/3.** rebels and the_new_empire generated cleanly. the_great_crater still failed — this time on the `invalid_source_header` check. The dumped turn (`build/turns/the_great_crater.md`) shows the claude CLI produced a meta-narration ("I'm not receiving output from any read/shell tools…") instead of the `=== FILE: ===` contract. Same class as ERRORS 2026-05-23 ("free-form markdown output is unreliable"), this time triggered by a low-confidence (0.18) sparse vault note that gives the model nothing to anchor on.
+
+**What worked instead:** for the 2 organizations slugs, swapping the dispatch mode (codex → claude) was enough. For the_great_crater, nothing worked across 5 attempts; recorded as `pending` with `blocked_by: invalid_source_header`. Decision: defer this slug rather than burn more turns.
+
+**Note for next time:**
+- If a slug fails codex with `failed to install system skills`, swap to `--llm-mode claude` rather than re-running codex.
+- Slugs with frontmatter `confidence < 0.3` and a one-paragraph Description are weak codegen inputs. Either accept they may never compile cleanly, or skip them. They are not a pipeline bug.
+- Don't burn >3 attempts on a single low-confidence lore slug. The system_map `pending` entry is the correct end state.
+
+---
+
 ## 2026-05-22 — Phase 2 codegen first turn: Unicode + Claude Code preamble
 
 **Didn't work (attempt 1):** `python phase2/codegen.py "implement the soldier unit"` crashed with `UnicodeEncodeError: 'charmap' codec can't encode character '→'` (the `→` arrow) when `print(result["response_text"])` hit Windows cp1252 stdout. Response was generated successfully but couldn't be displayed.

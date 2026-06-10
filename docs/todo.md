@@ -72,13 +72,31 @@ Status keys: `[ ]` not started · `[~]` in progress · `[!]` blocked · `[-]` de
       `#[derive(Bundle)] <Unit>Bundle` + hand-written `Default` → `Health::full`).
       `cargo build` clean. NB: the alphabetical first-of-kind (caelus) generates with
       no exemplar and is the fragile one (see MEMORY/ERRORS 2026-05-26).
-- [ ] **Scale content (NEXT)** — run remaining kinds through the loop:
-      `--from-vault --kinds buildings --concurrency 2 --repair-attempts 2` (42), then
-      `infected`, etc. The sibling-exemplar + repair loop should make these land far
-      more cleanly than the first unit run did. Baseline is at the 2800 token cap.
-- [ ] **Runnable game** — `game/` is still a library. A `main.rs` Bevy `App` that
-      wires the unit plugins, spawns entities, and ticks the sim is the step toward
-      the actual playable clone.
+- [~] **Scale content** — `buildings` (42/42), `game_mechanics` (12 modules incl.
+      cross-deps), and `wonders` (5/6) all done as of 2026-06-04. 84 modules
+      total in `system_map.yaml`, `cargo build` clean.
+- [x] **Finish infected kinds** ✅ 2026-06-04 — turned out the system_map had
+      already absorbed all infected* + wonders during the prior buildings/wonders
+      run (per MEMORY 2026-05-26). The backlog loop run SKIPped 37 already-done
+      slugs; no new infected modules were generated this session.
+- [x] **Finish the missing wonder** ✅ 2026-06-04 — already in system_map; was
+      a stale count in the 2026-06-04 status table. All 6 wonders present.
+- [~] **Decide on data-shaped kinds** — campaign_*/survival_maps/updates
+      deferred as runtime asset-loader targets, not code (see MEMORY 2026-06-04).
+      research / characters / mayors / locations / organizations sent through
+      the loop: 2 organizations landed (rebels, the_new_empire). `the_great_crater`
+      remains pending (5 attempts; logged in ERRORS).
+- [x] **Runnable game** ✅ 2026-06-04 — `game/src/main.rs` is a visual Bevy App
+      with `DefaultPlugins`, a `Camera2d`, every generated kind plugin registered,
+      one of each unit type spawned, `Time::<Fixed>::from_hz(25.0)` driving
+      `FixedUpdate`, and a periodic checksum log.
+- [x] **Cleanup warnings** ✅ 2026-06-04 — attempted loop re-run per Q3
+      preference; codex CLI crashed on all 3 (`failed to install system skills`)
+      and claude mode failed `invalid_source_header` on all 3. Fell back to
+      hand-edits per CLAUDE.md "simplest solution first". `swarms.rs` and
+      `wood_workshop.rs` had `mut` bindings removed; `WOOD_WALL_HP` deleted
+      from `stone_wall.rs`. `cargo build` clean, zero warnings. Deviation
+      from Q3 logged in ERRORS 2026-06-04.
 - [ ] **First SDK turn** — only when `ANTHROPIC_API_KEY` is available.
       Validates the `cache_control: ephemeral` math from DEPLOYMENT_GUIDE §4.
       Until then `claude` CLI mode (with `--tools ""`) is production.
@@ -97,6 +115,48 @@ Status keys: `[ ]` not started · `[~]` in progress · `[!]` blocked · `[-]` de
 - [x] Coverage gate + drop_reason discipline ✅ 2026-05-22
 - [x] Mainspace-only member enumeration ✅ 2026-05-22
 - [x] Phase 1 canonical_kind ✅ 2026-05-22
+
+## 2026-06-09 deferred
+
+- [ ] **#5 Wire generated systems into `main.rs` so the game does more than
+      tick.** `InputHandlerPlugin` is registered today but `main.rs` doesn't
+      spawn an entity for it to control. Minor scaffold update: add a basic
+      player entity + camera-follow so input actually moves something visible.
+      ~45 min. No LLM cost. Makes the game feel less inert. (Scoped during the
+      autonomous session that built ship/load; circle back when convenient.)
+
+## Fresh-run follow-ups (2026-06-06)
+
+- [x] **Phase 2 loop** ✅ 2026-06-07. 110 implemented, 2 stale pending (both `codegen: false` kinds). cargo build + smoke + run all green.
+- [ ] **Disk drift cleanup**: codex randomly produced `src/buildings/` and `src/building/` for the same kind. Both compile; aggregator handles them. Future iteration: tell the codegen prompt to use the configured kind name as the dir.
+- [ ] **Stale pending cleanup**: drop pending entries whose kinds are now `codegen: false`. Cosmetic; doesn't affect future runs.
+- [x] **Retrieval pin priority** ✅ 2026-06-07. Verified working by direct tracing; earlier suspicion was wrong. Real failure was codex quota; the Academy of Immortals content was a graph neighbour after the pin, not before.
+- [x] **`codegen: false` on data-shaped kinds** ✅ 2026-06-07. `campaign_map`, `campaign_content`, `survival_map`, `update_log` are now excluded from `--from-vault` walks via `phase2/loop_driver.load_valid_kinds` reading the per-kind flag. Game-agnostic config knob.
+- [x] **Phase 0 schema proposer union types** ✅ 2026-06-07. `_build_schema_prompt` now teaches the LLM to emit unions for numeric fields and structural types for lists / maps. Validator widening kept as a safety net for older configs.
+- [ ] **`the_great_crater` still pending across runs**: lore-only single page at confidence 0.18. Either accept as permanently pending or mark `location.codegen = false` (would also drop other locations if added). One slug; not worth a kind-wide flag.
+
+## Phase 2 — D follow-on (active)
+
+- [x] **App-aggregator generator** ✅ 2026-06-05. `phase2/entrypoint.py` produces
+      `game/src/app_plugins.rs` from every `impl Plugin for X` under `src/`,
+      chunked to ≤14 per `add_plugins` tuple. `main.rs` and `app_smoke.rs` call
+      `app_plugins::add_all` instead of hand-enumerating; smoke gate now covers
+      new leaves automatically. Per-engine data in `chosen_engine.entrypoint`.
+- [x] **Smoke test exercises `FixedUpdate`** ✅ 2026-06-05. `app.update()` alone
+      does not always tick FixedUpdate in Bevy 0.15; smoke now calls
+      `world_mut().run_schedule(FixedUpdate)` twice so B0001 conflicts in
+      FixedUpdate systems actually fire.
+- [x] **`excluded_plugins` knob** ✅ 2026-06-05. Lets known-broken plugins (e.g.
+      `AcademyOfImmortalsPlugin` B0001) stay on disk for the repair loop while
+      the binary and smoke gate run. Each entry carries a reason string.
+- [ ] **Regenerate AcademyOfImmortalsPlugin through the loop** so the smoke
+      gate accepts it and the exclusion can be removed. Same path applies to any
+      future plugin that lands in the exclusion list.
+- [ ] **LLM-authored `main.rs` codegen phase** (the second half of D). The
+      aggregator covers plugin enumeration; `main.rs` window/camera/spawn logic
+      is still hand-authored. A future codegen step gated on `main.rs` absence
+      would auto-generate the entrypoint for a fresh game. Defer until a second
+      target game tests the path.
 
 ## Open questions to resolve
 

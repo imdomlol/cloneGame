@@ -292,6 +292,23 @@ def ingest(ctx: dict[str, Any], cats: list[dict[str, Any]], limit: int | None) -
     return quarantined
 
 
+def _derive_api_endpoint(base_url: str) -> str:
+    """Map ``https://x.fandom.com/wiki/`` to ``https://x.fandom.com/api.php``.
+
+    Single source of truth for the wiki API URL: ``game-config.json``'s
+    ``game.wiki_base_url`` (Phase 0's output). This keeps Phase 1 from ever
+    pointing at a stale wiki when the operator switched target games but
+    forgot to update ``phase1.config.toml``. Game- and engine-agnostic;
+    works for any Fandom / MediaWiki wiki that follows the standard URL
+    layout. The explicit ``[wiki].api_endpoint`` in phase1.config.toml still
+    overrides for non-standard hosts.
+    """
+    base = base_url.rstrip("/")
+    if base.endswith("/wiki"):
+        base = base[: -len("/wiki")]
+    return f"{base}/api.php"
+
+
 def build_context(
     root: Path, config: dict[str, Any], game_config: dict[str, Any]
 ) -> dict[str, Any]:
@@ -303,10 +320,12 @@ def build_context(
         mode=compile_cfg.get("llm_mode"),
         model=compile_cfg.get("model"),
     )
+    base_url = game_config["game"]["wiki_base_url"]
+    api = _derive_api_endpoint(base_url)
     return {
         "root": root,
-        "api": config["wiki"]["api_endpoint"],
-        "base_url": game_config["game"]["wiki_base_url"],
+        "api": api,
+        "base_url": base_url,
         "ua": ingest_cfg.get("user_agent", "cloneGame-phase1/0.1"),
         "retries": int(ingest_cfg.get("retry_count", 3)),
         "delay_ms": int(ingest_cfg.get("request_delay_ms", 250)),

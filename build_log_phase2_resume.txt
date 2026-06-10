@@ -1,0 +1,212 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 6411.63it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+warn: generated output missing or invalid `// Sources:` header (offending paths: ['vault/campaign_content/outpost.md'])
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[SKIP] advanced_farm: implement the advanced farm building
+[SKIP] advanced_mill: implement the advanced mill building
+[SKIP] advanced_quarry: implement the advanced quarry building
+[SKIP] bank: implement the bank building
+[SKIP] buildings: implement the buildings building
+[SKIP] command_center: implement the command center building
+[SKIP] cottage: implement the cottage building
+[SKIP] engineering_center: implement the engineering center building
+[SKIP] executor: implement the executor building
+[SKIP] farm: implement the farm building
+[SKIP] fisherman_cottage: implement the fisherman cottage building
+[SKIP] foundry: implement the foundry building
+[SKIP] great_ballista: implement the great ballista building
+[SKIP] hunter_cottage: implement the hunter cottage building
+[SKIP] inn: implement the inn building
+[SKIP] land_mine: implement the land mine building
+[SKIP] lookout_tower: implement the lookout tower building
+[SKIP] market: implement the market building
+[SKIP] mill: implement the mill building
+[SKIP] oil_platform: implement the oil platform building
+[SKIP] power_plant: implement the power plant building
+[SKIP] quarry: implement the quarry building
+[SKIP] radar_tower: implement the radar tower building
+[SKIP] sawmill: implement the sawmill building
+[SKIP] shocking_tower: implement the shocking tower building
+[SKIP] soldiers_center: implement the soldiers center building
+[SKIP] stakes_trap: implement the stakes trap building
+[SKIP] stone_gate: implement the stone gate building
+[SKIP] stone_house: implement the stone house building
+[SKIP] stone_tower: implement the stone tower building
+[SKIP] stone_wall: implement the stone wall building
+[SKIP] stone_workshop: implement the stone workshop building
+[SKIP] tent: implement the tent building
+[SKIP] tesla_tower: implement the tesla tower building
+[SKIP] warehouse: implement the warehouse building
+[SKIP] wasp: implement the wasp building
+[SKIP] wire_fence_trap: implement the wire fence trap building
+[SKIP] wood_gate: implement the wood gate building
+[SKIP] wood_tower: implement the wood tower building
+[OK  ] wood_wall: implement the wood wall building  -> 2 files  (skipped: src/buildings/mod.rs)
+[SKIP] wood_workshop: implement the wood workshop building
+[OK  ] campaign_maps_the_new_empire: implement the campaign maps the new empire campaign_content  -> 1 files
+[SKIP] outpost: implement the outpost campaign_content
+[SKIP] rabies_z: implement the rabies z campaign_content
+[FAIL] the_new_empire: implement the the new empire campaign_content  (invalid_source_header)
+[OK  ] cape_storm: implement the cape storm campaign_map  -> 2 files  (skipped: src/campaign_map/mod.rs,src/lib.rs)
+[OK  ] coast_of_bones: implement the coast of bones campaign_map  -> 1 files
+[OK  ] el_dorado: implement the el dorado campaign_map  -> 2 files  (skipped: src/campaign_map/mod.rs)
+[OK  ] frozen_lake: implement the frozen lake campaign_map  -> 1 files
+[OK  ] lands_of_the_giant: implement the lands of the giant campaign_map  -> 1 files
+[OK  ] narrow_pass: implement the narrow pass campaign_map  -> 1 files
+[OK  ] the_broken_land: implement the the broken land campaign_map  -> 1 files
+[OK  ] the_crossroads: implement the the crossroads campaign_map  -> 1 files
+[OK  ] the_forbidden_forest: implement the the forbidden forest campaign_map  -> 1 files
+[OK  ] the_goddess_of_destiny: implement the the goddess of destiny campaign_map  -> 1 files
+[OK  ] the_hidden_valley: implement the the hidden valley campaign_map  -> 2 files  (skipped: src/campaign_map/mod.rs)
+[OK  ] the_highlands: implement the the highlands campaign_map  -> 2 files  (skipped: src/campaign_map/mod.rs)
+[OK  ] the_hunters_meadow: implement the the hunters meadow campaign_map  -> 1 files
+[OK  ] the_lonely_forest: implement the the lonely forest campaign_map  -> 1 files
+[OK  ] the_lowlands: implement the the lowlands campaign_map  -> 1 files
+[OK  ] the_mines_of_the_raven: implement the the mines of the raven campaign_map  -> 1 files
+[OK  ] the_nest_of_the_harpy: implement the the nest of the harpy campaign_map  -> 1 files
+[OK  ] the_noxious_swamp: implement the the noxious swamp campaign_map  -> 1 files  (skipped: src/campaign_map/mod.rs)
+[OK  ] the_oasis: implement the the oasis campaign_map  -> 1 files
+[OK  ] the_resistance: implement the the resistance campaign_map  -> 1 files
+[OK  ] the_valley_of_death: implement the the valley of death campaign_map  -> 1 files  (skipped: src/campaign_map/mod.rs)
+[OK  ] the_villa_of_terror: implement the the villa of terror campaign_map  -> 1 files
+[OK  ] the_wasteland_of_the_giants: implement the the wasteland of the giants campaign_map  -> 2 files  (skipped: src/campaign_map/mod.rs)
+[OK  ] caelus: implement the caelus character  -> 1 files
+[OK  ] calliope: implement the calliope character  -> 1 files
+[OK  ] animation_canceling: implement the animation canceling game_mechanic  -> 1 files
+[OK  ] explosive_barrel: implement the explosive barrel game_mechanic  -> 1 files
+[OK  ] flat_mode: implement the flat mode game_mechanic  -> 2 files  (skipped: src/game_mechanic/mod.rs)
+[OK  ] noise: implement the noise game_mechanic  -> 2 files  (skipped: src/game_mechanic/mod.rs)
+[OK  ] resources: implement the resources game_mechanic  -> 2 files  (skipped: src/game_mechanic/mod.rs)
+[OK  ] swarms: implement the swarms game_mechanic  -> 1 files  (skipped: src/game_mechanic/mod.rs)
+[OK  ] time: implement the time game_mechanic  -> 1 files  (skipped: src/game_mechanic/mod.rs)
+[OK  ] villages_of_doom: implement the villages of doom game_mechanic  -> 1 files
+[OK  ] infected: implement the infected infected  -> 2 files  (skipped: src/infected/mod.rs,src/lib.rs)
+[OK  ] infected_aged: implement the infected aged infected  -> 2 files  (skipped: src/infected/mod.rs)
+[OK  ] infected_behemoth: implement the infected behemoth infected  -> 1 files
+[OK  ] infected_chubby: implement the infected chubby infected  -> 1 files  (skipped: src/infected/mod.rs)
+[OK  ] infected_colonists: implement the infected colonists infected  -> 1 files
+[OK  ] infected_decrepit: implement the infected decrepit infected  -> 2 files  (skipped: src/infected/mod.rs)
+[FAIL] infected_executive: implement the infected executive infected  (cargo_build_failed: error[E0063]: missing field `source` in initializer of `NoiseEmittedEvent`
+   --> src\infected\infec)
+[FAIL] infected_fresh: implement the infected fresh infected  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the infected fresh)
+[FAIL] infected_giant: implement the infected giant infected  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the infected giant)
+[FAIL] infected_harpy: implement the infected harpy infected  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the infected harpy)
+[FAIL] infected_venom: implement the infected venom infected  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the infected venom)
+[FAIL] infected_young: implement the infected young infected  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the infected young)
+[FAIL] v9: implement the v9 infected  (codegen_error: paths>` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the v9)
+[FAIL] the_great_crater: implement the the great crater location  (codegen_error: ng the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the the great crater)
+[FAIL] mayors: implement the mayors mayor  (codegen_error: aths>` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the may)
+[FAIL] quintus_crane: implement the quintus crane new_empire_character  (codegen_error: ANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the quintus crane new_empire_)
+[FAIL] new_empire: implement the new empire organization  (codegen_error: hing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the new empire org)
+[FAIL] rebels: implement the rebels organization  (codegen_error: matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the rebels org)
+[FAIL] research: implement the research research  (codegen_error: ` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the research)
+[FAIL] technology_tree: implement the technology tree research  (codegen_error: ing the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the technology tree)
+[FAIL] survival_maps: implement the survival maps survival_map  (codegen_error: g the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the survival maps sur)
+[FAIL] lucifer: implement the lucifer unit  (codegen_error: aths>` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the luc)
+[FAIL] mutant: implement the mutant unit  (codegen_error: paths>` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the mu)
+[FAIL] ranger: implement the ranger unit  (codegen_error: paths>` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the ra)
+[FAIL] sniper: implement the sniper unit  (codegen_error: paths>` matching the [SANITIZED OBSIDIAN VAULT SPECIFICATION] block.
+
+[DEVELOPMENT GOAL]
+implement the sn)
+
+summary: {'skipped': 42, 'implemented': 41, 'pending': 20}

@@ -50,6 +50,7 @@ if str(_REPO_ROOT / "scripts") not in sys.path:
 import system_map  # noqa: E402
 from compile_cache import run_llm  # noqa: E402
 from model_config import default_llm_mode, model_defaults  # noqa: E402
+from registration_manifest import build_manifest  # noqa: E402
 from retrieval import count_tokens, retrieve  # noqa: E402
 
 LLM_MODE_CLAUDE = "claude"
@@ -139,6 +140,7 @@ def build_user_message(
     task: str,
     exemplar: str | None = None,
     repair: tuple[str, str] | None = None,
+    manifest: str = "",
 ) -> str:
     """Assemble the user-side prompt in the documented sections.
 
@@ -147,10 +149,14 @@ def build_user_message(
     public structure (see ``_reference_section``). When ``repair`` is supplied,
     a ``[BUILD FAILURE — REVISE]`` block carries the build error + prior attempt
     so the model fixes its own non-compiling output (see ``_repair_section``).
+    When ``manifest`` is supplied (non-empty), a ``[REGISTERED RESOURCES AND
+    EVENTS]`` block is prepended so the model knows what is already registered
+    by committed plugins and must not re-register (see ``registration_manifest``).
     """
     return (
         f"[CURRENT RECREATION PROGRESS]\n{system_map.strip() or '(no prior turns)'}\n\n"
         f"[SANITIZED OBSIDIAN VAULT SPECIFICATION]\n{vault_chunks}\n\n"
+        f"{manifest}"
         f"{_reference_section(exemplar)}"
         f"{_repair_section(repair)}"
         f"[TRANSLATION CONSTRAINTS]\n{_TRANSLATION_CONSTRAINTS}\n\n"
@@ -326,6 +332,7 @@ def generate(
     repair: tuple[str, str] | None = None,
     pin_id: str | None = None,
     pin_kind: str | None = None,
+    game_dir: Path | None = None,
     dry_run: bool = False,
 ) -> dict[str, Any]:
     """End-to-end codegen turn. Returns ``{prompt, response?, usage?, ...}``.
@@ -337,7 +344,11 @@ def generate(
     ``(build_error, prior_attempt)`` pair that turns this into a fix-it turn (see
     ``build_user_message``). ``pin_id`` (+ optional ``pin_kind``) forces the
     goal's own vault note into the retrieval bundle so its spec is always in
-    context (see ``retrieval.retrieve``).
+    context (see ``retrieval.retrieve``). ``game_dir`` enables the registration
+    manifest: when set, all already-registered resources and events are listed in
+    a ``[REGISTERED RESOURCES AND EVENTS]`` block so the LLM does not re-register
+    them (duplicate registration causes a Bevy B0001 panic; see
+    ``registration_manifest.build_manifest``).
     """
     engine_baseline = _load_text(baseline_path)
     if not engine_baseline:
@@ -345,7 +356,10 @@ def generate(
     system_map_block = system_map.render_for_prompt(system_map_path)
     vault_chunks, included_ids = retrieve(task, pin_id=pin_id, pin_kind=pin_kind)
     allowed_paths = extract_allowed_paths(vault_chunks)
-    user_message = build_user_message(system_map_block, vault_chunks, task, exemplar, repair)
+    manifest = build_manifest(game_dir) if game_dir is not None else ""
+    user_message = build_user_message(
+        system_map_block, vault_chunks, task, exemplar, repair, manifest
+    )
     resolved_model = model or default_model(llm_mode)
 
     summary: dict[str, Any] = {

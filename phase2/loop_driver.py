@@ -57,6 +57,7 @@ if str(_REPO_ROOT / "phase2") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "phase2"))
 
 import codegen  # noqa: E402
+import entrypoint  # noqa: E402
 import system_map  # noqa: E402
 
 DEFAULT_GAME_DIR = _REPO_ROOT / "game"
@@ -120,6 +121,25 @@ def load_module_registration(game_config_path: Path) -> dict[str, str] | None:
     reg = (config.get("chosen_engine") or {}).get("module_registration")
     if isinstance(reg, dict) and reg.get("aggregator") and reg.get("declaration"):
         return reg
+    return None
+
+
+def load_entrypoint_config(game_config_path: Path) -> dict | None:
+    """Read ``chosen_engine.entrypoint`` from game-config.json.
+
+    Opt-in per engine: a block of the shape ``{"aggregator_file":
+    "src/app_plugins.rs", "tuple_chunk_size": 14, ...}`` enables app-level
+    plugin aggregation (see ``regenerate_app_aggregator``). Returns None when
+    the file or block is absent so engines that have no programmatic plugin
+    registry skip the step entirely. ``aggregator_file`` is the only required
+    key; the rest carry sensible defaults inside the renderer.
+    """
+    if not game_config_path.exists():
+        return None
+    config = json.loads(game_config_path.read_text(encoding="utf-8"))
+    cfg = (config.get("chosen_engine") or {}).get("entrypoint")
+    if isinstance(cfg, dict) and cfg.get("aggregator_file"):
+        return cfg
     return None
 
 
@@ -341,6 +361,38 @@ def register_modules(
     return list(touched.values())
 
 
+def regenerate_app_aggregator(
+    game_dir: Path,
+    entrypoint_config: dict | None,
+) -> WrittenFile | None:
+    """Rewrite the per-engine app aggregator and return a revert trail entry.
+
+    The aggregator (e.g. ``src/app_plugins.rs`` for Bevy) collects every plugin
+    found under ``src/`` into one ``add_all`` function so ``main.rs`` and the
+    smoke test never need to enumerate plugins by hand. Regenerated after every
+    leaf merge so a newly-landed plugin is visible to the next ``cargo test
+    --test app_smoke`` — without this, the smoke gate stops covering new code.
+
+    Returns the ``WrittenFile`` (with prior bytes captured before the write) so
+    a build/smoke failure can revert this change byte-exact alongside the leaf
+    and the per-kind ``mod.rs`` declarations. Returns ``None`` when the engine
+    does not opt in (``entrypoint_config`` is None or missing the file path),
+    so non-Bevy engines pay no cost.
+    """
+    if not entrypoint_config:
+        return None
+    rel = entrypoint_config.get("aggregator_file")
+    if not rel:
+        return None
+    target = game_dir / rel
+    existed = target.exists()
+    prior = target.read_bytes() if existed else None
+    written_path = entrypoint.regenerate_aggregator(game_dir, entrypoint_config)
+    if written_path is None:
+        return None
+    return WrittenFile(target, existed, prior)
+
+
 def revert_merge(written: list[WrittenFile]) -> None:
     """Restore the prior on-disk state captured by ``merge_into_game``.
 
@@ -370,6 +422,21 @@ def _resolve_cargo() -> str | None:
     return str(candidate) if candidate.exists() else None
 
 
+def _cargo_env() -> dict[str, str]:
+    """Build env for cargo subprocesses: inherit PATH, add RUSTFLAGS=-D warnings.
+
+    ``-D warnings`` turns unused-mut, dead-code, and similar warnings into
+    errors so the repair loop catches them before they accumulate. If Bevy
+    macro-generated code emits false positives on a fresh dep compile, swap
+    to the selective set: ``-W unused -D unused_must_use -D unused_mut -D dead_code``.
+    Only the project's own crates recompile each turn (Cargo's incremental
+    build), so dep warnings surface only on a cold build.
+    """
+    env = os.environ.copy()
+    env["RUSTFLAGS"] = "-D warnings"
+    return env
+
+
 def run_cargo_build(
     game_dir: Path,
     cargo_bin: Path | None = None,
@@ -390,6 +457,34 @@ def run_cargo_build(
         capture_output=True,
         text=True,
         check=False,
+        env=_cargo_env(),
+    )
+    return result.returncode == 0, (result.stdout or "") + (result.stderr or "")
+
+
+def run_cargo_smoke(
+    game_dir: Path,
+    cargo_bin: Path | None = None,
+) -> tuple[bool, str]:
+    """Run ``cargo test --test app_smoke``; return ``(success, combined_output)``.
+
+    Catches runtime panics that ``cargo build`` cannot see: Bevy B0001
+    schedule-ambiguity errors, duplicate resource/event registrations, and
+    system-ordering conflicts. When the smoke test panics, the output names the
+    conflicting systems and the shared component — exactly the signal the repair
+    loop needs to feed back to the LLM for a targeted fix-it turn. Run after
+    every turn that compiles, before recording it as implemented.
+    """
+    cargo = str(cargo_bin) if cargo_bin is not None else _resolve_cargo()
+    if cargo is None:
+        return False, "cargo not found on PATH or in ~/.cargo/bin (rustup install required)"
+    result = subprocess.run(
+        [cargo, "test", "--test", "app_smoke"],
+        cwd=str(game_dir),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=_cargo_env(),
     )
     return result.returncode == 0, (result.stdout or "") + (result.stderr or "")
 
@@ -434,14 +529,73 @@ def load_valid_kinds(game_config_path: Path) -> set[str] | None:
     pre-rename singular ``unit/`` alongside the canonical ``units/``); walking
     those would emit duplicate / stale goals. Returns None when the file or the
     ``kinds`` block is absent (then no kind filtering is applied).
+
+    A kind block with ``codegen: false`` is excluded — that flag marks a kind
+    as runtime data (campaign maps, release notes, lore-only) for which Phase 2
+    should not generate code. Game-agnostic: any wiki / engine can use the same
+    knob to keep data-shaped kinds out of the codegen budget.
     """
     if not game_config_path.exists():
         return None
     config = json.loads(game_config_path.read_text(encoding="utf-8"))
     kinds = config.get("kinds")
-    if isinstance(kinds, dict) and kinds:
-        return set(kinds.keys())
-    return None
+    if not isinstance(kinds, dict) or not kinds:
+        return None
+    code_kinds: set[str] = set()
+    for name, data in kinds.items():
+        if not isinstance(data, dict):
+            code_kinds.add(name)
+            continue
+        if data.get("codegen", True) is False:
+            continue
+        code_kinds.add(name)
+    return code_kinds
+
+
+def load_systems(game_config_path: Path) -> list[dict[str, Any]]:
+    """Read the gameplay system list from ``chosen_engine.systems`` (preferred)
+    or the top-level ``systems`` block (fallback).
+
+    The list is per-game data populated by Phase 0's
+    ``propose_gameplay_systems``. Empty list when neither location has a
+    populated list, or the config file is missing.
+    """
+    if not game_config_path.exists():
+        return []
+    config = json.loads(game_config_path.read_text(encoding="utf-8"))
+    chosen = config.get("chosen_engine") or {}
+    systems = chosen.get("systems") if isinstance(chosen, dict) else None
+    if not isinstance(systems, list) or not systems:
+        systems = config.get("systems")
+    return [s for s in (systems or []) if isinstance(s, dict) and s.get("name")]
+
+
+def derive_goals_from_systems(
+    systems: list[dict[str, Any]],
+    names: list[str] | None = None,
+) -> list[tuple[str | None, str]]:
+    """Turn the ``chosen_engine.systems`` list into ``(name, goal)`` tuples.
+
+    The goal text is ``"implement the <name> system: <description>"`` so
+    the existing ``derive_kind`` regex picks up ``system`` as the kind word
+    (which routes the leaf into ``src/system/<name>.rs`` via the existing
+    ``module_registration`` mechanism). System-specific guidance — what
+    state machine pattern to use, how to wire input — lives in
+    ``prompts/engine_determinism/<engine>.md``'s ``## System rules`` section,
+    not in the per-turn goal text.
+    """
+    name_filter = set(names) if names else None
+    goals: list[tuple[str | None, str]] = []
+    for entry in systems:
+        nm = entry.get("name")
+        desc = entry.get("description", "")
+        if not isinstance(nm, str) or not nm:
+            continue
+        if name_filter is not None and nm not in name_filter:
+            continue
+        suffix = f": {desc}" if desc else ""
+        goals.append((nm, f"implement the {nm.replace('_', ' ')} system{suffix}"))
+    return goals
 
 
 def derive_goals_from_vault(
@@ -512,6 +666,28 @@ class PreparedTurn:
     error: str | None = None
 
 
+def _format_backend_error(
+    exc: Exception,
+    exc2: Exception | None = None,
+    fb: str | None = None,
+) -> str:
+    """Format a backend exception's error message keeping its tail, not its head.
+
+    Backend CLIs (codex, claude -p) prepend a banner (model id, workdir, sandbox,
+    session id) to every stderr write. The actual error message — quota hit,
+    model unavailable, network blip — sits at the end. A naive ``str(exc)[:240]``
+    truncation captures only the banner and discards the diagnostic. This helper
+    keeps the last 480 chars of the primary error (and the fallback's, when set)
+    so operators and downstream agents see *why* the call failed. Engine-agnostic:
+    works on any backend that raises with stderr embedded in the exception text.
+    """
+    primary_tail = str(exc)[-480:]
+    if exc2 is not None and fb is not None:
+        fallback_tail = str(exc2)[-240:]
+        return f"codegen_error: {primary_tail} | fallback {fb}: {fallback_tail}"[:1000]
+    return f"codegen_error: {primary_tail}"[:600]
+
+
 def _prepare_turn(
     note_id: str,
     goal: str,
@@ -522,7 +698,10 @@ def _prepare_turn(
     baseline_path: Path,
     generate: Any,
     turn_output_dir: Path,
+    game_dir: Path | None = None,
     repair: tuple[str, str] | None = None,
+    fallback_llm_mode: str | None = None,
+    fallback_model: str | None = None,
 ) -> PreparedTurn:
     """Run codegen + validate its output. Pure: no ``state`` / ``game/`` writes.
 
@@ -532,6 +711,18 @@ def _prepare_turn(
     parallel batch. ``exemplar`` is the same-kind sibling module passed to the
     codegen prompt as the structural pattern (None for the first of a kind).
     ``repair`` is an ``(build_error, prior_attempt)`` pair for a fix-it turn.
+    ``game_dir`` is forwarded to ``codegen.generate`` so the registration manifest
+    can be built from the current on-disk state of committed plugin files.
+
+    When ``fallback_llm_mode`` is set and the primary backend raises (a real
+    crash, not a model output we can validate), the turn is retried once with
+    the fallback mode. This is the engine-agnostic safety net for CLI backends
+    that fail at process-init time (e.g. codex 0.133.0's `failed to install
+    system skills` error) — a user without coding experience cannot diagnose
+    a backend-CLI crash, so the loop transparently switches to the other CLI
+    that uses the same subscription auth and continues. The fallback is
+    backend-agnostic by construction: it activates on **any** exception from
+    the primary backend; the model output contract stays the same.
     """
     try:
         summary = generate(
@@ -543,15 +734,40 @@ def _prepare_turn(
             repair=repair,
             pin_id=note_id,
             pin_kind=derive_kind(goal),
+            game_dir=game_dir,
         )
     except Exception as exc:
-        # The backend (claude -p / codex / SDK) can fail transiently — e.g.
-        # `claude -p` intermittently exits 1 on a large prompt. A hands-off loop
-        # must survive it: record pending (retried on the next run) and let the
-        # error budget decide when to stop, rather than crashing the whole run.
-        return PreparedTurn(
-            note_id, goal, pending_reason=["codegen_error"], error=f"codegen_error: {exc}"[:240]
-        )
+        if fallback_llm_mode and fallback_llm_mode != llm_mode:
+            try:
+                summary = generate(
+                    goal,
+                    llm_mode=fallback_llm_mode,
+                    model=fallback_model,
+                    baseline_path=baseline_path,
+                    exemplar=exemplar,
+                    repair=repair,
+                    pin_id=note_id,
+                    pin_kind=derive_kind(goal),
+                    game_dir=game_dir,
+                )
+            except Exception as exc2:
+                return PreparedTurn(
+                    note_id,
+                    goal,
+                    pending_reason=["codegen_error"],
+                    error=_format_backend_error(exc, exc2, fallback_llm_mode),
+                )
+        else:
+            # The backend (claude -p / codex / SDK) can fail transiently — e.g.
+            # `claude -p` intermittently exits 1 on a large prompt. A hands-off loop
+            # must survive it: record pending (retried on the next run) and let the
+            # error budget decide when to stop, rather than crashing the whole run.
+            return PreparedTurn(
+                note_id,
+                goal,
+                pending_reason=["codegen_error"],
+                error=_format_backend_error(exc),
+            )
     _dump_turn_output(note_id, summary["response_text"], turn_output_dir)
     text = summary["response_text"]
     if not summary["sources_header_ok"]:
@@ -584,6 +800,9 @@ def _prepare_batch(
     baseline_path: Path,
     generate: Any,
     turn_output_dir: Path,
+    game_dir: Path | None = None,
+    fallback_llm_mode: str | None = None,
+    fallback_model: str | None = None,
 ) -> list[PreparedTurn]:
     """Prepare a batch of ``(note_id, goal, exemplar)`` turns; concurrent when N>1.
 
@@ -591,7 +810,13 @@ def _prepare_batch(
     pure codegen phase (the slow LLM subprocess call); the caller still merges
     and gates serially, so the cargo build and ``system_map`` order stay
     deterministic regardless of ``concurrency``. Each turn carries its own
-    resolved ``exemplar`` (same-kind sibling source, or None).
+    resolved ``exemplar`` (same-kind sibling source, or None). ``game_dir`` is
+    forwarded to each ``_prepare_turn`` so the registration manifest reflects the
+    committed state at chunk-start (all turns in a batch see the same snapshot).
+
+    ``fallback_llm_mode`` (+ optional ``fallback_model``) is forwarded so any
+    turn whose primary backend crashes transparently retries on the fallback
+    before being recorded pending.
     """
     kw = {
         "llm_mode": llm_mode,
@@ -599,6 +824,9 @@ def _prepare_batch(
         "baseline_path": baseline_path,
         "generate": generate,
         "turn_output_dir": turn_output_dir,
+        "game_dir": game_dir,
+        "fallback_llm_mode": fallback_llm_mode,
+        "fallback_model": fallback_model,
     }
     if concurrency <= 1 or len(batch) <= 1:
         return [_prepare_turn(nid, goal, exemplar=ex, **kw) for nid, goal, ex in batch]
@@ -616,19 +844,36 @@ def _try_build(
     agg_name: str | None,
     crate_root_name: str | None,
     cargo_runner: Any,
+    smoke_runner: Any = None,
+    entrypoint_config: dict | None = None,
 ) -> tuple[bool, list[WrittenFile], list[WrittenFile], str, list[str]]:
-    """Merge + register a prepared turn and run the build gate, once.
+    """Merge + register a prepared turn and run the build gate(s), once.
 
     Returns ``(ok, written, touched, build_output, skipped)``: ``written`` is the
     leaf files (for the implemented record), ``touched`` is leaves + aggregators
     (for revert on failure).
+
+    When ``smoke_runner`` is set, a passing ``cargo build`` is followed by
+    ``cargo test --test app_smoke``. A smoke failure is treated identically to a
+    build failure — the merged files are reverted and the panic output is returned
+    as ``build_output`` so the repair loop can feed it to the LLM.
+
+    When ``entrypoint_config`` opts in, the app-level plugin aggregator is also
+    regenerated before the build; its revert entry is appended to ``touched`` so
+    a failure restores it byte-exact along with the leaf.
     """
     written, skipped = merge_into_game(
         prepared.parsed, game_dir, aggregator_name=agg_name, crate_root_name=crate_root_name
     )
     registered = register_modules([w.path for w in written], game_dir, registration)
+    app_agg = regenerate_app_aggregator(game_dir, entrypoint_config)
+    touched_aggregators = registered + ([app_agg] if app_agg is not None else [])
     ok, build_output = cargo_runner(game_dir)
-    return ok, written, written + registered, build_output, skipped
+    if ok and smoke_runner is not None:
+        smoke_ok, smoke_output = smoke_runner(game_dir)
+        if not smoke_ok:
+            return False, written, written + touched_aggregators, smoke_output, skipped
+    return ok, written, written + touched_aggregators, build_output, skipped
 
 
 def _record_success(
@@ -666,6 +911,8 @@ def _commit_turn(
     agg_name: str | None,
     crate_root_name: str | None,
     cargo_runner: Any,
+    smoke_runner: Any = None,
+    entrypoint_config: dict | None = None,
     repair_fn: Any = None,
     repair_attempts: int = 0,
 ) -> TurnResult:
@@ -689,7 +936,14 @@ def _commit_turn(
     skipped: list[str] = []
     for tries in range(repair_attempts + 1):
         ok, written, touched, build_output, skipped = _try_build(
-            attempt, game_dir, registration, agg_name, crate_root_name, cargo_runner
+            attempt,
+            game_dir,
+            registration,
+            agg_name,
+            crate_root_name,
+            cargo_runner,
+            smoke_runner,
+            entrypoint_config,
         )
         if ok:
             return _record_success(attempt, state, written, game_dir, skipped)
@@ -815,6 +1069,9 @@ def _make_repair_fn(
     baseline_path: Path,
     generate: Any,
     turn_output_dir: Path,
+    game_dir: Path | None = None,
+    fallback_llm_mode: str | None = None,
+    fallback_model: str | None = None,
 ) -> Any:
     """Build the codegen-with-build-error closure used by the repair loop.
 
@@ -822,7 +1079,10 @@ def _make_repair_fn(
     fresh codegen turn that feeds the failed source + the build tool's output
     back so the model fixes its own output. No exemplar is passed — the prior
     attempt already carries the structure to preserve. Engine-agnostic: the
-    correction signal is whatever the build runner emitted.
+    correction signal is whatever the build runner emitted. ``game_dir`` is
+    forwarded so repair turns also receive the registration manifest.
+    ``fallback_llm_mode`` is also forwarded so a repair turn can fall back
+    when the primary backend crashes mid-repair.
     """
 
     def _repair(note_id: str, goal: str, prior_text: str, build_error: str) -> PreparedTurn:
@@ -835,7 +1095,10 @@ def _make_repair_fn(
             baseline_path=baseline_path,
             generate=generate,
             turn_output_dir=turn_output_dir,
+            game_dir=game_dir,
             repair=(build_error, prior_text),
+            fallback_llm_mode=fallback_llm_mode,
+            fallback_model=fallback_model,
         )
 
     return _repair
@@ -852,10 +1115,14 @@ def run_loop(
     error_budget: int = DEFAULT_ERROR_BUDGET,
     generate: Any = codegen.generate,
     cargo_runner: Any = run_cargo_build,
+    smoke_runner: Any = None,
     registration: dict[str, str] | None = None,
+    entrypoint_config: dict | None = None,
     max_turns: int | None = None,
     concurrency: int = 1,
     repair_attempts: int = 0,
+    fallback_llm_mode: str | None = None,
+    fallback_model: str | None = None,
 ) -> list[TurnResult]:
     """Drive ``goals`` through the codegen + cargo loop. Persists state once at end.
 
@@ -899,6 +1166,9 @@ def run_loop(
         "baseline_path": baseline_path,
         "generate": generate,
         "turn_output_dir": turn_output_dir,
+        "game_dir": game_dir,
+        "fallback_llm_mode": fallback_llm_mode,
+        "fallback_model": fallback_model,
     }
     repair_fn = (
         _make_repair_fn(
@@ -907,6 +1177,9 @@ def run_loop(
             baseline_path=baseline_path,
             generate=generate,
             turn_output_dir=turn_output_dir,
+            game_dir=game_dir,
+            fallback_llm_mode=fallback_llm_mode,
+            fallback_model=fallback_model,
         )
         if repair_attempts > 0
         else None
@@ -935,6 +1208,8 @@ def run_loop(
             agg_name=agg_name,
             crate_root_name=crate_root_name,
             cargo_runner=cargo_runner,
+            smoke_runner=smoke_runner,
+            entrypoint_config=entrypoint_config,
             repair_fn=repair_fn,
             repair_attempts=repair_attempts,
         )
@@ -995,11 +1270,24 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="auto-derive goals by walking vault/<kind>/*.md (ignores positional goals)",
     )
+    parser.add_argument(
+        "--from-systems",
+        action="store_true",
+        help=(
+            "auto-derive goals from `chosen_engine.systems` (Phase 3 gameplay "
+            "systems). Use after `--from-vault` has produced entity leaves."
+        ),
+    )
     parser.add_argument("--vault-dir", type=Path, default=_REPO_ROOT / "vault")
     parser.add_argument(
         "--kinds",
         default=None,
         help="with --from-vault, comma-separated kind dirs to include (default: all)",
+    )
+    parser.add_argument(
+        "--systems",
+        default=None,
+        help="with --from-systems, comma-separated system names to include (default: all)",
     )
     parser.add_argument(
         "--limit",
@@ -1026,6 +1314,21 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "build error fed back before recording pending (default 2; 0 disables)"
         ),
     )
+    parser.add_argument(
+        "--fallback-llm-mode",
+        default=None,
+        choices=codegen.LLM_MODES,
+        help=(
+            "if the primary backend raises (e.g. codex CLI init crash), retry "
+            "the turn with this backend before recording pending. Engine- and "
+            "backend-agnostic; activates on any exception from --llm-mode."
+        ),
+    )
+    parser.add_argument(
+        "--fallback-model",
+        default=None,
+        help="model id for the fallback backend (defaults to pipeline.config.toml)",
+    )
     return parser.parse_args(argv)
 
 
@@ -1046,11 +1349,23 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 2
+    elif args.from_systems:
+        names = [n.strip() for n in args.systems.split(",") if n.strip()] if args.systems else None
+        systems = load_systems(args.game_config)
+        goals = derive_goals_from_systems(systems, names)
+        if not goals:
+            print(
+                "error: no systems defined in game-config.json "
+                "(chosen_engine.systems is empty; run Phase 0 to populate).",
+                file=sys.stderr,
+            )
+            return 2
     else:
         goals = load_goals(args.goals_file, args.goals)
         if not goals:
             print(
-                "error: no goals (pass positional args, --goals-file, or --from-vault)",
+                "error: no goals (pass positional args, --goals-file, "
+                "--from-vault, or --from-systems)",
                 file=sys.stderr,
             )
             return 2
@@ -1064,9 +1379,13 @@ def main(argv: list[str] | None = None) -> int:
         model=args.model,
         error_budget=args.error_budget,
         registration=load_module_registration(args.game_config),
+        entrypoint_config=load_entrypoint_config(args.game_config),
         max_turns=args.limit,
         concurrency=args.concurrency,
         repair_attempts=args.repair_attempts,
+        smoke_runner=run_cargo_smoke,
+        fallback_llm_mode=args.fallback_llm_mode,
+        fallback_model=args.fallback_model,
     )
 
     counts: dict[str, int] = {}

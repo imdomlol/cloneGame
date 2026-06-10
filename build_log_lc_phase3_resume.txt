@@ -1,0 +1,25 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 5791.75it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[FAIL] game_state_machine: implement the game state machine system: Tracks and transitions between menu, playing, paused, win, and lose game states.  (cargo_build_failed: running 1 test
+test app_smoke ... FAILED
+
+failures:
+
+---- app_smoke stdout ----
+
+thread 'app_smoke' )
+[SKIP] input_handler: implement the input handler system: Maps keyboard and mouse input to player actions like movement, weapon firing, and item pickup.
+[FAIL] hud: implement the hud system: Renders UI showing quota progress, scrap inventory, equipped weapons, active upgrades, and time remaining.  (codegen_error: claude exited 1)
+[FAIL] entity_spawner: implement the entity spawner system: Spawns hostile creatures on the map based on elapsed time, location, and difficulty.  (codegen_error: claude exited 1)
+[FAIL] scrap_economy: implement the scrap economy system: Tracks collected scrap items, manages player inventory, and updates progress toward the profit quota.  (codegen_error: claude exited 1)
+[FAIL] combat_system: implement the combat system system: Resolves weapon attacks against creatures, applies damage, and handles creature death.  (codegen_error: claude exited 1)
+[FAIL] facility_timer: implement the facility timer system: Manages time pressure on exploration; triggers entity spawning waves and enforces mission time limits.  (codegen_error: claude exited 1)
+[FAIL] hazard_system: implement the hazard system system: Detects and triggers environmental hazards, applies damage when players interact with them.  (codegen_error: claude exited 1)
+[FAIL] creature_ai: implement the creature ai system: Controls hostile creature behavior including movement, aggression, and targeting of nearby players.  (codegen_error: claude exited 1)
+[FAIL] ship_system: implement the ship system system: Manages ship docking, loads scrap cargo, applies purchased upgrades, and determines mission completion.  (codegen_error: claude exited 1)
+
+summary: {'pending': 9, 'skipped': 1}

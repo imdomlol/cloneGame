@@ -8,7 +8,7 @@ from scripts.frontmatter import (
     repair_frontmatter_delimiter,
     replace_frontmatter_type,
 )
-from scripts.validation import canonical_kind, validate_jsonschema
+from scripts.validation import canonical_kind, kind_frontmatter_schema, validate_jsonschema
 from scripts.vault_index import (
     completed_source_for_kind,
     completed_source_index,
@@ -237,6 +237,30 @@ class SourceIndexTests(unittest.TestCase):
             self.assertTrue(completed.exists())
 
 
+class DeriveApiEndpointTests(unittest.TestCase):
+    def test_strips_wiki_suffix(self) -> None:
+        from scripts.phase1_ingest import _derive_api_endpoint
+        self.assertEqual(
+            _derive_api_endpoint("https://lethal-company.fandom.com/wiki/"),
+            "https://lethal-company.fandom.com/api.php",
+        )
+
+    def test_handles_no_trailing_slash(self) -> None:
+        from scripts.phase1_ingest import _derive_api_endpoint
+        self.assertEqual(
+            _derive_api_endpoint("https://they-are-billions.fandom.com/wiki"),
+            "https://they-are-billions.fandom.com/api.php",
+        )
+
+    def test_handles_root_url(self) -> None:
+        from scripts.phase1_ingest import _derive_api_endpoint
+        # Some wikis serve from the root, no /wiki/ prefix
+        self.assertEqual(
+            _derive_api_endpoint("https://example.com/"),
+            "https://example.com/api.php",
+        )
+
+
 class ValidationTests(unittest.TestCase):
     def test_validate_jsonschema_does_not_emit_refresolver_warning(self) -> None:
         schema = {
@@ -253,6 +277,89 @@ class ValidationTests(unittest.TestCase):
                 errors = validate_jsonschema({"id": "technology_tree"}, [schema], root)
 
         self.assertEqual(errors, [])
+
+    def test_widened_scalar_accepts_integer_array_and_object(self) -> None:
+        """Phase 0 over-types numeric/structural wiki fields as `string`.
+        The validator widens scalar declarations so the compile LLM's natural
+        extraction (integers, lists, nested maps) doesn't get quarantined.
+        """
+        game_config = {
+            "kinds": {
+                "building": {
+                    "frontmatter_schema": {
+                        "properties": {
+                            "hp": {"type": "string"},
+                            "depends_on_resources": {"type": "string"},
+                            "cost": {"type": "string"},
+                        }
+                    }
+                }
+            }
+        }
+        widened = kind_frontmatter_schema(game_config, "building")
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "schemas").mkdir()
+            errors = validate_jsonschema(
+                {
+                    "hp": 125,
+                    "depends_on_resources": ["stone", "iron"],
+                    "cost": {"wood": 30, "gold": 1200},
+                },
+                [widened],
+                root,
+            )
+        self.assertEqual(errors, [])
+
+    def test_widened_union_passes_through_untouched(self) -> None:
+        """When the Phase 0 proposer correctly emits union types, the validator
+        should accept the union directly (no double-widening needed)."""
+        game_config = {
+            "kinds": {
+                "unit": {
+                    "frontmatter_schema": {
+                        "properties": {
+                            "hp": {"type": ["string", "integer", "number"]}
+                        }
+                    }
+                }
+            }
+        }
+        widened = kind_frontmatter_schema(game_config, "unit")
+        # Union remains a union (widening only acts on single-string scalars).
+        self.assertEqual(
+            widened["properties"]["hp"]["type"],
+            ["string", "integer", "number"],
+        )
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "schemas").mkdir()
+            errors = validate_jsonschema({"hp": 120}, [widened], root)
+        self.assertEqual(errors, [])
+
+    def test_widening_preserves_object_shape_constraint(self) -> None:
+        """A property genuinely declared as object keeps its shape — the
+        proposer was confident; we trust that."""
+        game_config = {
+            "kinds": {
+                "building": {
+                    "frontmatter_schema": {
+                        "properties": {
+                            "cost": {"type": "object"},
+                        }
+                    }
+                }
+            }
+        }
+        widened = kind_frontmatter_schema(game_config, "building")
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "schemas").mkdir()
+            errors = validate_jsonschema({"cost": "not-an-object"}, [widened], root)
+        self.assertTrue(
+            any("is not of type" in e for e in errors),
+            f"expected object-vs-string rejection, got {errors}",
+        )
 
 
 class CanonicalKindTests(unittest.TestCase):

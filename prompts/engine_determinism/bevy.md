@@ -7,3 +7,16 @@
 7. **Desync detection via the shared checksum.** Add a `*_checksum` system, last in your unit's `.chain()`, that folds each determinism-relevant component's fixed-point bits into the existing `crate::sim::SimChecksumState` resource: `state.accumulate(value.to_bits() as u64)`. `accumulate` is commutative, so cross-system order is irrelevant. The resource, its `accumulate` method, and `SimChecksumPlugin` already exist in `sim.rs` — do not redefine them, and do not implement your own hashing, broadcasting, or cross-client compare (the foundation owns those).
 8. **Bundles deriving `Default` need all-`Default` fields.** Any marker or unit component placed in a `#[derive(Bundle, Default)]` struct must itself derive `Default` (or impl it manually) — a bare `#[derive(Component)] struct Foo;` marker does NOT satisfy `Default` and fails the bundle's derive. Add `Default` to every component a `Default`-deriving bundle holds.
 9. **Use the shared `Health` and `UnitStats`.** `crate::sim::Health { current, max }` and `crate::sim::UnitStats { move_speed, attack_range, attack_damage, attack_speed, watch_range }` exist in `sim.rs`. Translate each unit's frontmatter HP and baseline stats into these (use `Health::full(max)`); never define a per-unit `*Health` / `*Stats` struct. Keep unit-specific extras (veteran, barrels, DoT, upgrades) as their own components.
+10. **`SimEventsPlugin` owns the three foundation events.** `IncomingDamageEvent`, `EntityKilledEvent`, and `NoiseEmittedEvent` are registered once by `crate::sim::SimEventsPlugin`. At app construction call `app.add_plugins(SimEventsPlugin)` — never `app.add_event::<IncomingDamageEvent>()` (or the other two) inside a leaf plugin. A second registration of the same event type causes a Bevy B0001 panic at runtime that `cargo build` cannot detect (it fires only when the schedule is first built). Leaf plugins must register only their own faction-local events (e.g. `SpawnSoldierEvent`, `GainSoldierExperienceEvent`).
+
+## System rules (apply for `... system` goals only)
+
+Apply IN ADDITION to rules 1-10. Output path: `src/system/<name>.rs`. Plugin name: `<Name>Plugin`.
+
+- **State machine** uses Bevy `States` enum + `app.init_state::<EnumName>()` + `.run_if(in_state(...))`. The state-machine plugin owns the enum; other systems import it. Do NOT call `app.add_plugins(StatesPlugin)` — `DefaultPlugins` already registers it, and a second registration panics at runtime.
+- **Input** runs in `Update` (not `FixedUpdate`), reads `Res<ButtonInput<KeyCode>>` / `MouseButton`, translates to engine events. Sim never reads input.
+- **HUD** uses `bevy_ui` only (no egui). Spawn `Node` / `Text`; update in `Update`. HUD reads sim resources; never mutates them.
+- **Cross-entity sim systems** (combat, aggro, economy) tick in `FixedUpdate` and follow rules 1-7: `tick_rng`, no transcendentals, fold into `SimChecksumState`.
+- **State**: persistent counters → `Resource`. One-shot signals → events. Initialize resources in plugin `build`.
+- **No new deps.** Stay inside `bevy`, `fixed`, `rand_chacha`, `rand_core`. If needed: leave a `// TODO:` and emit a stub.
+- **Explicit ordering** between system plugins via `.before(...)` / `.after(...)`; never rely on plugin add order.

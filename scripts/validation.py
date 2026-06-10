@@ -97,13 +97,57 @@ def universal_schema(root: Path, kinds: set[str]) -> dict[str, Any]:
     return schema
 
 
+_SCALAR_TYPES = ("string", "integer", "number", "boolean", "null")
+_ALL_JSON_TYPES = (*_SCALAR_TYPES, "array", "object")
+
+
+def _widen_property_type(prop: dict[str, Any]) -> dict[str, Any]:
+    """Widen a single property's ``type`` so it accepts any JSON value.
+
+    Phase 0's LLM proposer routinely labels numeric wiki fields as
+    ``{"type": "string"}`` and richer wiki fields (lists of resources, nested
+    cost objects) as scalars too — because it sees them surrounded by
+    string-y context (table cells). The compile LLM then correctly extracts
+    them as integers (`hit_points: 125`), arrays (`produces: ['stone',
+    'iron']`), or objects (`cost: {wood: 30, gold: 1200}`). Validation rejects
+    everything that isn't a string. On a fresh run this produced ~70%
+    quarantine on the first pass; widening to scalar-only still left ~2%
+    quarantined on objects/arrays.
+
+    Compromise: any **scalar** declaration is treated as "accepts any JSON
+    value." A property the proposer genuinely typed as ``object`` keeps that
+    constraint (the proposer was confident about shape); a scalar is treated
+    as advisory. This keeps the universal schema's ``required`` list as the
+    real presence gate while letting per-kind types stop being a quarantine
+    source for LLM-proposed schemas.
+
+    Engine- and game-agnostic by construction: the rule operates on schema
+    keywords only, not field names or values. Recurses into ``items`` and
+    nested object ``properties`` so the same rule applies at every depth.
+    """
+    if not isinstance(prop, dict):
+        return prop
+    widened = dict(prop)
+    t = widened.get("type")
+    if isinstance(t, str) and t in _SCALAR_TYPES:
+        widened["type"] = list(_ALL_JSON_TYPES)
+    if isinstance(widened.get("items"), dict):
+        widened["items"] = _widen_property_type(widened["items"])
+    if isinstance(widened.get("properties"), dict):
+        widened["properties"] = {
+            k: _widen_property_type(v) for k, v in widened["properties"].items()
+        }
+    return widened
+
+
 def kind_frontmatter_schema(game_config: dict[str, Any], kind: str) -> dict[str, Any] | None:
     """Per-kind schema for VALIDATION; only enforces property types, not presence."""
     schema = raw_kind_schema(game_config, kind)
     properties = schema.get("properties") if isinstance(schema, dict) else None
     if not isinstance(properties, dict) or not properties:
         return None
-    return {"type": "object", "properties": properties}
+    widened_properties = {k: _widen_property_type(v) for k, v in properties.items()}
+    return {"type": "object", "properties": widened_properties}
 
 
 def collect_required(schema: dict[str, Any]) -> list[str]:

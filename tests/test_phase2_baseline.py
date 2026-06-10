@@ -27,8 +27,6 @@ Arch: {{architecture_summary}}
 {{determinism_rules}}
 [universal]
 {{universal_fields}}
-[kinds]
-{{kinds_section}}
 """
 
 _UNIVERSAL = {

@@ -96,6 +96,12 @@ pip install jsonschema                              # optional; enables full Dra
 
 Phase 2 (vault → codegen, requires `pip install -r requirements-phase2.txt`):
 ```powershell
+python phase2/scaffold.py                           # render per-engine foundation files
+                                                    #   (Cargo.toml, sim.rs, lib.rs, main.rs,
+                                                    #   tests/app_smoke.rs) from
+                                                    #   prompts/engine_scaffold/<engine>/
+python phase2/scaffold.py --force                   # overwrite hand-edited foundation
+python phase2/scaffold.py --dry-run                 # preview without writing
 python phase2/indexer.py                            # rebuild Chroma + graph.json
 python phase2/baseline.py                           # render build/engine_baseline.md
 python phase2/system_map.py init                    # one-time state init
@@ -132,7 +138,9 @@ There is **no build step and no CI**. `ruff`/`vulture` (see "Pre-Commit Checks" 
 - `phase1.config.toml` — Phase 1 runtime config (wiki API endpoint, retry/throttle, LLM mode + model, cache dir).
 - `prompts/wiki-compile-system.md` — system prompt for the Phase 1 compile LLM. Edits to this invalidate the SHA-256 cache.
 - `schemas/_universal.schema.json` — required-on-every-file frontmatter fields. Per-kind frontmatter contracts live as data in `game-config.json -> kinds.<kind>.frontmatter_schema`, not as files.
-- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. Per-kind validation only enforces property types on fields that happen to be present — presence is gated solely by `schemas/_universal.schema.json`'s `required` list. Do not add a per-kind `required` array; it would be ignored. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning.
+- `game-config.json -> kinds.<kind>.frontmatter_schema` — per-kind frontmatter contract (`{properties: {...}}`). Inlined here so schemas travel with the game config and Phase 0 can LLM-propose them per target game. Per-kind validation only enforces property types on fields that happen to be present — presence is gated solely by `schemas/_universal.schema.json`'s `required` list. Do not add a per-kind `required` array; it would be ignored. Kinds without a `frontmatter_schema` get universal-only validation plus a one-time warning. The Phase 0 proposer is taught to emit union types like `["string", "integer", "number"]` for numeric fields and `"array"` / `"object"` for structural fields; `scripts/validation._widen_property_type` widens any leaf scalar declaration to all-JSON-types as a backward-compat safety net for older `game-config.json` files.
+- `game-config.json -> kinds.<kind>.codegen` — opt-out flag (default `true`). Set to `false` for kinds that should be runtime data (release notes, campaign maps, lore-only entities); `phase2/loop_driver.load_valid_kinds` excludes them from `--from-vault` walks. Game-agnostic: any wiki / engine can use the flag without code changes. Phase 0's `propose_codegen_flags` auto-sets this per kind based on whether the wiki shape looks like code (units, mechanics, weapons) or data (maps, lore, patch notes).
+- `game-config.json -> chosen_engine.systems` — Phase 3 gameplay-system list. Per-game data proposed by Phase 0's `propose_gameplay_systems`. Each entry: `{name, description, depends_on (list of kinds), produces (list of resources/events)}`. Always includes three universals (`game_state_machine`, `input_handler`, `hud`) plus per-game systems inferred from kind shape. Consumed by `python phase2/loop_driver.py --from-systems` which generates one Bevy plugin per system into `src/system/<name>.rs`. Per-engine system rules (state machine pattern, input handling, HUD framework) live in `prompts/engine_determinism/<engine>.md`'s `## System rules` section.
 
 ## Conventions & gotchas
 

@@ -1,0 +1,122 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 5451.03it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[SKIP] advanced_farm: implement the advanced farm building
+[SKIP] advanced_mill: implement the advanced mill building
+[SKIP] advanced_quarry: implement the advanced quarry building
+[SKIP] bank: implement the bank building
+[SKIP] buildings: implement the buildings building
+[SKIP] command_center: implement the command center building
+[SKIP] cottage: implement the cottage building
+[SKIP] engineering_center: implement the engineering center building
+[SKIP] executor: implement the executor building
+[SKIP] farm: implement the farm building
+[SKIP] fisherman_cottage: implement the fisherman cottage building
+[SKIP] foundry: implement the foundry building
+[SKIP] great_ballista: implement the great ballista building
+[SKIP] hunter_cottage: implement the hunter cottage building
+[SKIP] inn: implement the inn building
+[SKIP] land_mine: implement the land mine building
+[SKIP] lookout_tower: implement the lookout tower building
+[SKIP] market: implement the market building
+[SKIP] mill: implement the mill building
+[SKIP] oil_platform: implement the oil platform building
+[SKIP] power_plant: implement the power plant building
+[SKIP] quarry: implement the quarry building
+[SKIP] radar_tower: implement the radar tower building
+[SKIP] sawmill: implement the sawmill building
+[SKIP] shocking_tower: implement the shocking tower building
+[SKIP] soldiers_center: implement the soldiers center building
+[SKIP] stakes_trap: implement the stakes trap building
+[SKIP] stone_gate: implement the stone gate building
+[SKIP] stone_house: implement the stone house building
+[SKIP] stone_tower: implement the stone tower building
+[SKIP] stone_wall: implement the stone wall building
+[SKIP] stone_workshop: implement the stone workshop building
+[SKIP] tent: implement the tent building
+[SKIP] tesla_tower: implement the tesla tower building
+[SKIP] warehouse: implement the warehouse building
+[SKIP] wasp: implement the wasp building
+[SKIP] wire_fence_trap: implement the wire fence trap building
+[SKIP] wood_gate: implement the wood gate building
+[SKIP] wood_tower: implement the wood tower building
+[SKIP] wood_wall: implement the wood wall building
+[SKIP] wood_workshop: implement the wood workshop building
+[SKIP] caelus: implement the caelus character
+[SKIP] calliope: implement the calliope character
+[SKIP] animation_canceling: implement the animation canceling game_mechanic
+[SKIP] explosive_barrel: implement the explosive barrel game_mechanic
+[SKIP] flat_mode: implement the flat mode game_mechanic
+[SKIP] noise: implement the noise game_mechanic
+[SKIP] resources: implement the resources game_mechanic
+[SKIP] swarms: implement the swarms game_mechanic
+[SKIP] time: implement the time game_mechanic
+[SKIP] villages_of_doom: implement the villages of doom game_mechanic
+[SKIP] infected: implement the infected infected
+[SKIP] infected_aged: implement the infected aged infected
+[SKIP] infected_behemoth: implement the infected behemoth infected
+[SKIP] infected_chubby: implement the infected chubby infected
+[SKIP] infected_colonists: implement the infected colonists infected
+[SKIP] infected_decrepit: implement the infected decrepit infected
+[OK  ] infected_executive: implement the infected executive infected  -> 1 files
+[OK  ] infected_fresh: implement the infected fresh infected  -> 2 files  (skipped: src/infected/mod.rs)
+[OK  ] infected_giant: implement the infected giant infected  -> 1 files  (skipped: src/infected/mod.rs)
+[OK  ] infected_harpy: implement the infected harpy infected  -> 1 files
+[OK  ] infected_venom: implement the infected venom infected  -> 1 files  (skipped: src/infected/mod.rs)
+[OK  ] infected_young: implement the infected young infected  -> 2 files  (skipped: src/infected/mod.rs)
+[OK  ] v9: implement the v9 infected  -> 1 files  (skipped: src/infected/mod.rs)
+[OK  ] the_great_crater: implement the the great crater location  -> 1 files  (skipped: src/location/mod.rs,src/lib.rs)
+[OK  ] mayors: implement the mayors mayor  -> 1 files
+[OK  ] quintus_crane: implement the quintus crane new_empire_character  -> 2 files  (skipped: src/new_empire_character/mod.rs,src/lib.rs)
+[OK  ] new_empire: implement the new empire organization  -> 2 files  (skipped: src/organization/mod.rs,src/lib.rs)
+[OK  ] rebels: implement the rebels organization  -> 2 files  (skipped: src/organization/mod.rs)
+[OK  ] research: implement the research research  -> 1 files
+[OK  ] technology_tree: implement the technology tree research  -> 1 files
+[OK  ] lucifer: implement the lucifer unit  -> 1 files
+[OK  ] mutant: implement the mutant unit  -> 1 files
+[OK  ] ranger: implement the ranger unit  -> 1 files
+[OK  ] sniper: implement the sniper unit  -> 1 files
+[OK  ] soldier: implement the soldier unit  -> 1 files
+[OK  ] thanatos: implement the thanatos unit  -> 1 files
+[OK  ] titan: implement the titan unit  -> 1 files  (skipped: src/units/mod.rs)
+[OK  ] academy_of_immortals: implement the academy of immortals wonder  -> 1 files
+[OK  ] atlas_transmutator: implement the atlas transmutator wonder  -> 1 files
+[OK  ] crystal_palace: implement the crystal palace wonder  -> 2 files  (skipped: src/wonder/mod.rs)
+[OK  ] silent_beholder: implement the silent beholder wonder  -> 2 files  (skipped: src/wonder/mod.rs)
+[OK  ] the_lightning_spire: implement the the lightning spire wonder  -> 1 files  (skipped: src/wonder/mod.rs)
+[OK  ] the_victorious: implement the the victorious wonder  -> 1 files
+
+summary: {'skipped': 57, 'implemented': 27}

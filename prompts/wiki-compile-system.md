@@ -19,6 +19,13 @@ of a single wiki page into a schema-conformant Obsidian Vault note.
 - The frontmatter MUST include these universal fields:
   id, name, type, subtype, source_url, source_revision, extracted_at,
   confidence, depends_on. Plus the per-kind fields named in the schema below.
+- `id` is the snake_case version of the page name — NEVER the wiki's numeric
+  page id. E.g. for "Cash Register": `id: cash_register`. Allowed characters:
+  `[a-z0-9_]+`. Strip apostrophes, spaces become underscores, all lowercase.
+- `type` MUST be exactly `{{type_hint}}` (the canonical kind name passed by
+  the pipeline). NEVER use the wiki category display name (`Scrap`,
+  `Entities`) or a variant. If the page belongs to multiple categories, use
+  the type-hint value above all others.
 - All numbers MUST be integers or floats — never strings, never ranges (split
   ranges into `min`/`max` fields).
 - Every cross-entity reference in prose MUST be an Obsidian [[wiki_link]] using

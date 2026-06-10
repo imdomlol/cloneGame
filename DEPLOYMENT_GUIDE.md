@@ -1,10 +1,12 @@
 # Deployment Guide
 
-Architecture spec for the wiki-to-code pipeline. Describes the system as it
-exists today (Phases 0–1) plus the design for the unimplemented Phase 2.
+Architecture spec for the wiki-to-code pipeline. All three phases are
+implemented. Phase 2 has been driven against live LLM CLIs and produced a
+real Rust/Bevy crate under `game/` (84 modules across 5 kinds as of
+2026-06-04, `cargo build` clean).
 
-See `plan.md` for implementation status and the active blocker (target engine
-selection). See `CLAUDE.md` for agent-facing conventions and gotchas.
+See `docs/plan.md` for implementation status and the active per-kind
+backlog. See `CLAUDE.md` for agent-facing conventions and gotchas.
 
 ---
 
@@ -13,12 +15,12 @@ selection). See `CLAUDE.md` for agent-facing conventions and gotchas.
 ```
 ┌────────────────┐  Phase 0   ┌──────────────────┐  Phase 1   ┌─────────────┐  Phase 2   ┌──────────┐
 │  Fandom Wiki   │ ─────────► │ game-config.json │ ─────────► │   vault/    │ ─────────► │ Game code│
-│  (live URL)    │  taxonomy  │   (human-OK'd)   │   ingest   │ Obsidian MD │   codegen  │  (TBD)   │
+│  (live URL)    │  taxonomy  │   (human-OK'd)   │   ingest   │ Obsidian MD │   codegen  │  game/   │
 └────────────────┘            └──────────────────┘            └─────────────┘            └──────────┘
 ```
 
-Each arrow is a separate Python entry point. Phases 0 and 1 are implemented;
-Phase 2 is planned but not yet built.
+Each arrow is a separate Python entry point. All three phases are implemented;
+Phase 2 codegen output lives at `game/` (Rust/Bevy crate, committed).
 
 Target wiki for the reference deployment: **They Are Billions**
 (`they-are-billions.fandom.com`).
@@ -207,12 +209,15 @@ provider means adding a branch there, not introducing a new SDK dependency.
 
 ---
 
-## 3. Phase 2 — Vault → Code (scaffolded)
+## 3. Phase 2 — Vault → Code (live)
 
-**Scaffolded as of 2026-05-22.** All five modules ship with unit tests; the
-first live Anthropic codegen turn is gated on explicit user confirmation
-per `CLAUDE.md > Default Behaviors #12`. Engine choice landed earlier
-(Bevy + lockstep — see `plan.md` and `cloneGame/MEMORY.md`).
+**Live as of 2026-05-22; has scaled to 84 modules across 5 kinds by
+2026-06-04.** All five pipeline modules ship with unit tests. The
+`phase2/loop_driver.py` orchestrator gates each turn behind `cargo build
+--manifest-path game/Cargo.toml`, byte-exactly reverts on failure, and runs a
+build-error repair loop. Engine choice is Bevy + lockstep (see `docs/plan.md`
+and `docs/MEMORY.md`). Live LLM calls still require in-session user
+confirmation per `CLAUDE.md > Default Behaviors #12`.
 
 ### 3.1 Component map
 
@@ -416,7 +421,7 @@ projects.
 - [ ] `python scripts/phase1_ingest.py` returns exit code 0, or `_quarantine/`
       contents reviewed and prompt/schema iterated
 
-### 5.3 Phase 2 (scaffolded; first live turn pending)
+### 5.3 Phase 2 (live; 84 modules generated)
 
 - [x] Target engine chosen (Bevy + lockstep, 2026-05-19; see `plan.md`)
 - [x] `npm install -g repomix` (2026-05-21)
@@ -436,6 +441,14 @@ projects.
 - [x] Every generated source file should start with `// Sources: vault/...`
       (output rule in `prompts/engine_baseline.template.md`; post-check in
       `phase2.codegen.validate_source_header`)
-- [ ] Spend the first live Anthropic turn (gated on in-session user yes
-      per `CLAUDE.md > Default Behaviors #12`)
-- [ ] Wire a small driver that loops codegen turns + updates `system_map.yaml`
+- [x] First live codegen turn spent (soldier, 2026-05-22)
+- [x] Loop driver shipped (`phase2/loop_driver.py`) — cargo-gated, byte-exact
+      revert, driver-owned module registration, sibling-exemplar consistency,
+      build-error repair loop, parallel codegen
+- [x] 84 modules generated across `units`, `buildings`, `game_mechanics`,
+      `wonders`, `infected` (2026-06-04); `cargo build` clean
+- [ ] Finish remaining vault kinds (`infected_runners/special/walkers`, 1
+      wonder, plus decide on data-shaped kinds — see `docs/todo.md`)
+- [ ] `main.rs` Bevy `App` that wires plugins, spawns entities, ticks the sim
+- [ ] First SDK-mode turn (only when `ANTHROPIC_API_KEY` is available) to
+      validate the `cache_control: ephemeral` math in §4

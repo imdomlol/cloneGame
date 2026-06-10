@@ -8,6 +8,168 @@ Repo: `C:\Users\dominic\Documents\GitHub\cloneGame`. Project status board: `clon
 
 ---
 
+## 2026-06-09 — `scripts/ship.py` + `scripts/load_game.py` + `releases/` convention
+
+**Decided:** Finished games are preserved via a snapshot directory under
+`releases/<slug>/`. `scripts/ship.py` writes the snapshot; `scripts/load_game.py`
+restores it. Slug is auto-derived from `game-config.json -> game.name`
+(lowercased, hyphenated). The convention is **independent of engine or game**:
+the snapshot stores whatever the chosen engine's source tree looks like, plus
+the vault and config that produced it.
+
+What a release contains:
+
+- `source/` — the full Cargo project (Bevy today; would be the engine's project
+  shape for any other engine). Includes `src/`, `tests/`, `Cargo.toml`,
+  `Cargo.lock`. `target/` is intentionally excluded (gigabytes, regenerable).
+- `vault/` — Phase 1's structured notes that fed codegen.
+- `game-config.json` — Phase 0 output: taxonomy + schemas + engine + system list.
+- `system_map.yaml` — Phase 2 ledger: what was implemented at ship time.
+- `binary/<platform>/<exe>` — compiled release binary, **gitignored**
+  (`releases/.gitignore` excludes `*/binary/`); too large for git, suited for
+  GitHub Releases or a separate distribution tier.
+- `README.md` — generated description: shipped timestamp, engine, plugin counts,
+  three ways to use the release.
+
+**Why:** dom flagged earlier that wiping the repo to start a new game loses
+the previous game entirely. The pipeline is hands-off; the operator shouldn't
+have to manually copy directories. `ship` solves "I built this and want to
+keep it"; `load` solves "I want to come back to it later." Both are local-only;
+distribution via GitHub Releases or similar is left for a later iteration.
+
+**Rejected:**
+- (a) Git branches per game. Cleaner semantically but requires the operator to
+  understand branch switching, and gigabytes of build cache from `cargo build`
+  invalidate cleanly only when `target/` is in `.gitignore` per-branch.
+- (b) GitHub Releases as the primary mechanism. Couples preservation to
+  GitHub auth + network. Bad fit for the "user without coding experience"
+  goal.
+- (c) Snapshotting `build/repomix-output.xml` / `chroma/` / engine_baseline.md.
+  These are regenerable from `vault/` + `game-config.json` and don't add
+  signal to the release. Reduces snapshot size from ~3x to ~1x.
+
+**Don't reintroduce:** ad-hoc rsync / manual copies. `ship` and `load` are
+the entrypoints; tests in `tests/test_ship.py` + `tests/test_load_game.py`
+keep them honest. 30 tests cover the full surface.
+
+---
+
+## 2026-06-07 (later) — Phase 3 designed + scaffolded; Phase 1 API derivation fix
+
+**Decided:** A new "Phase 3" produces gameplay-system plugins (state machine, input, HUD, win/lose, plus per-game logic) that compose Phase 2's per-entity leaves into a playable loop. Wikis describe entities individually, not the glue that connects them, so without Phase 3 the crate compiles but doesn't play. Engine-agnostic by construction: the system list is per-game data (proposed by an LLM), and *how* to write a system lives in `prompts/engine_determinism/<engine>.md`.
+
+**Architecture:**
+
+1. **Phase 0** gains a `propose_gameplay_systems` pass that produces a `systems` array on `chosen_engine` (fallback: top-level). Each entry: `{name, description, depends_on (list of kinds), produces (list of resources/events)}`. Always includes three universals (`game_state_machine`, `input_handler`, `hud`) and 4–10 per-game additions inferred from the kind shape.
+2. **Phase 2** unchanged. Still walks the vault for entity leaves.
+3. **Phase 3** is a new flag on the existing loop driver: `python phase2/loop_driver.py --from-systems`. Reads `chosen_engine.systems`, builds goals via `derive_goals_from_systems`, runs through the same codegen / build / smoke / repair gates. Goal text: `"implement the <name> system: <description>"` — the existing `derive_kind` regex picks `system` as the kind word, routing output to `src/system/<name>.rs`.
+4. **Aggregator pickup is automatic.** `phase2/entrypoint.py` greps every `impl Plugin for X` under `src/`, so generated system plugins land in `app_plugins::add_all` without any aggregator change.
+
+**Per-engine system rules (deferred):** A `## System rules` section in `prompts/engine_determinism/bevy.md` would teach the LLM how Bevy expects state machines (`States`), input (`Input<KeyCode>`), HUD (`bevy_ui` / `bevy_egui`), and how cross-entity systems integrate with the determinism rules. Deferring to a second pass once the first system turn actually runs and we see where the LLM struggles.
+
+**Why now:** dom flagged that the current generated game is "thin" — colored sprites, no input, no win condition. He asked whether a new phase is needed; the answer is yes, and this is its design.
+
+**Also this turn — wiki API URL derivation fix:** `phase1.config.toml` hardcoded the They Are Billions API endpoint, so swapping `game-config.json` to a different wiki silently kept Phase 1 querying TAB. Surfaced as "0 mainspace pages" for every Lethal Company category. Fix: `scripts/phase1_ingest._derive_api_endpoint` derives the API URL from `game-config.json`'s `game.wiki_base_url` (`https://x.fandom.com/wiki/` → `https://x.fandom.com/api.php`). Engine- and game-agnostic; the explicit override in phase1.config.toml is now dead config (left in place, harmless). Bug had been latent since the fresh-run because both runs were against the same wiki.
+
+**Rejected:** (a) Hand-curating the system list per game. Loses the autonomy that the rest of the pipeline has. (b) Generating systems via per-vault walk like Phase 2. Wikis don't have system entries; the codegen would have nothing to retrieve. (c) Putting system rules in the codegen prompt directly. Belongs in per-engine determinism data alongside the existing rules.
+
+**Don't reintroduce:** hardcoded wiki URLs in `phase1.config.toml`. The single source of truth is `game-config.json`'s `game.wiki_base_url`.
+
+---
+
+## 2026-06-07 — Three pipeline-gap fixes from the fresh-run retrospective
+
+Three engine- and game-agnostic improvements landed after the 2026-06-06 fresh run paused at 83/114:
+
+1. **Phase 0 proposer prompt now teaches union types.** `scripts/phase0_analyze._build_schema_prompt` now includes explicit `TYPE EMISSION RULES`: numeric wiki fields → `["string", "integer", "number"]`; lists → `array`; nested maps → `object`; booleans → `["string", "boolean"]`. This is the real fix behind the `_widen_property_type` validator workaround from 2026-06-05. The widening stays as a safety net for older `game-config.json` files (`{"type": "string"}` widens to all-types; the new prompt's union output passes through untouched). Cleaner schemas downstream means stricter validation when the proposer actually does emit shape constraints.
+
+2. **`codegen: false` flag on per-kind config** lets a kind be marked as runtime data / lore / patch notes and excluded from Phase 2 walks. `phase2.loop_driver.load_valid_kinds` now drops any kind with `codegen: false`. Marked the four data-shaped kinds (`campaign_map`, `campaign_content`, `survival_map`, `update_log`) in the current `game-config.json` so the loop's `--from-vault` no longer wastes turns on them. Game-agnostic: any wiki / engine can use the same knob. Future Phase 0 proposers should classify each kind as code-vs-data; for now the flag is set by hand based on the 2026-06-04 deferral decision.
+
+3. **Retrieval pin priority is fine** — verified by tracing `retrieve("implement the lucifer unit", pin_id="lucifer", pin_kind="unit")` directly. Lucifer's vault note ranks first in the bundle as designed. The earlier suspicion was wrong: the Academy of Immortals content in the failing prompt was a graph neighbour packed *after* lucifer; the actual failure was codex hitting its daily quota. Logged as "verified working" rather than fixed.
+
+**Rejected:** (a) removing `_widen_property_type` now that the proposer emits unions. Keeping as backward-compat for older configs; no cost when types already pass. (b) auto-classifying kinds as data-vs-code in Phase 0 this session. Real fix but would require a new LLM call + validation; deferred to next iteration of the proposer.
+
+**Don't reintroduce:** `{"type": "string"}` as the default schema example in the Phase 0 prompt. The prompt now leads with the union example.
+
+---
+
+## 2026-06-06 — Codex concurrency fixed; spawn lock + correct model id + backend fallback
+
+**Decided / done during the from-scratch fresh-run:**
+
+1. **`gpt-5.3-codex` is not a valid model id** for ChatGPT-account `codex exec` users; the LLM dispatcher kept emitting `codegen_error` on every Phase 2 turn until the model id was changed to `gpt-5.5` in `pipeline.config.toml -> [phase2_codegen.models]`. Phase 0 and Phase 1 already used `gpt-5.4-mini` and worked. The error was hidden behind a `[:240]` truncation that captured only the codex banner; the actual `"The 'gpt-5.3-codex' model is not supported when using Codex with a ChatGPT account"` message lived past byte 240.
+
+2. **Codex concurrency races on `~/.codex/skills/` init** when N codex processes spawn within ~1 second of each other (codex refreshes its 172-skill plugin catalog on every start). Added a `threading.Lock` + 3-second hold in `scripts/compile_cache.run_llm` that serializes only codex spawn (not reasoning). claude / SDK paths bypass the lock. Pilot at `--concurrency 3` ran 6/6 OK after the lock + correct model id were in place.
+
+3. **`_format_backend_error` keeps the tail of the exception**, not the head. Backend CLIs (codex, claude -p) prepend a banner before the actual error message; truncating from the start hides quota / model / network issues. The new helper tails the message and is engine-agnostic.
+
+4. **`--fallback-llm-mode`** in `phase2/loop_driver.py` retries any turn whose primary backend raises with a secondary backend (used here as the unattended-run safety net when codex hit its daily ChatGPT quota at ~1:30 AM PDT; the loop resumed on claude). Engine- and backend-agnostic; activates on any exception from the primary.
+
+**Why:** the autonomous run uncovered three failure modes that any from-scratch user would hit. Each fix is engine- and game-agnostic: the model id is config, the spawn lock is a runtime invariant of the CLI backend, the error tail helper applies to any subprocess-stderr exception, and the fallback works for any pair of LLM_MODES. The CHATGPT quota itself is a per-user limit nothing in the pipeline can fix; the fallback is the right escape valve.
+
+**Rejected:** (a) running codex at `--concurrency 1` as a workaround. Slower wall-clock and didn't actually fix the race for future users at higher concurrency. (b) pre-installing all 172 codex skills serially before the loop. Doesn't fix the per-call init that still runs in parallel; codex re-validates the catalog on every start. (c) burning Claude Code quota as the default. Codex is the cheaper subscription per turn; claude is the documented fallback only.
+
+**Don't reintroduce:** `gpt-5.3-codex` as a default codex model id — it's invalid for ChatGPT-account users. If a future model rev makes it valid, prove it with a single `codex exec --model gpt-X` first. Also don't truncate backend exceptions from the head — always keep the tail; the meaningful text is at the end of the banner.
+
+---
+
+## 2026-06-05 — Phase 1 validator widening for LLM-proposed scalar schemas
+
+**Decided:** `scripts/validation.kind_frontmatter_schema` widens any scalar-typed property in a per-kind schema (`type: "string"` / `"integer"` / `"number"` / `"boolean"` / `"null"`) to accept the full JSON type set including `array` and `object`. Phase 0's LLM proposer routinely labels numeric and richer-shape fields as strings because it sees them in string-y wikitext table context; the compile LLM correctly extracts them as integers, arrays, or objects, which the strict schema then rejects. On the fresh-run the pre-fix quarantine rate was ~71% (69/97 pages); post-fix it dropped to 0 after a single cache-hit re-run.
+
+**Why:** game- and engine-agnostic by construction (operates on schema shape only, not field names). Preserves structural constraints when the proposer is confident (`object` declarations keep their constraint); only scalars are treated as advisory. Long-term fix is teaching the proposer to emit unions for numeric fields — until then the lenient validator catches the drift downstream.
+
+**Rejected:** (a) tightening the proposer prompt to emit unions. Cleaner architecturally but invalidates the per-game `frontmatter_schema` block on the next Phase 0 run, which forces a Phase 1 re-compile of every page. Deferred. (b) disabling per-kind validation entirely. Loses sanity-check coverage for the (rare) case where the proposer DOES emit a meaningful shape constraint.
+
+**Don't reintroduce:** strict scalar typing on LLM-proposed per-kind schemas. If a future proposer is reliably emitting union types, the widening helper can shrink back to only the declared types.
+
+---
+
+## 2026-06-05 (later) — Per-engine scaffold templates close the last hand-written gap
+
+**Decided:** Engine foundation files that were previously hand-authored — `Cargo.toml`, `src/lib.rs`, `src/sim.rs`, `src/main.rs`, `src/app_plugins.rs` (stub), `tests/app_smoke.rs` — now live as templates under `prompts/engine_scaffold/<engine>/` mirroring the target layout. `phase2/scaffold.py` is the prelude step: it reads `chosen_engine.name` from `game-config.json`, finds the matching scaffold directory, and copies every file byte-exact into `game/`. Hand-edited files are preserved by default (status `skipped_hand_edit`); `--force` overwrites; `--dry-run` previews.
+
+Engine dispatch is by lowercased `chosen_engine.name`, the same key as `prompts/engine_determinism/<engine>.md`. Adding a new engine is a new directory under `prompts/engine_scaffold/`, not a code change.
+
+**Why:** Dom flagged during the planned fresh-run that the "preserve" list (Cargo.toml, sim.rs, main.rs, app_smoke.rs, etc) was a pipeline gap, not foundation. The pipeline should produce a working game from `chosen_engine` + vault — no hand-written code anywhere. The scaffold step closes this for non-codegen-shaped engine scaffolding (deps, foundation primitives, entrypoint, smoke harness). Per-game variation still flows through Phase 0 (taxonomy) → Phase 1 (vault) → Phase 2 (leaves); per-engine architecture flows through scaffold templates + determinism rules. Per-game inside-engine variation (e.g. window title) is currently hard-coded in the template and is acceptable — when a per-game knob is genuinely needed, the template can grow `{placeholder}` substitution; left out for now per "simplest solution first".
+
+**Why no string substitution in templates:** the rendered files encode engine architecture (which Bevy version, what foundation types the bevy.md rules name), not per-game data. Per-game data lives in the vault. Adding substitution now would invite drift in the foundation contract; the current setup means the bevy.md rules reference exactly the types the scaffold lays down.
+
+**Rejected:** (a) Generating Cargo.toml and main.rs via the codegen LLM. Adds LLM cost for files that are 100% engine-pattern, none of it game-specific. (b) Keeping these as "permanent foundation" outside the pipeline. Fails the "user runs the pipeline and gets a game" goal — a new engine would require code edits to the existing hand-authored files. (c) A manifest.json-driven file mapping. Walking the scaffold tree and mirroring relative paths is simpler and removes a metadata file that could drift from the actual contents.
+
+**Don't reintroduce:** hand-authoring engine scaffold files in `game/`. The scaffold step is the entrypoint; a forgotten file gets noticed because the scaffold dir would have a new entry but the renderer would emit `skipped_hand_edit` on it. To genuinely customise the scaffold per game (rare), use `--force` after editing the per-game file, or carve out a new engine name (e.g. `bevy-multiplayer`) under `prompts/engine_scaffold/`.
+
+---
+
+## 2026-06-05 — Phase 2 step D: driver-owned app aggregator + excludable plugins
+
+**Decided:** The crate-level plugin registry (`game/src/app_plugins.rs`) is now driver-owned, the same way per-kind `mod.rs` aggregators already are. `loop_driver.regenerate_app_aggregator` walks `src/` for every `impl Plugin for X`, derives crate-relative module paths from file paths, and writes an idempotent `pub fn add_all(app: &mut App) -> &mut App` chained over chunks of ≤14 plugins (Bevy's tuple-`add_plugins` ceiling). The regen runs as part of `_try_build` on every turn, captured in the revert trail so a failed turn restores `app_plugins.rs` byte-exact. `main.rs` and `app_smoke.rs` both call `app_plugins::add_all` instead of enumerating plugins by hand; they no longer decay when new leaves land.
+
+Per-engine data: `chosen_engine.entrypoint = {aggregator_file, aggregator_module, tuple_chunk_size, main_file, excluded_plugins}` in `game-config.json`. Opt-in: engines that have no programmatic plugin registry (Godot scenes, Unity prefabs) omit the block and the step is skipped. `excluded_plugins` is a `{name: reason}` map that holds known-broken plugins out of the aggregator while the loop regenerates them through the smoke gate (current entry: `AcademyOfImmortalsPlugin` for the existing `&mut UnitStats` B0001 conflict).
+
+**Why:** The smoke gate (A+B from the 2026-06-04 retrospective) only catches conflicts in plugins that are *in* the aggregator. Before D, `app_smoke.rs` was hand-enumerated, so a new leaf could land without being smoke-tested — the gate decayed silently. Auto-deriving the list from `impl Plugin for X` declarations closes that. Also: `app.update()` alone does not always tick `FixedUpdate` in Bevy 0.15 (Fixed time accumulator), so most ECS conflicts (which surface inside `FixedUpdate` systems) were not actually being run. The smoke test now calls `app.world_mut().run_schedule(FixedUpdate)` twice explicitly, guaranteeing those systems fire and surface their B0001 conflicts.
+
+**Rejected:** (a) Generating `main.rs` itself via codegen in this pass — main.rs carries window config, camera, spawn logic, and the visible-app scope dom chose; the LLM has no spec for that. Deferred to a future iteration that gates on `main.rs` being absent rather than always re-running. (b) Hard-coding the aggregator filename in Python; per the game-agnostic principle it lives in `chosen_engine.entrypoint`. (c) Silently dropping conflicting plugins from the aggregator — that would hide the bug; the exclusion list is explicit, requires a documented reason, and shows up in code review.
+
+**Don't reintroduce:** hand-enumerating plugins in `main.rs` / `app_smoke.rs`. The aggregator is the single source of truth; touching the enumeration by hand will be overwritten on the next loop run. If you need to exclude a plugin temporarily, add it to `excluded_plugins` with the reason — the loop's smoke gate will catch the underlying breakage and the repair loop will fix it, then the exclusion can come out.
+
+---
+
+## 2026-06-04 — Data-shaped kinds deferred to runtime asset path; lore + research go through loop
+
+**Decided:** Of the untouched kinds in the backlog:
+
+- **Runtime data assets (no codegen):** `campaign_content` (7), `campaign_maps` (24), `survival_maps` (1), `updates` (1). These will be loaded as RON/JSON assets at runtime once a loader exists; not generated as Rust modules. The asset-loader implementation itself is deferred until a runnable `main.rs` exists.
+- **Go through the loop driver as code:** `research` (2), `characters` (3), `mayors` (1), `locations` (1), `organizations` (2). Same loop invocation as the infected/wonders backlog.
+
+**Why:** Per-map Rust modules don't generalize across games — a different game's maps are pure data with no code shape worth synthesizing. Patch notes (`updates`) are not code. Lore-only kinds *might* not warrant code modules either, but the marginal cost of running them through the loop is small, the system_map ledger captures the coverage, and a future "mayor" entry might surface meaningful mechanics (the existing `game_mechanics/mayors.rs` shows there is real behavior to model). Better to let the codegen LLM judge than to skip blind. Research is plausibly mechanics-shaped already.
+
+**Rejected:** (a) skipping the lore kinds entirely — would leave the coverage table permanently incomplete with no signal of *why*. (b) generating stubs — wastes a turn and produces noise modules that don't contribute. (c) generating per-map Rust for campaign_maps — 24 turns of LLM cost for data that doesn't compose into code.
+
+**Don't reintroduce:** treating map/scenario data as a codegen target. When the asset loader lands, it reads RON/JSON from a `assets/` path; the pipeline doesn't generate it.
+
+---
+
 ## 2026-05-21 — Phase 2 embedding provider: local embedder, not OpenAI
 
 **Decided:** Phase 2's Chroma index will use a local embedding model (e.g. BGE / nomic-embed via `sentence-transformers`) rather than OpenAI `text-embedding-3-small`. Concrete model pick deferred to Phase 2 kickoff; the constraint is "runs locally, no third-party API key."

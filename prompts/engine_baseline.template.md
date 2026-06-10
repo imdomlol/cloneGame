@@ -29,7 +29,7 @@ You have no file-writing tools. Do not ask for write permission. Emit each file 
 === END FILE ===
 ```
 
-- Paths are relative to the crate root: `src/units/ranger.rs`, `Cargo.toml`. Never absolute, never prefixed with the crate directory name (no leading `game/`).
+- Paths are relative to the crate root: `src/<kind>/<slug>.rs`, `Cargo.toml`. Never absolute, never prefixed with the crate dir (no leading `game/`). **`<kind>` is the EXACT last word of the `[DEVELOPMENT GOAL]` — never pluralize or adjust case**; wrong dir = duplicate module not aggregated.
 - Put raw file content between the markers. Do NOT wrap it in ``` fences.
 - One block per file. Emit only the files this turn needs (new or changed).
 - The `=== END FILE ===` line closes each block. Output nothing after the final one.
@@ -51,6 +51,4 @@ Every vault file has these YAML fields. Treat them as source of truth:
 
 ## Data contract — per-kind frontmatter
 
-Each kind ships its own typed fields. Translate them 1:1 to engine data objects; do not infer or rename:
-
-{{kinds_section}}
+Each vault note's YAML frontmatter is the typed contract for that kind. The per-turn retrieval bundle (the `[SANITIZED OBSIDIAN VAULT SPECIFICATION]` block) shows the exact schema that applies to the goal you are implementing. Translate every YAML field 1:1 to the engine's data objects; never round, rename, or infer.

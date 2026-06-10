@@ -1,0 +1,18 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 6046.47it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[OK  ] advanced_farm: implement the advanced farm building  -> 1 files
+[OK  ] advanced_mill: implement the advanced mill building  -> 1 files
+[OK  ] advanced_quarry: implement the advanced quarry building  -> 1 files
+[OK  ] bank: implement the bank building  -> 2 files  (skipped: src/buildings/mod.rs)
+[OK  ] buildings: implement the buildings building  -> 1 files
+[OK  ] command_center: implement the command center building  -> 2 files  (skipped: src/buildings/mod.rs)
+
+summary: {'implemented': 6}

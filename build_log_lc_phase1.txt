@@ -1,0 +1,3650 @@
+
+========== ITEM 001 ==========
+001 NEXT       Airhorn
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Airhorn
+  cancel     Ctrl+C skips this page and continues
+001 DONE       Airhorn
+  result     compiled
+  path       vault\scrap_items\airhorn.md
+  wikitext   1512 chars -> 1435 chars
+---------- END ITEM 001 ----------
+
+========== ITEM 002 ==========
+002 NEXT       Apparatus
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Apparatus
+  cancel     Ctrl+C skips this page and continues
+002 SKIP       Apparatus
+  reason     already completed for this kind
+  path       vault\scrap_items\apparatus.md
+---------- END ITEM 002 ----------
+
+========== ITEM 003 ==========
+003 NEXT       Bee Hive
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Bee_Hive
+  cancel     Ctrl+C skips this page and continues
+003 SKIP       Bee Hive
+  reason     already completed for this kind
+  path       vault\scrap_items\bee_hive.md
+---------- END ITEM 003 ----------
+
+========== ITEM 004 ==========
+004 NEXT       Big Bolt
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Big_Bolt
+  cancel     Ctrl+C skips this page and continues
+004 QUARANTINE Big Bolt
+  result     validation errors
+  path       vault\_quarantine\19.md
+  wikitext   1123 chars -> 1103 chars
+  error      19 is not of type 'string'
+---------- END ITEM 004 ----------
+
+========== ITEM 005 ==========
+005 NEXT       Bone
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Bone
+  cancel     Ctrl+C skips this page and continues
+005 SKIP       Bone
+  reason     already completed for this kind
+  path       vault\scrap_items\bone.md
+---------- END ITEM 005 ----------
+
+========== ITEM 006 ==========
+006 NEXT       Bottles
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Bottles
+  cancel     Ctrl+C skips this page and continues
+006 QUARANTINE Bottles
+  result     validation errors
+  path       vault\_quarantine\20.md
+  wikitext   1354 chars -> 1159 chars
+  error      20 is not of type 'string'
+---------- END ITEM 006 ----------
+
+========== ITEM 007 ==========
+007 NEXT       Brass Bell
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Brass_Bell
+  cancel     Ctrl+C skips this page and continues
+007 DONE       Brass Bell
+  result     compiled
+  path       vault\scrap_items\brass_bell.md
+  wikitext   1595 chars -> 1392 chars
+---------- END ITEM 007 ----------
+
+========== ITEM 008 ==========
+008 NEXT       Candy
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Candy
+  cancel     Ctrl+C skips this page and continues
+008 QUARANTINE Candy
+  result     validation errors
+  path       vault\_quarantine\22.md
+  wikitext   682 chars -> 662 chars
+  error      22 is not of type 'string'
+---------- END ITEM 008 ----------
+
+========== ITEM 009 ==========
+009 NEXT       Cash Register
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Cash_Register
+  cancel     Ctrl+C skips this page and continues
+009 DONE       Cash Register
+  result     compiled
+  path       vault\scrap_items\cash_register.md
+  wikitext   2180 chars -> 1816 chars
+---------- END ITEM 009 ----------
+
+========== ITEM 010 ==========
+010 NEXT       Chemical Jug
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Chemical_Jug
+  cancel     Ctrl+C skips this page and continues
+  related    item -> vault\scrap_items\chemical_jug.md
+010 MIGRATE    Chemical Jug
+  reason     reused completed source from another kind
+  from       item -> vault\scrap_items\chemical_jug.md
+  path       vault\scrap_items\chemical_jug.md
+---------- END ITEM 010 ----------
+
+========== ITEM 011 ==========
+011 NEXT       Clock
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Clock
+  cancel     Ctrl+C skips this page and continues
+011 SKIP       Clock
+  reason     already completed for this kind
+  path       vault\scrap_items\clock.md
+---------- END ITEM 011 ----------
+
+========== ITEM 012 ==========
+012 NEXT       Clown Horn
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Clown_Horn
+  cancel     Ctrl+C skips this page and continues
+012 DONE       Clown Horn
+  result     compiled
+  path       vault\scrap_items\clown_horn.md
+  wikitext   1514 chars -> 1433 chars
+---------- END ITEM 012 ----------
+
+========== ITEM 013 ==========
+013 NEXT       Coffee Mug
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Coffee_Mug
+  cancel     Ctrl+C skips this page and continues
+013 DONE       Coffee Mug
+  result     compiled
+  path       vault\scrap_items\coffee_mug.md
+  wikitext   1572 chars -> 1376 chars
+---------- END ITEM 013 ----------
+
+========== ITEM 014 ==========
+014 NEXT       Control Pad
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Control_Pad
+  cancel     Ctrl+C skips this page and continues
+014 DONE       Control Pad
+  result     compiled
+  path       vault\scrap_items\control_pad.md
+  wikitext   860 chars -> 654 chars
+---------- END ITEM 014 ----------
+
+========== ITEM 015 ==========
+015 NEXT       Cookie Pan
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Cookie_Pan
+  cancel     Ctrl+C skips this page and continues
+015 DONE       Cookie Pan
+  result     compiled
+  path       vault\scrap_items\cookie_pan.md
+  wikitext   705 chars -> 685 chars
+---------- END ITEM 015 ----------
+
+========== ITEM 016 ==========
+016 NEXT       DIY-Flashbang
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/DIY-Flashbang
+  cancel     Ctrl+C skips this page and continues
+016 DONE       DIY-Flashbang
+  result     compiled
+  path       vault\scrap_items\homemade_flashbang.md
+  wikitext   2727 chars -> 2346 chars
+---------- END ITEM 016 ----------
+
+========== ITEM 017 ==========
+017 NEXT       Double-Barrel
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Double-Barrel
+  cancel     Ctrl+C skips this page and continues
+017 DONE       Double-Barrel
+  result     compiled
+  path       vault\scrap_items\double_barrel.md
+  wikitext   9837 chars -> 9108 chars
+---------- END ITEM 017 ----------
+
+========== ITEM 018 ==========
+018 NEXT       Dramatic Mask
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Dramatic_Mask
+  cancel     Ctrl+C skips this page and continues
+018 DONE       Dramatic Mask
+  result     compiled
+  path       vault\scrap_items\dramatic_mask.md
+  wikitext   4079 chars -> 3504 chars
+---------- END ITEM 018 ----------
+
+========== ITEM 019 ==========
+019 NEXT       Dust Pan
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Dust_Pan
+  cancel     Ctrl+C skips this page and continues
+019 DONE       Dust Pan
+  result     compiled
+  path       vault\scrap_items\dust_pan.md
+  wikitext   505 chars -> 485 chars
+---------- END ITEM 019 ----------
+
+========== ITEM 020 ==========
+020 NEXT       Ear
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Ear
+  cancel     Ctrl+C skips this page and continues
+020 DONE       Ear
+  result     compiled
+  path       vault\scrap_items\ear.md
+  wikitext   517 chars -> 498 chars
+---------- END ITEM 020 ----------
+
+========== ITEM 021 ==========
+021 NEXT       Easter Egg
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Easter_Egg
+  cancel     Ctrl+C skips this page and continues
+021 QUARANTINE Easter Egg
+  result     validation errors
+  path       vault\_quarantine\69.md
+  wikitext   2853 chars -> 2592 chars
+  error      69 is not of type 'string'
+---------- END ITEM 021 ----------
+
+========== ITEM 022 ==========
+022 NEXT       Egg
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Egg
+  cancel     Ctrl+C skips this page and continues
+022 DONE       Egg
+  result     compiled
+  path       vault\scrap_items\egg.md
+  wikitext   4636 chars -> 4224 chars
+---------- END ITEM 022 ----------
+
+========== ITEM 023 ==========
+023 NEXT       Egg Beater
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Egg_Beater
+  cancel     Ctrl+C skips this page and continues
+023 DONE       Egg Beater
+  result     compiled
+  path       vault\scrap_items\egg_beater.md
+  wikitext   511 chars -> 491 chars
+---------- END ITEM 023 ----------
+
+========== ITEM 024 ==========
+024 NEXT       Fancy Lamp
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Fancy_Lamp
+  cancel     Ctrl+C skips this page and continues
+024 DONE       Fancy Lamp
+  result     compiled
+  path       vault\scrap_items\fancy_lamp.md
+  wikitext   689 chars -> 670 chars
+---------- END ITEM 024 ----------
+
+========== ITEM 025 ==========
+025 NEXT       Flask
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Flask
+  cancel     Ctrl+C skips this page and continues
+025 QUARANTINE Flask
+  result     validation errors
+  path       vault\_quarantine\64.md
+  wikitext   919 chars -> 811 chars
+  error      64 is not of type 'string'
+---------- END ITEM 025 ----------
+
+========== ITEM 026 ==========
+026 NEXT       Foot
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Foot
+  cancel     Ctrl+C skips this page and continues
+026 DONE       Foot
+  result     compiled
+  path       vault\scrap_items\foot.md
+  wikitext   569 chars -> 550 chars
+---------- END ITEM 026 ----------
+
+========== ITEM 027 ==========
+027 NEXT       Garbage Lid
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Garbage_Lid
+  cancel     Ctrl+C skips this page and continues
+027 DONE       Garbage Lid
+  result     compiled
+  path       vault\scrap_items\garbage_lid.md
+  wikitext   833 chars -> 813 chars
+---------- END ITEM 027 ----------
+
+========== ITEM 028 ==========
+028 NEXT       Gift Box
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Gift_Box
+  cancel     Ctrl+C skips this page and continues
+028 QUARANTINE Gift Box
+  result     validation errors
+  path       vault\_quarantine\63.md
+  wikitext   2670 chars -> 2651 chars
+  error      63 is not of type 'string'
+---------- END ITEM 028 ----------
+
+========== ITEM 029 ==========
+029 NEXT       Gold Bar
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Gold_Bar
+  cancel     Ctrl+C skips this page and continues
+029 QUARANTINE Gold Bar
+  result     validation errors
+  path       vault\_quarantine\36.md
+  wikitext   1563 chars -> 1256 chars
+  error      36 is not of type 'string'
+---------- END ITEM 029 ----------
+
+========== ITEM 030 ==========
+030 NEXT       Golden Cup
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Golden_Cup
+  cancel     Ctrl+C skips this page and continues
+030 DONE       Golden Cup
+  result     compiled
+  path       vault\scrap_items\golden_cup.md
+  wikitext   554 chars -> 534 chars
+---------- END ITEM 030 ----------
+
+========== ITEM 031 ==========
+031 NEXT       Hair Brush
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Hair_Brush
+  cancel     Ctrl+C skips this page and continues
+031 QUARANTINE Hair Brush
+  result     validation errors
+  path       vault\_quarantine\21.md
+  wikitext   858 chars -> 838 chars
+  error      21 is not of type 'string'
+---------- END ITEM 031 ----------
+
+========== ITEM 032 ==========
+032 NEXT       Hairdryer
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Hairdryer
+  cancel     Ctrl+C skips this page and continues
+032 DONE       Hairdryer
+  result     compiled
+  path       vault\scrap_items\hairdryer.md
+  wikitext   1342 chars -> 1260 chars
+---------- END ITEM 032 ----------
+
+========== ITEM 033 ==========
+033 NEXT       Hand
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Hand
+  cancel     Ctrl+C skips this page and continues
+033 DONE       Hand
+  result     compiled
+  path       vault\scrap_items\hand.md
+  wikitext   713 chars -> 694 chars
+---------- END ITEM 033 ----------
+
+========== ITEM 034 ==========
+034 NEXT       Heart
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Heart
+  cancel     Ctrl+C skips this page and continues
+034 DONE       Heart
+  result     compiled
+  path       vault\scrap_items\heart.md
+  wikitext   1032 chars -> 862 chars
+---------- END ITEM 034 ----------
+
+========== ITEM 035 ==========
+035 NEXT       Jar of Pickles
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Jar_of_Pickles
+  cancel     Ctrl+C skips this page and continues
+035 QUARANTINE Jar of Pickles
+  result     validation errors
+  path       vault\_quarantine\44.md
+  wikitext   874 chars -> 854 chars
+  error      44 is not of type 'string'
+---------- END ITEM 035 ----------
+
+========== ITEM 036 ==========
+036 NEXT       Kitchen Knife
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Kitchen_Knife
+  cancel     Ctrl+C skips this page and continues
+036 QUARANTINE Kitchen Knife
+  result     validation errors
+  path       vault\_quarantine\68.md
+  wikitext   4744 chars -> 4183 chars
+  error      68 is not of type 'string'
+---------- END ITEM 036 ----------
+
+========== ITEM 037 ==========
+037 NEXT       Knee
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Knee
+  cancel     Ctrl+C skips this page and continues
+037 DONE       Knee
+  result     compiled
+  path       vault\scrap_items\knee.md
+  wikitext   524 chars -> 505 chars
+---------- END ITEM 037 ----------
+
+========== ITEM 038 ==========
+038 NEXT       Large Axle
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Large_Axle
+  cancel     Ctrl+C skips this page and continues
+038 QUARANTINE Large Axle
+  result     validation errors
+  path       vault\_quarantine\26.md
+  wikitext   923 chars -> 903 chars
+  error      26 is not of type 'string'
+  error      {} is not of type 'string', 'integer', 'number'
+---------- END ITEM 038 ----------
+
+========== ITEM 039 ==========
+039 NEXT       Laser Pointer
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Laser_Pointer
+  cancel     Ctrl+C skips this page and continues
+039 DONE       Laser Pointer
+  result     compiled
+  path       vault\scrap_items\laser_pointer.md
+  wikitext   1145 chars -> 1125 chars
+---------- END ITEM 039 ----------
+
+========== ITEM 040 ==========
+040 NEXT       Magic 7 Ball
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Magic_7_Ball
+  cancel     Ctrl+C skips this page and continues
+040 DONE       Magic 7 Ball
+  result     compiled
+  path       vault\scrap_items\magic_7_ball.md
+  wikitext   705 chars -> 686 chars
+---------- END ITEM 040 ----------
+
+========== ITEM 041 ==========
+041 NEXT       Magnifying Glass
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Magnifying_Glass
+  cancel     Ctrl+C skips this page and continues
+041 DONE       Magnifying Glass
+  result     compiled
+  path       vault\scrap_items\magnifying_glass.md
+  wikitext   893 chars -> 873 chars
+---------- END ITEM 041 ----------
+
+========== ITEM 042 ==========
+042 NEXT       Old Phone
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Old_Phone
+  cancel     Ctrl+C skips this page and continues
+042 DONE       Old Phone
+  result     compiled
+  path       vault\scrap_items\old_phone.md
+  wikitext   1142 chars -> 1092 chars
+---------- END ITEM 042 ----------
+
+========== ITEM 043 ==========
+043 NEXT       Painting
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Painting
+  cancel     Ctrl+C skips this page and continues
+043 DONE       Painting
+  result     compiled
+  path       vault\scrap_items\painting.md
+  wikitext   703 chars -> 600 chars
+---------- END ITEM 043 ----------
+
+========== ITEM 044 ==========
+044 NEXT       Perfume Bottle
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Perfume_Bottle
+  cancel     Ctrl+C skips this page and continues
+044 QUARANTINE Perfume Bottle
+  result     validation errors
+  path       vault\_quarantine\42.md
+  wikitext   833 chars -> 813 chars
+  error      42 is not of type 'string'
+---------- END ITEM 044 ----------
+
+========== ITEM 045 ==========
+045 NEXT       Pill Bottle
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Pill_Bottle
+  cancel     Ctrl+C skips this page and continues
+045 QUARANTINE Pill Bottle
+  result     validation errors
+  path       vault\_quarantine\45.md
+  wikitext   953 chars -> 721 chars
+  error      45 is not of type 'string'
+---------- END ITEM 045 ----------
+
+========== ITEM 046 ==========
+046 NEXT       Plastic Cup
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Plastic_Cup
+  cancel     Ctrl+C skips this page and continues
+046 QUARANTINE Plastic Cup
+  result     validation errors
+  path       vault\_quarantine\74.md
+  wikitext   1208 chars -> 874 chars
+  error      74 is not of type 'string'
+---------- END ITEM 046 ----------
+
+========== ITEM 047 ==========
+047 NEXT       Plastic Fish
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Plastic_Fish
+  cancel     Ctrl+C skips this page and continues
+047 QUARANTINE Plastic Fish
+  result     validation errors
+  path       vault\_quarantine\34.md
+  wikitext   813 chars -> 722 chars
+  error      34 is not of type 'string'
+---------- END ITEM 047 ----------
+
+========== ITEM 048 ==========
+048 NEXT       Player Body
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Player_Body
+  cancel     Ctrl+C skips this page and continues
+048 DONE       Player Body
+  result     compiled
+  path       vault\scrap_items\player_body.md
+  wikitext   6019 chars -> 5657 chars
+---------- END ITEM 048 ----------
+
+========== ITEM 049 ==========
+049 NEXT       Red Soda
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Red_Soda
+  cancel     Ctrl+C skips this page and continues
+049 DONE       Red Soda
+  result     compiled
+  path       vault\scrap_items\red_soda.md
+  wikitext   738 chars -> 718 chars
+---------- END ITEM 049 ----------
+
+========== ITEM 050 ==========
+050 NEXT       Remote
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Remote
+  cancel     Ctrl+C skips this page and continues
+050 DONE       Remote
+  result     compiled
+  path       vault\scrap_items\remote.md
+  wikitext   1042 chars -> 992 chars
+---------- END ITEM 050 ----------
+
+========== ITEM 051 ==========
+051 NEXT       Ribcage
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Ribcage
+  cancel     Ctrl+C skips this page and continues
+051 DONE       Ribcage
+  result     compiled
+  path       vault\scrap_items\ribcage.md
+  wikitext   654 chars -> 634 chars
+---------- END ITEM 051 ----------
+
+========== ITEM 052 ==========
+052 NEXT       Ring
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Ring
+  cancel     Ctrl+C skips this page and continues
+052 DONE       Ring
+  result     compiled
+  path       vault\scrap_items\wedding_ring.md
+  wikitext   799 chars -> 779 chars
+---------- END ITEM 052 ----------
+
+========== ITEM 053 ==========
+053 NEXT       Rubber Ducky
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Rubber_Ducky
+  cancel     Ctrl+C skips this page and continues
+053 DONE       Rubber Ducky
+  result     compiled
+  path       vault\scrap_items\rubber_ducky.md
+  wikitext   1619 chars -> 1454 chars
+---------- END ITEM 053 ----------
+
+========== ITEM 054 ==========
+054 NEXT       Scrap
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Scrap
+  cancel     Ctrl+C skips this page and continues
+054 DONE       Scrap
+  result     compiled
+  path       vault\scrap_items\scrap.md
+  wikitext   15080 chars -> 11842 chars
+---------- END ITEM 054 ----------
+
+========== ITEM 055 ==========
+055 NEXT       Soccer Ball
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Soccer_Ball
+  cancel     Ctrl+C skips this page and continues
+055 DONE       Soccer Ball
+  result     compiled
+  path       vault\scrap_items\soccer_ball.md
+  wikitext   2718 chars -> 2269 chars
+---------- END ITEM 055 ----------
+
+========== ITEM 056 ==========
+056 NEXT       Steering Wheel
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Steering_Wheel
+  cancel     Ctrl+C skips this page and continues
+056 DONE       Steering Wheel
+  result     compiled
+  path       vault\scrap_items\steering_wheel.md
+  wikitext   574 chars -> 554 chars
+---------- END ITEM 056 ----------
+
+========== ITEM 057 ==========
+057 NEXT       Stop Sign
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Stop_Sign
+  cancel     Ctrl+C skips this page and continues
+057 DONE       Stop Sign
+  result     compiled
+  path       vault\scrap_items\stop_sign.md
+  wikitext   2160 chars -> 2030 chars
+---------- END ITEM 057 ----------
+
+========== ITEM 058 ==========
+058 NEXT       Tattered Metal Sheet
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Tattered_Metal_Sheet
+  cancel     Ctrl+C skips this page and continues
+058 DONE       Tattered Metal Sheet
+  result     compiled
+  path       vault\scrap_items\tattered_metal_sheet.md
+  wikitext   1537 chars -> 1429 chars
+---------- END ITEM 058 ----------
+
+========== ITEM 059 ==========
+059 NEXT       Tea Kettle
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Tea_Kettle
+  cancel     Ctrl+C skips this page and continues
+059 QUARANTINE Tea Kettle
+  result     validation errors
+  path       vault\_quarantine\53.md
+  wikitext   641 chars -> 621 chars
+  error      53 is not of type 'string'
+---------- END ITEM 059 ----------
+
+========== ITEM 060 ==========
+060 NEXT       Teeth
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Teeth
+  cancel     Ctrl+C skips this page and continues
+060 DONE       Teeth
+  result     compiled
+  path       vault\scrap_items\teeth.md
+  wikitext   1140 chars -> 1086 chars
+---------- END ITEM 060 ----------
+
+========== ITEM 061 ==========
+061 NEXT       Toilet Paper
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Toilet_Paper
+  cancel     Ctrl+C skips this page and continues
+061 DONE       Toilet Paper
+  result     compiled
+  path       vault\scrap_items\toilet_paper.md
+  wikitext   1668 chars -> 1222 chars
+---------- END ITEM 061 ----------
+
+========== ITEM 062 ==========
+062 NEXT       Toothpaste
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Toothpaste
+  cancel     Ctrl+C skips this page and continues
+062 QUARANTINE Toothpaste
+  result     validation errors
+  path       vault\_quarantine\54.md
+  wikitext   751 chars -> 731 chars
+  error      54 is not of type 'string'
+---------- END ITEM 062 ----------
+
+========== ITEM 063 ==========
+063 NEXT       Toy Cube
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Toy_Cube
+  cancel     Ctrl+C skips this page and continues
+063 DONE       Toy Cube
+  result     compiled
+  path       vault\scrap_items\toy_cube.md
+  wikitext   1031 chars -> 943 chars
+---------- END ITEM 063 ----------
+
+========== ITEM 064 ==========
+064 NEXT       Toy Robot
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Toy_Robot
+  cancel     Ctrl+C skips this page and continues
+064 DONE       Toy Robot
+  result     compiled
+  path       vault\scrap_items\robot_toy.md
+  wikitext   2084 chars -> 1893 chars
+---------- END ITEM 064 ----------
+
+========== ITEM 065 ==========
+065 NEXT       Toy Train
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Toy_Train
+  cancel     Ctrl+C skips this page and continues
+065 DONE       Toy Train
+  result     compiled
+  path       vault\scrap_items\toy_train.md
+  wikitext   1462 chars -> 1232 chars
+---------- END ITEM 065 ----------
+
+========== ITEM 066 ==========
+066 NEXT       V-type Engine
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/V-type_Engine
+  cancel     Ctrl+C skips this page and continues
+066 DONE       V-type Engine
+  result     compiled
+  path       vault\scrap_items\v_type_engine.md
+  wikitext   1003 chars -> 984 chars
+---------- END ITEM 066 ----------
+
+========== ITEM 067 ==========
+067 NEXT       Weapon
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Weapon
+  cancel     Ctrl+C skips this page and continues
+067 DONE       Weapon
+  result     compiled
+  path       vault\scrap_items\weapon.md
+  wikitext   3659 chars -> 3172 chars
+---------- END ITEM 067 ----------
+
+========== ITEM 068 ==========
+068 NEXT       Whoopie-Cushion
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Whoopie-Cushion
+  cancel     Ctrl+C skips this page and continues
+068 QUARANTINE Whoopie-Cushion
+  result     validation errors
+  path       vault\_quarantine\67.md
+  wikitext   1732 chars -> 1612 chars
+  error      67 is not of type 'string'
+---------- END ITEM 068 ----------
+
+========== ITEM 069 ==========
+069 NEXT       Yield Sign
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Yield_Sign
+  cancel     Ctrl+C skips this page and continues
+069 QUARANTINE Yield Sign
+  result     validation errors
+  path       vault\_quarantine\58.md
+  wikitext   2439 chars -> 2398 chars
+  error      58 is not of type 'string'
+---------- END ITEM 069 ----------
+
+========== ITEM 070 ==========
+070 NEXT       Zed Dog
+  category   Scrap
+  kind       scrap_items
+  source     https://lethal-company.fandom.com/wiki/Zed_Dog
+  cancel     Ctrl+C skips this page and continues
+070 DONE       Zed Dog
+  result     compiled
+  path       vault\scrap_items\zed_dog.md
+  wikitext   2970 chars -> 2609 chars
+---------- END ITEM 070 ----------
+
+========== ITEM 071 ==========
+071 NEXT       Boombox
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Boombox
+  cancel     Ctrl+C skips this page and continues
+071 DONE       Boombox
+  result     compiled
+  path       vault\store_items\boombox.md
+  wikitext   2286 chars -> 2064 chars
+---------- END ITEM 071 ----------
+
+========== ITEM 072 ==========
+072 NEXT       Classic Painting
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Classic_Painting
+  cancel     Ctrl+C skips this page and continues
+072 DONE       Classic Painting
+  result     compiled
+  path       vault\store_items\classic_painting.md
+  wikitext   370 chars -> 321 chars
+---------- END ITEM 072 ----------
+
+========== ITEM 073 ==========
+073 NEXT       Cozy lights
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Cozy_lights
+  cancel     Ctrl+C skips this page and continues
+073 DONE       Cozy lights
+  result     compiled
+  path       vault\store_items\cozy_lights.md
+  wikitext   839 chars -> 813 chars
+---------- END ITEM 073 ----------
+
+========== ITEM 074 ==========
+074 NEXT       Disco Ball
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Disco_Ball
+  cancel     Ctrl+C skips this page and continues
+074 DONE       Disco Ball
+  result     compiled
+  path       vault\store_items\disco_ball.md
+  wikitext   835 chars -> 719 chars
+---------- END ITEM 074 ----------
+
+========== ITEM 075 ==========
+075 NEXT       Dog house
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Dog_house
+  cancel     Ctrl+C skips this page and continues
+075 DONE       Dog house
+  result     compiled
+  path       vault\store_items\dog_house.md
+  wikitext   394 chars -> 344 chars
+---------- END ITEM 075 ----------
+
+========== ITEM 076 ==========
+076 NEXT       Extension ladder
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Extension_ladder
+  cancel     Ctrl+C skips this page and continues
+076 DONE       Extension ladder
+  result     compiled
+  path       vault\store_items\extension_ladder.md
+  wikitext   2853 chars -> 2674 chars
+---------- END ITEM 076 ----------
+
+========== ITEM 077 ==========
+077 NEXT       Flashlight
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Flashlight
+  cancel     Ctrl+C skips this page and continues
+077 DONE       Flashlight
+  result     compiled
+  path       vault\store_items\flashlight.md
+  wikitext   1488 chars -> 1330 chars
+---------- END ITEM 077 ----------
+
+========== ITEM 078 ==========
+078 NEXT       Fridge
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Fridge
+  cancel     Ctrl+C skips this page and continues
+078 DONE       Fridge
+  result     compiled
+  path       vault\store_items\fridge.md
+  wikitext   425 chars -> 376 chars
+---------- END ITEM 078 ----------
+
+========== ITEM 079 ==========
+079 NEXT       Goldfish
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Goldfish
+  cancel     Ctrl+C skips this page and continues
+079 DONE       Goldfish
+  result     compiled
+  path       vault\store_items\goldfish.md
+  wikitext   357 chars -> 330 chars
+---------- END ITEM 079 ----------
+
+========== ITEM 080 ==========
+080 NEXT       Inverse teleporter
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Inverse_teleporter
+  cancel     Ctrl+C skips this page and continues
+080 DONE       Inverse teleporter
+  result     compiled
+  path       vault\store_items\inverse_teleporter.md
+  wikitext   1385 chars -> 1359 chars
+---------- END ITEM 080 ----------
+
+========== ITEM 081 ==========
+081 NEXT       Jack O' Lantern
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Jack_O%27_Lantern
+  cancel     Ctrl+C skips this page and continues
+081 DONE       Jack O' Lantern
+  result     compiled
+  path       vault\store_items\jack_o_lantern.md
+  wikitext   572 chars -> 545 chars
+---------- END ITEM 081 ----------
+
+========== ITEM 082 ==========
+082 NEXT       Jetpack
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Jetpack
+  cancel     Ctrl+C skips this page and continues
+082 DONE       Jetpack
+  result     compiled
+  path       vault\store_items\jetpack.md
+  wikitext   3315 chars -> 3289 chars
+---------- END ITEM 082 ----------
+
+========== ITEM 083 ==========
+083 NEXT       Lockpicker
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Lockpicker
+  cancel     Ctrl+C skips this page and continues
+083 DONE       Lockpicker
+  result     compiled
+  path       vault\store_items\lockpicker.md
+  wikitext   1665 chars -> 1638 chars
+---------- END ITEM 083 ----------
+
+========== ITEM 084 ==========
+084 NEXT       Loud Horn
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Loud_Horn
+  cancel     Ctrl+C skips this page and continues
+084 DONE       Loud Horn
+  result     compiled
+  path       vault\store_items\loud_horn.md
+  wikitext   1638 chars -> 1445 chars
+---------- END ITEM 084 ----------
+
+========== ITEM 085 ==========
+085 NEXT       Microwave
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Microwave
+  cancel     Ctrl+C skips this page and continues
+085 DONE       Microwave
+  result     compiled
+  path       vault\store_items\microwave.md
+  wikitext   572 chars -> 523 chars
+---------- END ITEM 085 ----------
+
+========== ITEM 086 ==========
+086 NEXT       Plushie Pajama Man
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Plushie_Pajama_Man
+  cancel     Ctrl+C skips this page and continues
+086 DONE       Plushie Pajama Man
+  result     compiled
+  path       vault\store_items\plushie_pajama_man.md
+  wikitext   1203 chars -> 820 chars
+---------- END ITEM 086 ----------
+
+========== ITEM 087 ==========
+087 NEXT       Pro-flashlight
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Pro-flashlight
+  cancel     Ctrl+C skips this page and continues
+087 DONE       Pro-flashlight
+  result     compiled
+  path       vault\store_items\pro_flashlight.md
+  wikitext   1839 chars -> 1681 chars
+---------- END ITEM 087 ----------
+
+========== ITEM 088 ==========
+088 NEXT       Radar-booster
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Radar-booster
+  cancel     Ctrl+C skips this page and continues
+088 DONE       Radar-booster
+  result     compiled
+  path       vault\store_items\radar_booster.md
+  wikitext   6261 chars -> 6236 chars
+---------- END ITEM 088 ----------
+
+========== ITEM 089 ==========
+089 NEXT       Record Player
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Record_Player
+  cancel     Ctrl+C skips this page and continues
+089 DONE       Record Player
+  result     compiled
+  path       vault\store_items\record_player.md
+  wikitext   709 chars -> 655 chars
+---------- END ITEM 089 ----------
+
+========== ITEM 090 ==========
+090 NEXT       Romantic table
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Romantic_table
+  cancel     Ctrl+C skips this page and continues
+090 DONE       Romantic table
+  result     compiled
+  path       vault\store_items\romantic_table.md
+  wikitext   765 chars -> 739 chars
+---------- END ITEM 090 ----------
+
+========== ITEM 091 ==========
+091 NEXT       Shovel
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Shovel
+  cancel     Ctrl+C skips this page and continues
+091 DONE       Shovel
+  result     compiled
+  path       vault\store_items\shovel.md
+  wikitext   3693 chars -> 3546 chars
+---------- END ITEM 091 ----------
+
+========== ITEM 092 ==========
+092 NEXT       Shower
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Shower
+  cancel     Ctrl+C skips this page and continues
+092 DONE       Shower
+  result     compiled
+  path       vault\store_items\shower.md
+  wikitext   918 chars -> 892 chars
+---------- END ITEM 092 ----------
+
+========== ITEM 093 ==========
+093 NEXT       Signal translator
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Signal_translator
+  cancel     Ctrl+C skips this page and continues
+093 DONE       Signal translator
+  result     compiled
+  path       vault\store_items\signal_translator.md
+  wikitext   1427 chars -> 1375 chars
+---------- END ITEM 093 ----------
+
+========== ITEM 094 ==========
+094 NEXT       Sofa Chair
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Sofa_Chair
+  cancel     Ctrl+C skips this page and continues
+094 DONE       Sofa Chair
+  result     compiled
+  path       vault\store_items\sofa_chair.md
+  wikitext   345 chars -> 295 chars
+---------- END ITEM 094 ----------
+
+========== ITEM 095 ==========
+095 NEXT       Spray Paint
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Spray_Paint
+  cancel     Ctrl+C skips this page and continues
+095 DONE       Spray Paint
+  result     compiled
+  path       vault\store_items\spray_paint.md
+  wikitext   2509 chars -> 2481 chars
+---------- END ITEM 095 ----------
+
+========== ITEM 096 ==========
+096 NEXT       Stun Grenade
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Stun_Grenade
+  cancel     Ctrl+C skips this page and continues
+096 DONE       Stun Grenade
+  result     compiled
+  path       vault\store_items\stun_grenade.md
+  wikitext   3084 chars -> 3036 chars
+---------- END ITEM 096 ----------
+
+========== ITEM 097 ==========
+097 NEXT       Suits
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Suits
+  cancel     Ctrl+C skips this page and continues
+097 DONE       Suits
+  result     compiled
+  path       vault\store_items\suits.md
+  wikitext   2251 chars -> 1449 chars
+---------- END ITEM 097 ----------
+
+========== ITEM 098 ==========
+098 NEXT       Table
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Table
+  cancel     Ctrl+C skips this page and continues
+098 DONE       Table
+  result     compiled
+  path       vault\store_items\table.md
+  wikitext   1099 chars -> 834 chars
+---------- END ITEM 098 ----------
+
+========== ITEM 099 ==========
+099 NEXT       Teleporter
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Teleporter
+  cancel     Ctrl+C skips this page and continues
+099 DONE       Teleporter
+  result     compiled
+  path       vault\store_items\teleporter.md
+  wikitext   1317 chars -> 1292 chars
+---------- END ITEM 099 ----------
+
+========== ITEM 100 ==========
+100 NEXT       Television
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Television
+  cancel     Ctrl+C skips this page and continues
+100 DONE       Television
+  result     compiled
+  path       vault\store_items\television.md
+  wikitext   1251 chars -> 1019 chars
+---------- END ITEM 100 ----------
+
+========== ITEM 101 ==========
+101 NEXT       Toilet
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Toilet
+  cancel     Ctrl+C skips this page and continues
+101 DONE       Toilet
+  result     compiled
+  path       vault\store_items\toilet.md
+  wikitext   491 chars -> 465 chars
+---------- END ITEM 101 ----------
+
+========== ITEM 102 ==========
+102 NEXT       TZP-Inhalant
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/TZP-Inhalant
+  cancel     Ctrl+C skips this page and continues
+102 DONE       TZP-Inhalant
+  result     compiled
+  path       vault\store_items\tzp_inhalant.md
+  wikitext   1936 chars -> 1910 chars
+---------- END ITEM 102 ----------
+
+========== ITEM 103 ==========
+103 NEXT       Walkie-Talkie
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Walkie-Talkie
+  cancel     Ctrl+C skips this page and continues
+103 DONE       Walkie-Talkie
+  result     compiled
+  path       vault\store_items\walkie_talkie.md
+  wikitext   2618 chars -> 2160 chars
+---------- END ITEM 103 ----------
+
+========== ITEM 104 ==========
+104 NEXT       Weapon
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Weapon
+  cancel     Ctrl+C skips this page and continues
+  related    scrap_items -> vault\scrap_items\weapon.md
+104 MIGRATE    Weapon
+  reason     reused completed source from another kind
+  from       scrap_items -> vault\scrap_items\weapon.md
+  path       vault\store_items\weapon.md
+---------- END ITEM 104 ----------
+
+========== ITEM 105 ==========
+105 NEXT       Weed Killer
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Weed_Killer
+  cancel     Ctrl+C skips this page and continues
+105 DONE       Weed Killer
+  result     compiled
+  path       vault\store_items\weed_killer.md
+  wikitext   4051 chars -> 4025 chars
+---------- END ITEM 105 ----------
+
+========== ITEM 106 ==========
+106 NEXT       Welcome Mat
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Welcome_Mat
+  cancel     Ctrl+C skips this page and continues
+106 DONE       Welcome Mat
+  result     compiled
+  path       vault\store_items\welcome_mat.md
+  wikitext   586 chars -> 550 chars
+---------- END ITEM 106 ----------
+
+========== ITEM 107 ==========
+107 NEXT       Zap gun
+  category   Store items
+  kind       store_items
+  source     https://lethal-company.fandom.com/wiki/Zap_gun
+  cancel     Ctrl+C skips this page and continues
+107 DONE       Zap gun
+  result     compiled
+  path       vault\store_items\zap_gun.md
+  wikitext   3745 chars -> 3699 chars
+---------- END ITEM 107 ----------
+
+========== ITEM 108 ==========
+108 NEXT       Entity
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Entity
+  cancel     Ctrl+C skips this page and continues
+108 DONE       Entity
+  result     compiled
+  path       vault\entity_pages\entity.md
+  wikitext   12082 chars -> 10425 chars
+---------- END ITEM 108 ----------
+
+========== ITEM 109 ==========
+109 NEXT       Baboon Hawk
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Baboon_Hawk
+  cancel     Ctrl+C skips this page and continues
+109 DONE       Baboon Hawk
+  result     compiled
+  path       vault\entity_pages\baboon_hawk.md
+  wikitext   20545 chars -> 19690 chars
+---------- END ITEM 109 ----------
+
+========== ITEM 110 ==========
+110 NEXT       Backwater Gunkfish
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Backwater_Gunkfish
+  cancel     Ctrl+C skips this page and continues
+110 DONE       Backwater Gunkfish
+  result     compiled
+  path       vault\entity_pages\backwater_gunkfish.md
+  wikitext   6454 chars -> 6010 chars
+---------- END ITEM 110 ----------
+
+========== ITEM 111 ==========
+111 NEXT       Barber
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Barber
+  cancel     Ctrl+C skips this page and continues
+111 DONE       Barber
+  result     compiled
+  path       vault\entity_pages\barber.md
+  wikitext   4390 chars -> 3879 chars
+---------- END ITEM 111 ----------
+
+========== ITEM 112 ==========
+112 NEXT       Bestiary
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Bestiary
+  cancel     Ctrl+C skips this page and continues
+112 DONE       Bestiary
+  result     compiled
+  path       vault\entity_pages\bestiary.md
+  wikitext   3935 chars -> 2446 chars
+---------- END ITEM 112 ----------
+
+========== ITEM 113 ==========
+113 NEXT       Bracken
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Bracken
+  cancel     Ctrl+C skips this page and continues
+113 DONE       Bracken
+  result     compiled
+  path       vault\entity_pages\bracken.md
+  wikitext   12051 chars -> 11098 chars
+---------- END ITEM 113 ----------
+
+========== ITEM 114 ==========
+114 NEXT       Bunker Spider
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Bunker_Spider
+  cancel     Ctrl+C skips this page and continues
+114 DONE       Bunker Spider
+  result     compiled
+  path       vault\entity_pages\bunker_spider.md
+  wikitext   5589 chars -> 5539 chars
+---------- END ITEM 114 ----------
+
+========== ITEM 115 ==========
+115 NEXT       Butler
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Butler
+  cancel     Ctrl+C skips this page and continues
+115 DONE       Butler
+  result     compiled
+  path       vault\entity_pages\butler.md
+  wikitext   8796 chars -> 7951 chars
+---------- END ITEM 115 ----------
+
+========== ITEM 116 ==========
+116 NEXT       Cadaver
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Cadaver
+  cancel     Ctrl+C skips this page and continues
+116 DONE       Cadaver
+  result     compiled
+  path       vault\entity_pages\cadaver.md
+  wikitext   10954 chars -> 10723 chars
+---------- END ITEM 116 ----------
+
+========== ITEM 117 ==========
+117 NEXT       Cadaver Bloom
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Cadaver_Bloom
+  cancel     Ctrl+C skips this page and continues
+117 DONE       Cadaver Bloom
+  result     compiled
+  path       vault\entity_pages\cadaver_bloom.md
+  wikitext   3800 chars -> 3055 chars
+---------- END ITEM 117 ----------
+
+========== ITEM 118 ==========
+118 NEXT       Circuit Bee
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Circuit_Bee
+  cancel     Ctrl+C skips this page and continues
+118 DONE       Circuit Bee
+  result     compiled
+  path       vault\entity_pages\circuit_bee.md
+  wikitext   3206 chars -> 2995 chars
+---------- END ITEM 118 ----------
+
+========== ITEM 119 ==========
+119 NEXT       Coil-Head
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Coil-Head
+  cancel     Ctrl+C skips this page and continues
+119 DONE       Coil-Head
+  result     compiled
+  path       vault\entity_pages\coil_head.md
+  wikitext   9192 chars -> 8563 chars
+---------- END ITEM 119 ----------
+
+========== ITEM 120 ==========
+120 NEXT       Earth Leviathan
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Earth_Leviathan
+  cancel     Ctrl+C skips this page and continues
+120 DONE       Earth Leviathan
+  result     compiled
+  path       vault\entity_pages\earth_leviathan.md
+  wikitext   5625 chars -> 4931 chars
+---------- END ITEM 120 ----------
+
+========== ITEM 121 ==========
+121 NEXT       Eyeless Dog
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Eyeless_Dog
+  cancel     Ctrl+C skips this page and continues
+121 DONE       Eyeless Dog
+  result     compiled
+  path       vault\entity_pages\eyeless_dog.md
+  wikitext   10195 chars -> 9776 chars
+---------- END ITEM 121 ----------
+
+========== ITEM 122 ==========
+122 NEXT       Feiopar
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Feiopar
+  cancel     Ctrl+C skips this page and continues
+122 DONE       Feiopar
+  result     compiled
+  path       vault\entity_pages\feiopar.md
+  wikitext   10248 chars -> 9916 chars
+---------- END ITEM 122 ----------
+
+========== ITEM 123 ==========
+123 NEXT       Forest Keeper
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Forest_Keeper
+  cancel     Ctrl+C skips this page and continues
+123 DONE       Forest Keeper
+  result     compiled
+  path       vault\entity_pages\forest_keeper.md
+  wikitext   13221 chars -> 12016 chars
+---------- END ITEM 123 ----------
+
+========== ITEM 124 ==========
+124 NEXT       Ghost Girl
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Ghost_Girl
+  cancel     Ctrl+C skips this page and continues
+124 DONE       Ghost Girl
+  result     compiled
+  path       vault\entity_pages\ghost_girl.md
+  wikitext   17614 chars -> 17024 chars
+---------- END ITEM 124 ----------
+
+========== ITEM 125 ==========
+125 NEXT       Giant Sapsucker
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Giant_Sapsucker
+  cancel     Ctrl+C skips this page and continues
+125 DONE       Giant Sapsucker
+  result     compiled
+  path       vault\entity_pages\giant_sapsucker.md
+  wikitext   10069 chars -> 9278 chars
+---------- END ITEM 125 ----------
+
+========== ITEM 126 ==========
+126 NEXT       Hoarding Bug
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Hoarding_Bug
+  cancel     Ctrl+C skips this page and continues
+126 DONE       Hoarding Bug
+  result     compiled
+  path       vault\entity_pages\hoarding_bug.md
+  wikitext   10137 chars -> 10087 chars
+---------- END ITEM 126 ----------
+
+========== ITEM 127 ==========
+127 NEXT       Hygrodere
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Hygrodere
+  cancel     Ctrl+C skips this page and continues
+127 DONE       Hygrodere
+  result     compiled
+  path       vault\entity_pages\hygrodere.md
+  wikitext   6638 chars -> 5835 chars
+---------- END ITEM 127 ----------
+
+========== ITEM 128 ==========
+128 NEXT       Jester
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Jester
+  cancel     Ctrl+C skips this page and continues
+128 DONE       Jester
+  result     compiled
+  path       vault\entity_pages\jester.md
+  wikitext   7245 chars -> 6989 chars
+---------- END ITEM 128 ----------
+
+========== ITEM 129 ==========
+129 NEXT       Kidnapper Fox
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Kidnapper_Fox
+  cancel     Ctrl+C skips this page and continues
+129 DONE       Kidnapper Fox
+  result     compiled
+  path       vault\entity_pages\kidnapper_fox.md
+  wikitext   9047 chars -> 7442 chars
+---------- END ITEM 129 ----------
+
+========== ITEM 130 ==========
+130 NEXT       Maneater
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Maneater
+  cancel     Ctrl+C skips this page and continues
+130 DONE       Maneater
+  result     compiled
+  path       vault\entity_pages\maneater.md
+  wikitext   20898 chars -> 19489 chars
+---------- END ITEM 130 ----------
+
+========== ITEM 131 ==========
+131 NEXT       Manticoil
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Manticoil
+  cancel     Ctrl+C skips this page and continues
+131 DONE       Manticoil
+  result     compiled
+  path       vault\entity_pages\manticoil.md
+  wikitext   3543 chars -> 3460 chars
+---------- END ITEM 131 ----------
+
+========== ITEM 132 ==========
+132 NEXT       Mask Hornets
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Mask_Hornets
+  cancel     Ctrl+C skips this page and continues
+132 DONE       Mask Hornets
+  result     compiled
+  path       vault\entity_pages\mask_hornets.md
+  wikitext   2570 chars -> 2409 chars
+---------- END ITEM 132 ----------
+
+========== ITEM 133 ==========
+133 NEXT       Masked
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Masked
+  cancel     Ctrl+C skips this page and continues
+133 DONE       Masked
+  result     compiled
+  path       vault\entity_pages\masked.md
+  wikitext   11065 chars -> 10307 chars
+---------- END ITEM 133 ----------
+
+========== ITEM 134 ==========
+134 NEXT       Nutcracker
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Nutcracker
+  cancel     Ctrl+C skips this page and continues
+134 DONE       Nutcracker
+  result     compiled
+  path       vault\entity_pages\nutcrackers.md
+  wikitext   12306 chars -> 11684 chars
+---------- END ITEM 134 ----------
+
+========== ITEM 135 ==========
+135 NEXT       Old Bird
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Old_Bird
+  cancel     Ctrl+C skips this page and continues
+135 DONE       Old Bird
+  result     compiled
+  path       vault\entity_pages\old_bird.md
+  wikitext   14724 chars -> 12526 chars
+---------- END ITEM 135 ----------
+
+========== ITEM 136 ==========
+136 NEXT       Roaming Locust
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Roaming_Locust
+  cancel     Ctrl+C skips this page and continues
+136 DONE       Roaming Locust
+  result     compiled
+  path       vault\entity_pages\roaming_locust.md
+  wikitext   1765 chars -> 1621 chars
+---------- END ITEM 136 ----------
+
+========== ITEM 137 ==========
+137 NEXT       Snare Flea
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Snare_Flea
+  cancel     Ctrl+C skips this page and continues
+137 DONE       Snare Flea
+  result     compiled
+  path       vault\entity_pages\snare_flea.md
+  wikitext   7609 chars -> 7479 chars
+---------- END ITEM 137 ----------
+
+========== ITEM 138 ==========
+138 NEXT       Spore Lizard
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Spore_Lizard
+  cancel     Ctrl+C skips this page and continues
+138 DONE       Spore Lizard
+  result     compiled
+  path       vault\entity_pages\spore_lizard.md
+  wikitext   2989 chars -> 2938 chars
+---------- END ITEM 138 ----------
+
+========== ITEM 139 ==========
+139 NEXT       The Company Monster
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/The_Company_Monster
+  cancel     Ctrl+C skips this page and continues
+139 DONE       The Company Monster
+  result     compiled
+  path       vault\entity_pages\the_company_monster.md
+  wikitext   6924 chars -> 6308 chars
+---------- END ITEM 139 ----------
+
+========== ITEM 140 ==========
+140 NEXT       Thumper
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Thumper
+  cancel     Ctrl+C skips this page and continues
+140 DONE       Thumper
+  result     compiled
+  path       vault\entity_pages\thumper.md
+  wikitext   6988 chars -> 6128 chars
+---------- END ITEM 140 ----------
+
+========== ITEM 141 ==========
+141 NEXT       Tulip Snake
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Tulip_Snake
+  cancel     Ctrl+C skips this page and continues
+141 DONE       Tulip Snake
+  result     compiled
+  path       vault\entity_pages\tulip_snake.md
+  wikitext   6809 chars -> 5992 chars
+---------- END ITEM 141 ----------
+
+========== ITEM 142 ==========
+142 NEXT       Vain Shroud
+  category   Entities
+  kind       entity_pages
+  source     https://lethal-company.fandom.com/wiki/Vain_Shroud
+  cancel     Ctrl+C skips this page and continues
+142 DONE       Vain Shroud
+  result     compiled
+  path       vault\entity_pages\vain_shroud.md
+  wikitext   3746 chars -> 3320 chars
+---------- END ITEM 142 ----------
+
+========== ITEM 143 ==========
+143 NEXT       Cause of Death
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Cause_of_Death
+  cancel     Ctrl+C skips this page and continues
+143 DONE       Cause of Death
+  result     compiled
+  path       vault\gameplay_mechanics\cause_of_death.md
+  wikitext   61 chars -> 39 chars
+---------- END ITEM 143 ----------
+
+========== ITEM 144 ==========
+144 NEXT       Challenge Moons
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Challenge_Moons
+  cancel     Ctrl+C skips this page and continues
+144 DONE       Challenge Moons
+  result     compiled
+  path       vault\gameplay_mechanics\challenge_moons.md
+  wikitext   4508 chars -> 4230 chars
+---------- END ITEM 144 ----------
+
+========== ITEM 145 ==========
+145 NEXT       Company Ranks
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Company_Ranks
+  cancel     Ctrl+C skips this page and continues
+145 DONE       Company Ranks
+  result     compiled
+  path       vault\gameplay_mechanics\company_ranks.md
+  wikitext   872 chars -> 619 chars
+---------- END ITEM 145 ----------
+
+========== ITEM 146 ==========
+146 NEXT       Credits
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Credits
+  cancel     Ctrl+C skips this page and continues
+146 DONE       Credits
+  result     compiled
+  path       vault\gameplay_mechanics\credits.md
+  wikitext   1760 chars -> 1737 chars
+---------- END ITEM 146 ----------
+
+========== ITEM 147 ==========
+147 NEXT       Decor
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Decor
+  cancel     Ctrl+C skips this page and continues
+147 DONE       Decor
+  result     compiled
+  path       vault\gameplay_mechanics\decor.md
+  wikitext   3976 chars -> 3109 chars
+---------- END ITEM 147 ----------
+
+========== ITEM 148 ==========
+148 NEXT       Dropship
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Dropship
+  cancel     Ctrl+C skips this page and continues
+148 DONE       Dropship
+  result     compiled
+  path       vault\gameplay_mechanics\dropship.md
+  wikitext   3860 chars -> 3225 chars
+---------- END ITEM 148 ----------
+
+========== ITEM 149 ==========
+149 NEXT       Electric Coil
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Electric_Coil
+  cancel     Ctrl+C skips this page and continues
+149 DONE       Electric Coil
+  result     compiled
+  path       vault\gameplay_mechanics\electric_coil.md
+  wikitext   950 chars -> 884 chars
+---------- END ITEM 149 ----------
+
+========== ITEM 150 ==========
+150 NEXT       Employee
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Employee
+  cancel     Ctrl+C skips this page and continues
+150 DONE       Employee
+  result     compiled
+  path       vault\gameplay_mechanics\employee.md
+  wikitext   13005 chars -> 11941 chars
+---------- END ITEM 150 ----------
+
+========== ITEM 151 ==========
+151 NEXT       Entity Targeting
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Entity_Targeting
+  cancel     Ctrl+C skips this page and continues
+151 DONE       Entity Targeting
+  result     compiled
+  path       vault\gameplay_mechanics\entity_targeting.md
+  wikitext   4724 chars -> 4702 chars
+---------- END ITEM 151 ----------
+
+========== ITEM 152 ==========
+152 NEXT       Fear
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Fear
+  cancel     Ctrl+C skips this page and continues
+152 DONE       Fear
+  result     compiled
+  path       vault\gameplay_mechanics\fear.md
+  wikitext   4078 chars -> 4056 chars
+---------- END ITEM 152 ----------
+
+========== ITEM 153 ==========
+153 NEXT       Fire Exit
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Fire_Exit
+  cancel     Ctrl+C skips this page and continues
+153 DONE       Fire Exit
+  result     compiled
+  path       vault\gameplay_mechanics\fire_exit.md
+  wikitext   2616 chars -> 1837 chars
+---------- END ITEM 153 ----------
+
+========== ITEM 154 ==========
+154 NEXT       Guide:Camera duty
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Guide%3ACamera_duty
+  cancel     Ctrl+C skips this page and continues
+154 DONE       Guide:Camera duty
+  result     compiled
+  path       vault\gameplay_mechanics\camera_duty.md
+  wikitext   14742 chars -> 14678 chars
+---------- END ITEM 154 ----------
+
+========== ITEM 155 ==========
+155 NEXT       Guide:Contract
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Guide%3AContract
+  cancel     Ctrl+C skips this page and continues
+155 DONE       Guide:Contract
+  result     compiled
+  path       vault\gameplay_mechanics\guide_contract.md
+  wikitext   4458 chars -> 4366 chars
+---------- END ITEM 155 ----------
+
+========== ITEM 156 ==========
+156 NEXT       Interior
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Interior
+  cancel     Ctrl+C skips this page and continues
+156 DONE       Interior
+  result     compiled
+  path       vault\gameplay_mechanics\interior.md
+  wikitext   24046 chars -> 19187 chars
+---------- END ITEM 156 ----------
+
+========== ITEM 157 ==========
+157 NEXT       Item Bar
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Item_Bar
+  cancel     Ctrl+C skips this page and continues
+157 DONE       Item Bar
+  result     compiled
+  path       vault\gameplay_mechanics\item_bar.md
+  wikitext   3489 chars -> 3397 chars
+---------- END ITEM 157 ----------
+
+========== ITEM 158 ==========
+158 NEXT       Items
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Items
+  cancel     Ctrl+C skips this page and continues
+158 DONE       Items
+  result     compiled
+  path       vault\gameplay_mechanics\items.md
+  wikitext   2780 chars -> 2517 chars
+---------- END ITEM 158 ----------
+
+========== ITEM 159 ==========
+159 NEXT       Landmine
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Landmine
+  cancel     Ctrl+C skips this page and continues
+159 DONE       Landmine
+  result     compiled
+  path       vault\gameplay_mechanics\landmine.md
+  wikitext   3463 chars -> 3416 chars
+---------- END ITEM 159 ----------
+
+========== ITEM 160 ==========
+160 NEXT       Lore
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Lore
+  cancel     Ctrl+C skips this page and continues
+160 DONE       Lore
+  result     compiled
+  path       vault\gameplay_mechanics\lore.md
+  wikitext   11285 chars -> 10976 chars
+---------- END ITEM 160 ----------
+
+========== ITEM 161 ==========
+161 NEXT       Map Hazard
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Map_Hazard
+  cancel     Ctrl+C skips this page and continues
+161 DONE       Map Hazard
+  result     compiled
+  path       vault\gameplay_mechanics\map_hazards.md
+  wikitext   2617 chars -> 2475 chars
+---------- END ITEM 161 ----------
+
+========== ITEM 162 ==========
+162 NEXT       Mechanics
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Mechanics
+  cancel     Ctrl+C skips this page and continues
+162 DONE       Mechanics
+  result     compiled
+  path       vault\gameplay_mechanics\global_game_variables.md
+  wikitext   12679 chars -> 12558 chars
+---------- END ITEM 162 ----------
+
+========== ITEM 163 ==========
+163 NEXT       Monitors
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Monitors
+  cancel     Ctrl+C skips this page and continues
+163 DONE       Monitors
+  result     compiled
+  path       vault\gameplay_mechanics\monitors.md
+  wikitext   2383 chars -> 2065 chars
+---------- END ITEM 163 ----------
+
+========== ITEM 164 ==========
+164 NEXT       Moons
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Moons
+  cancel     Ctrl+C skips this page and continues
+164 DONE       Moons
+  result     compiled
+  path       vault\gameplay_mechanics\moons.md
+  wikitext   8964 chars -> 8830 chars
+---------- END ITEM 164 ----------
+
+========== ITEM 165 ==========
+165 NEXT       Orbit
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Orbit
+  cancel     Ctrl+C skips this page and continues
+165 DONE       Orbit
+  result     compiled
+  path       vault\gameplay_mechanics\orbit.md
+  wikitext   665 chars -> 494 chars
+---------- END ITEM 165 ----------
+
+========== ITEM 166 ==========
+166 NEXT       Profit Quota
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Profit_Quota
+  cancel     Ctrl+C skips this page and continues
+166 DONE       Profit Quota
+  result     compiled
+  path       vault\gameplay_mechanics\profit_quota.md
+  wikitext   6396 chars -> 5881 chars
+---------- END ITEM 166 ----------
+
+========== ITEM 167 ==========
+167 NEXT       Scanner
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Scanner
+  cancel     Ctrl+C skips this page and continues
+167 DONE       Scanner
+  result     compiled
+  path       vault\gameplay_mechanics\scanner.md
+  wikitext   2063 chars -> 1967 chars
+---------- END ITEM 167 ----------
+
+========== ITEM 168 ==========
+168 NEXT       Scrap
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Scrap
+  cancel     Ctrl+C skips this page and continues
+  related    scrap_items -> vault\scrap_items\scrap.md
+168 MIGRATE    Scrap
+  reason     reused completed source from another kind
+  from       scrap_items -> vault\scrap_items\scrap.md
+  path       vault\gameplay_mechanics\scrap.md
+---------- END ITEM 168 ----------
+
+========== ITEM 169 ==========
+169 NEXT       Spike Trap
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Spike_Trap
+  cancel     Ctrl+C skips this page and continues
+169 DONE       Spike Trap
+  result     compiled
+  path       vault\gameplay_mechanics\spike_trap.md
+  wikitext   4589 chars -> 3937 chars
+---------- END ITEM 169 ----------
+
+========== ITEM 170 ==========
+170 NEXT       Store
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Store
+  cancel     Ctrl+C skips this page and continues
+170 DONE       Store
+  result     compiled
+  path       vault\gameplay_mechanics\company_store.md
+  wikitext   13042 chars -> 10915 chars
+---------- END ITEM 170 ----------
+
+========== ITEM 171 ==========
+171 NEXT       Terminal
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Terminal
+  cancel     Ctrl+C skips this page and continues
+171 DONE       Terminal
+  result     compiled
+  path       vault\gameplay_mechanics\terminal.md
+  wikitext   8255 chars -> 8192 chars
+---------- END ITEM 171 ----------
+
+========== ITEM 172 ==========
+172 NEXT       The Company
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/The_Company
+  cancel     Ctrl+C skips this page and continues
+172 DONE       The Company
+  result     compiled
+  path       vault\gameplay_mechanics\gordion.md
+  wikitext   7587 chars -> 6514 chars
+---------- END ITEM 172 ----------
+
+========== ITEM 173 ==========
+173 NEXT       The Ship
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/The_Ship
+  cancel     Ctrl+C skips this page and continues
+173 DONE       The Ship
+  result     compiled
+  path       vault\gameplay_mechanics\the_ship.md
+  wikitext   12246 chars -> 11468 chars
+---------- END ITEM 173 ----------
+
+========== ITEM 174 ==========
+174 NEXT       Turret
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Turret
+  cancel     Ctrl+C skips this page and continues
+174 DONE       Turret
+  result     compiled
+  path       vault\gameplay_mechanics\turret.md
+  wikitext   4508 chars -> 4205 chars
+---------- END ITEM 174 ----------
+
+========== ITEM 175 ==========
+175 NEXT       Vain Shroud
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Vain_Shroud
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\vain_shroud.md
+175 MIGRATE    Vain Shroud
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\vain_shroud.md
+  path       vault\gameplay_mechanics\vain_shroud.md
+---------- END ITEM 175 ----------
+
+========== ITEM 176 ==========
+176 NEXT       Weapon
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Weapon
+  cancel     Ctrl+C skips this page and continues
+  related    store_items -> vault\store_items\weapon.md
+176 MIGRATE    Weapon
+  reason     reused completed source from another kind
+  from       store_items -> vault\store_items\weapon.md
+  path       vault\gameplay_mechanics\weapon.md
+---------- END ITEM 176 ----------
+
+========== ITEM 177 ==========
+177 NEXT       Weather
+  category   Gameplay
+  kind       gameplay_mechanics
+  source     https://lethal-company.fandom.com/wiki/Weather
+  cancel     Ctrl+C skips this page and continues
+177 DONE       Weather
+  result     compiled
+  path       vault\gameplay_mechanics\weather.md
+  wikitext   10572 chars -> 10372 chars
+---------- END ITEM 177 ----------
+
+========== ITEM 178 ==========
+178 NEXT       Version 4
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_4
+  cancel     Ctrl+C skips this page and continues
+178 DONE       Version 4
+  result     compiled
+  path       vault\version_pages\version_4.md
+  wikitext   2449 chars -> 1786 chars
+---------- END ITEM 178 ----------
+
+========== ITEM 179 ==========
+179 NEXT       Version 40
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_40
+  cancel     Ctrl+C skips this page and continues
+179 DONE       Version 40
+  result     compiled
+  path       vault\version_pages\version_40.md
+  wikitext   1852 chars -> 1774 chars
+---------- END ITEM 179 ----------
+
+========== ITEM 180 ==========
+180 NEXT       Version 45
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_45
+  cancel     Ctrl+C skips this page and continues
+180 DONE       Version 45
+  result     compiled
+  path       vault\version_pages\version_45.md
+  wikitext   3414 chars -> 3353 chars
+---------- END ITEM 180 ----------
+
+========== ITEM 181 ==========
+181 NEXT       Version 47
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_47
+  cancel     Ctrl+C skips this page and continues
+181 DONE       Version 47
+  result     compiled
+  path       vault\version_pages\version_47.md
+  wikitext   4860 chars -> 4787 chars
+---------- END ITEM 181 ----------
+
+========== ITEM 182 ==========
+182 NEXT       Version 50
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_50
+  cancel     Ctrl+C skips this page and continues
+182 DONE       Version 50
+  result     compiled
+  path       vault\version_pages\version_50.md
+  wikitext   12804 chars -> 12733 chars
+---------- END ITEM 182 ----------
+
+========== ITEM 183 ==========
+183 NEXT       Version 55
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_55
+  cancel     Ctrl+C skips this page and continues
+183 DONE       Version 55
+  result     compiled
+  path       vault\version_pages\version_55.md
+  wikitext   9930 chars -> 9295 chars
+---------- END ITEM 183 ----------
+
+========== ITEM 184 ==========
+184 NEXT       Version 60
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_60
+  cancel     Ctrl+C skips this page and continues
+184 DONE       Version 60
+  result     compiled
+  path       vault\version_pages\version_60.md
+  wikitext   4640 chars -> 4567 chars
+---------- END ITEM 184 ----------
+
+========== ITEM 185 ==========
+185 NEXT       Version 61
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_61
+  cancel     Ctrl+C skips this page and continues
+185 DONE       Version 61
+  result     compiled
+  path       vault\version_pages\version_61.md
+  wikitext   976 chars -> 948 chars
+---------- END ITEM 185 ----------
+
+========== ITEM 186 ==========
+186 NEXT       Version 62
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_62
+  cancel     Ctrl+C skips this page and continues
+186 DONE       Version 62
+  result     compiled
+  path       vault\version_pages\version_62.md
+  wikitext   3785 chars -> 3712 chars
+---------- END ITEM 186 ----------
+
+========== ITEM 187 ==========
+187 NEXT       Version 64
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_64
+  cancel     Ctrl+C skips this page and continues
+187 DONE       Version 64
+  result     compiled
+  path       vault\version_pages\version_64.md
+  wikitext   6160 chars -> 6086 chars
+---------- END ITEM 187 ----------
+
+========== ITEM 188 ==========
+188 NEXT       Version 65
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_65
+  cancel     Ctrl+C skips this page and continues
+188 DONE       Version 65
+  result     compiled
+  path       vault\version_pages\version_65.md
+  wikitext   2373 chars -> 2300 chars
+---------- END ITEM 188 ----------
+
+========== ITEM 189 ==========
+189 NEXT       Version 66
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_66
+  cancel     Ctrl+C skips this page and continues
+189 DONE       Version 66
+  result     compiled
+  path       vault\version_pages\version_66.md
+  wikitext   909 chars -> 888 chars
+---------- END ITEM 189 ----------
+
+========== ITEM 190 ==========
+190 NEXT       Version 67
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_67
+  cancel     Ctrl+C skips this page and continues
+190 DONE       Version 67
+  result     compiled
+  path       vault\version_pages\version_67.md
+  wikitext   1175 chars -> 1001 chars
+---------- END ITEM 190 ----------
+
+========== ITEM 191 ==========
+191 NEXT       Version 68
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_68
+  cancel     Ctrl+C skips this page and continues
+191 DONE       Version 68
+  result     compiled
+  path       vault\version_pages\version_68.md
+  wikitext   838 chars -> 838 chars
+---------- END ITEM 191 ----------
+
+========== ITEM 192 ==========
+192 NEXT       Version 69
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_69
+  cancel     Ctrl+C skips this page and continues
+192 DONE       Version 69
+  result     compiled
+  path       vault\version_pages\version_69.md
+  wikitext   1095 chars -> 1074 chars
+---------- END ITEM 192 ----------
+
+========== ITEM 193 ==========
+193 NEXT       Version 70
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_70
+  cancel     Ctrl+C skips this page and continues
+193 DONE       Version 70
+  result     compiled
+  path       vault\version_pages\version_70.md
+  wikitext   2568 chars -> 1903 chars
+---------- END ITEM 193 ----------
+
+========== ITEM 194 ==========
+194 NEXT       Version 71
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_71
+  cancel     Ctrl+C skips this page and continues
+194 DONE       Version 71
+  result     compiled
+  path       vault\version_pages\version_71.md
+  wikitext   1868 chars -> 1868 chars
+---------- END ITEM 194 ----------
+
+========== ITEM 195 ==========
+195 NEXT       Version 72
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_72
+  cancel     Ctrl+C skips this page and continues
+195 DONE       Version 72
+  result     compiled
+  path       vault\version_pages\version_72.md
+  wikitext   1148 chars -> 1148 chars
+---------- END ITEM 195 ----------
+
+========== ITEM 196 ==========
+196 NEXT       Version 73
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_73
+  cancel     Ctrl+C skips this page and continues
+196 DONE       Version 73
+  result     compiled
+  path       vault\version_pages\version_73.md
+  wikitext   719 chars -> 719 chars
+---------- END ITEM 196 ----------
+
+========== ITEM 197 ==========
+197 NEXT       Version 80
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_80
+  cancel     Ctrl+C skips this page and continues
+197 DONE       Version 80
+  result     compiled
+  path       vault\version_pages\version_80.md
+  wikitext   4693 chars -> 4639 chars
+---------- END ITEM 197 ----------
+
+========== ITEM 198 ==========
+198 NEXT       Version 9
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_9
+  cancel     Ctrl+C skips this page and continues
+198 DONE       Version 9
+  result     compiled
+  path       vault\version_pages\version_9.md
+  wikitext   3214 chars -> 2848 chars
+---------- END ITEM 198 ----------
+
+========== ITEM 199 ==========
+199 NEXT       Version History
+  category   Version
+  kind       version_pages
+  source     https://lethal-company.fandom.com/wiki/Version_History
+  cancel     Ctrl+C skips this page and continues
+199 DONE       Version History
+  result     compiled
+  path       vault\version_pages\version_history.md
+  wikitext   1404 chars -> 1383 chars
+---------- END ITEM 199 ----------
+
+========== ITEM 200 ==========
+200 NEXT       Backwater Gunkfish
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Backwater_Gunkfish
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\backwater_gunkfish.md
+200 MIGRATE    Backwater Gunkfish
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\backwater_gunkfish.md
+  path       vault\indoor_entity_pages\backwater_gunkfish.md
+---------- END ITEM 200 ----------
+
+========== ITEM 201 ==========
+201 NEXT       Barber
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Barber
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\barber.md
+201 MIGRATE    Barber
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\barber.md
+  path       vault\indoor_entity_pages\barber.md
+---------- END ITEM 201 ----------
+
+========== ITEM 202 ==========
+202 NEXT       Bracken
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Bracken
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\bracken.md
+202 MIGRATE    Bracken
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\bracken.md
+  path       vault\indoor_entity_pages\bracken.md
+---------- END ITEM 202 ----------
+
+========== ITEM 203 ==========
+203 NEXT       Bunker Spider
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Bunker_Spider
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\bunker_spider.md
+203 MIGRATE    Bunker Spider
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\bunker_spider.md
+  path       vault\indoor_entity_pages\bunker_spider.md
+---------- END ITEM 203 ----------
+
+========== ITEM 204 ==========
+204 NEXT       Butler
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Butler
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\butler.md
+204 MIGRATE    Butler
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\butler.md
+  path       vault\indoor_entity_pages\butler.md
+---------- END ITEM 204 ----------
+
+========== ITEM 205 ==========
+205 NEXT       Cadaver
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Cadaver
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\cadaver.md
+205 MIGRATE    Cadaver
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\cadaver.md
+  path       vault\indoor_entity_pages\cadaver.md
+---------- END ITEM 205 ----------
+
+========== ITEM 206 ==========
+206 NEXT       Cadaver Bloom
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Cadaver_Bloom
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\cadaver_bloom.md
+206 MIGRATE    Cadaver Bloom
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\cadaver_bloom.md
+  path       vault\indoor_entity_pages\cadaver_bloom.md
+---------- END ITEM 206 ----------
+
+========== ITEM 207 ==========
+207 NEXT       Coil-Head
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Coil-Head
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\coil_head.md
+207 MIGRATE    Coil-Head
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\coil_head.md
+  path       vault\indoor_entity_pages\coil_head.md
+---------- END ITEM 207 ----------
+
+========== ITEM 208 ==========
+208 NEXT       Ghost Girl
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Ghost_Girl
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\ghost_girl.md
+208 MIGRATE    Ghost Girl
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\ghost_girl.md
+  path       vault\indoor_entity_pages\ghost_girl.md
+---------- END ITEM 208 ----------
+
+========== ITEM 209 ==========
+209 NEXT       Hoarding Bug
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Hoarding_Bug
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\hoarding_bug.md
+209 MIGRATE    Hoarding Bug
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\hoarding_bug.md
+  path       vault\indoor_entity_pages\hoarding_bug.md
+---------- END ITEM 209 ----------
+
+========== ITEM 210 ==========
+210 NEXT       Hygrodere
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Hygrodere
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\hygrodere.md
+210 MIGRATE    Hygrodere
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\hygrodere.md
+  path       vault\indoor_entity_pages\hygrodere.md
+---------- END ITEM 210 ----------
+
+========== ITEM 211 ==========
+211 NEXT       Jester
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Jester
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\jester.md
+211 MIGRATE    Jester
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\jester.md
+  path       vault\indoor_entity_pages\jester.md
+---------- END ITEM 211 ----------
+
+========== ITEM 212 ==========
+212 NEXT       Maneater
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Maneater
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\maneater.md
+212 MIGRATE    Maneater
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\maneater.md
+  path       vault\indoor_entity_pages\maneater.md
+---------- END ITEM 212 ----------
+
+========== ITEM 213 ==========
+213 NEXT       Mask Hornets
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Mask_Hornets
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\mask_hornets.md
+213 MIGRATE    Mask Hornets
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\mask_hornets.md
+  path       vault\indoor_entity_pages\mask_hornets.md
+---------- END ITEM 213 ----------
+
+========== ITEM 214 ==========
+214 NEXT       Masked
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Masked
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\masked.md
+214 MIGRATE    Masked
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\masked.md
+  path       vault\indoor_entity_pages\masked.md
+---------- END ITEM 214 ----------
+
+========== ITEM 215 ==========
+215 NEXT       Nutcracker
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Nutcracker
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\nutcrackers.md
+215 MIGRATE    Nutcracker
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\nutcrackers.md
+  path       vault\indoor_entity_pages\nutcrackers.md
+---------- END ITEM 215 ----------
+
+========== ITEM 216 ==========
+216 NEXT       Snare Flea
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Snare_Flea
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\snare_flea.md
+216 MIGRATE    Snare Flea
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\snare_flea.md
+  path       vault\indoor_entity_pages\snare_flea.md
+---------- END ITEM 216 ----------
+
+========== ITEM 217 ==========
+217 NEXT       Spore Lizard
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Spore_Lizard
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\spore_lizard.md
+217 MIGRATE    Spore Lizard
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\spore_lizard.md
+  path       vault\indoor_entity_pages\spore_lizard.md
+---------- END ITEM 217 ----------
+
+========== ITEM 218 ==========
+218 NEXT       Thumper
+  category   Indoor Entities
+  kind       indoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Thumper
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\thumper.md
+218 MIGRATE    Thumper
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\thumper.md
+  path       vault\indoor_entity_pages\thumper.md
+---------- END ITEM 218 ----------
+
+========== ITEM 219 ==========
+219 NEXT       Adamance
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Adamance
+  cancel     Ctrl+C skips this page and continues
+219 DONE       Adamance
+  result     compiled
+  path       vault\destination_pages\adamance.md
+  wikitext   16059 chars -> 14621 chars
+---------- END ITEM 219 ----------
+
+========== ITEM 220 ==========
+220 NEXT       Artifice
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Artifice
+  cancel     Ctrl+C skips this page and continues
+220 DONE       Artifice
+  result     compiled
+  path       vault\destination_pages\artifice.md
+  wikitext   16094 chars -> 14656 chars
+---------- END ITEM 220 ----------
+
+========== ITEM 221 ==========
+221 NEXT       Assurance
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Assurance
+  cancel     Ctrl+C skips this page and continues
+221 DONE       Assurance
+  result     compiled
+  path       vault\destination_pages\assurance.md
+  wikitext   12771 chars -> 11891 chars
+---------- END ITEM 221 ----------
+
+========== ITEM 222 ==========
+222 NEXT       Challenge Moons
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Challenge_Moons
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\challenge_moons.md
+222 MIGRATE    Challenge Moons
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\challenge_moons.md
+  path       vault\destination_pages\challenge_moons.md
+---------- END ITEM 222 ----------
+
+========== ITEM 223 ==========
+223 NEXT       Dine
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Dine
+  cancel     Ctrl+C skips this page and continues
+223 DONE       Dine
+  result     compiled
+  path       vault\destination_pages\7_dine.md
+  wikitext   11220 chars -> 10229 chars
+---------- END ITEM 223 ----------
+
+========== ITEM 224 ==========
+224 NEXT       Embrion
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Embrion
+  cancel     Ctrl+C skips this page and continues
+224 DONE       Embrion
+  result     compiled
+  path       vault\destination_pages\5_embrion.md
+  wikitext   11256 chars -> 10573 chars
+---------- END ITEM 224 ----------
+
+========== ITEM 225 ==========
+225 NEXT       Experimentation
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Experimentation
+  cancel     Ctrl+C skips this page and continues
+225 DONE       Experimentation
+  result     compiled
+  path       vault\destination_pages\experimentation.md
+  wikitext   13768 chars -> 12660 chars
+---------- END ITEM 225 ----------
+
+========== ITEM 226 ==========
+226 NEXT       Liquidation
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Liquidation
+  cancel     Ctrl+C skips this page and continues
+226 DONE       Liquidation
+  result     compiled
+  path       vault\destination_pages\44_liquidation.md
+  wikitext   5365 chars -> 5314 chars
+---------- END ITEM 226 ----------
+
+========== ITEM 227 ==========
+227 NEXT       March
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/March
+  cancel     Ctrl+C skips this page and continues
+227 DONE       March
+  result     compiled
+  path       vault\destination_pages\61_march.md
+  wikitext   9916 chars -> 9034 chars
+---------- END ITEM 227 ----------
+
+========== ITEM 228 ==========
+228 NEXT       Moons
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Moons
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\moons.md
+228 MIGRATE    Moons
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\moons.md
+  path       vault\destination_pages\moons.md
+---------- END ITEM 228 ----------
+
+========== ITEM 229 ==========
+229 NEXT       Offense
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Offense
+  cancel     Ctrl+C skips this page and continues
+229 DONE       Offense
+  result     compiled
+  path       vault\destination_pages\21_offense.md
+  wikitext   12076 chars -> 11136 chars
+---------- END ITEM 229 ----------
+
+========== ITEM 230 ==========
+230 NEXT       Rend
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Rend
+  cancel     Ctrl+C skips this page and continues
+230 DONE       Rend
+  result     compiled
+  path       vault\destination_pages\rend.md
+  wikitext   11722 chars -> 10627 chars
+---------- END ITEM 230 ----------
+
+========== ITEM 231 ==========
+231 NEXT       The Company
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/The_Company
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\gordion.md
+231 MIGRATE    The Company
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\gordion.md
+  path       vault\destination_pages\gordion.md
+---------- END ITEM 231 ----------
+
+========== ITEM 232 ==========
+232 NEXT       Titan
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Titan
+  cancel     Ctrl+C skips this page and continues
+232 DONE       Titan
+  result     compiled
+  path       vault\destination_pages\8_titan.md
+  wikitext   11447 chars -> 10973 chars
+---------- END ITEM 232 ----------
+
+========== ITEM 233 ==========
+233 NEXT       Vow
+  category   Destinations
+  kind       destination_pages
+  source     https://lethal-company.fandom.com/wiki/Vow
+  cancel     Ctrl+C skips this page and continues
+233 DONE       Vow
+  result     compiled
+  path       vault\destination_pages\vow.md
+  wikitext   14668 chars -> 14012 chars
+---------- END ITEM 233 ----------
+
+========== ITEM 234 ==========
+234 NEXT       DIY-Flashbang
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/DIY-Flashbang
+  cancel     Ctrl+C skips this page and continues
+  related    scrap_items -> vault\scrap_items\homemade_flashbang.md
+234 MIGRATE    DIY-Flashbang
+  reason     reused completed source from another kind
+  from       scrap_items -> vault\scrap_items\homemade_flashbang.md
+  path       vault\weapon_pages\homemade_flashbang.md
+---------- END ITEM 234 ----------
+
+========== ITEM 235 ==========
+235 NEXT       Double-Barrel
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Double-Barrel
+  cancel     Ctrl+C skips this page and continues
+  related    scrap_items -> vault\scrap_items\double_barrel.md
+235 MIGRATE    Double-Barrel
+  reason     reused completed source from another kind
+  from       scrap_items -> vault\scrap_items\double_barrel.md
+  path       vault\weapon_pages\double_barrel.md
+---------- END ITEM 235 ----------
+
+========== ITEM 236 ==========
+236 NEXT       Kitchen Knife
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Kitchen_Knife
+  cancel     Ctrl+C skips this page and continues
+236 DONE       Kitchen Knife
+  result     compiled
+  path       vault\weapon_pages\kitchen_knife.md
+  wikitext   4744 chars -> 4183 chars
+---------- END ITEM 236 ----------
+
+========== ITEM 237 ==========
+237 NEXT       Shotgun Shells
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Shotgun_Shells
+  cancel     Ctrl+C skips this page and continues
+237 DONE       Shotgun Shells
+  result     compiled
+  path       vault\weapon_pages\shotgun_shell.md
+  wikitext   4428 chars -> 4069 chars
+---------- END ITEM 237 ----------
+
+========== ITEM 238 ==========
+238 NEXT       Shovel
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Shovel
+  cancel     Ctrl+C skips this page and continues
+  related    store_items -> vault\store_items\shovel.md
+238 MIGRATE    Shovel
+  reason     reused completed source from another kind
+  from       store_items -> vault\store_items\shovel.md
+  path       vault\weapon_pages\shovel.md
+---------- END ITEM 238 ----------
+
+========== ITEM 239 ==========
+239 NEXT       Stop Sign
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Stop_Sign
+  cancel     Ctrl+C skips this page and continues
+  related    scrap_items -> vault\scrap_items\stop_sign.md
+239 MIGRATE    Stop Sign
+  reason     reused completed source from another kind
+  from       scrap_items -> vault\scrap_items\stop_sign.md
+  path       vault\weapon_pages\stop_sign.md
+---------- END ITEM 239 ----------
+
+========== ITEM 240 ==========
+240 NEXT       Stun Grenade
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Stun_Grenade
+  cancel     Ctrl+C skips this page and continues
+  related    store_items -> vault\store_items\stun_grenade.md
+240 MIGRATE    Stun Grenade
+  reason     reused completed source from another kind
+  from       store_items -> vault\store_items\stun_grenade.md
+  path       vault\weapon_pages\stun_grenade.md
+---------- END ITEM 240 ----------
+
+========== ITEM 241 ==========
+241 NEXT       Weapon
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Weapon
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\weapon.md
+241 MIGRATE    Weapon
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\weapon.md
+  path       vault\weapon_pages\weapon.md
+---------- END ITEM 241 ----------
+
+========== ITEM 242 ==========
+242 NEXT       Yield Sign
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Yield_Sign
+  cancel     Ctrl+C skips this page and continues
+242 DONE       Yield Sign
+  result     compiled
+  path       vault\weapon_pages\yield_sign.md
+  wikitext   2439 chars -> 2398 chars
+---------- END ITEM 242 ----------
+
+========== ITEM 243 ==========
+243 NEXT       Zap gun
+  category   Weapons
+  kind       weapon_pages
+  source     https://lethal-company.fandom.com/wiki/Zap_gun
+  cancel     Ctrl+C skips this page and continues
+  related    store_items -> vault\store_items\zap_gun.md
+243 MIGRATE    Zap gun
+  reason     reused completed source from another kind
+  from       store_items -> vault\store_items\zap_gun.md
+  path       vault\weapon_pages\zap_gun.md
+---------- END ITEM 243 ----------
+
+========== ITEM 244 ==========
+244 NEXT       Clipboard
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Clipboard
+  cancel     Ctrl+C skips this page and continues
+244 DONE       Clipboard
+  result     compiled
+  path       vault\item_index_pages\clipboard.md
+  wikitext   6859 chars -> 6327 chars
+---------- END ITEM 244 ----------
+
+========== ITEM 245 ==========
+245 NEXT       Decor
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Decor
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\decor.md
+245 MIGRATE    Decor
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\decor.md
+  path       vault\item_index_pages\decor.md
+---------- END ITEM 245 ----------
+
+========== ITEM 246 ==========
+246 NEXT       Items
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Items
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\items.md
+246 MIGRATE    Items
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\items.md
+  path       vault\item_index_pages\items.md
+---------- END ITEM 246 ----------
+
+========== ITEM 247 ==========
+247 NEXT       Key
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Key
+  cancel     Ctrl+C skips this page and continues
+247 DONE       Key
+  result     compiled
+  path       vault\item_index_pages\key.md
+  wikitext   1640 chars -> 1620 chars
+---------- END ITEM 247 ----------
+
+========== ITEM 248 ==========
+248 NEXT       Scrap
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Scrap
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\scrap.md
+248 MIGRATE    Scrap
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\scrap.md
+  path       vault\item_index_pages\scrap.md
+---------- END ITEM 248 ----------
+
+========== ITEM 249 ==========
+249 NEXT       Shotgun Shells
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Shotgun_Shells
+  cancel     Ctrl+C skips this page and continues
+  related    weapon_pages -> vault\weapon_pages\shotgun_shell.md
+249 MIGRATE    Shotgun Shells
+  reason     reused completed source from another kind
+  from       weapon_pages -> vault\weapon_pages\shotgun_shell.md
+  path       vault\item_index_pages\shotgun_shell.md
+---------- END ITEM 249 ----------
+
+========== ITEM 250 ==========
+250 NEXT       Sticky Note
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Sticky_Note
+  cancel     Ctrl+C skips this page and continues
+250 DONE       Sticky Note
+  result     compiled
+  path       vault\item_index_pages\sticky_note.md
+  wikitext   430 chars -> 411 chars
+---------- END ITEM 250 ----------
+
+========== ITEM 251 ==========
+251 NEXT       Store
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Store
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\company_store.md
+251 MIGRATE    Store
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\company_store.md
+  path       vault\item_index_pages\company_store.md
+---------- END ITEM 251 ----------
+
+========== ITEM 252 ==========
+252 NEXT       Weapon
+  category   Items
+  kind       item_index_pages
+  source     https://lethal-company.fandom.com/wiki/Weapon
+  cancel     Ctrl+C skips this page and continues
+  related    weapon_pages -> vault\weapon_pages\weapon.md
+252 MIGRATE    Weapon
+  reason     reused completed source from another kind
+  from       weapon_pages -> vault\weapon_pages\weapon.md
+  path       vault\item_index_pages\weapon.md
+---------- END ITEM 252 ----------
+
+========== ITEM 253 ==========
+253 NEXT       Baboon Hawk
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Baboon_Hawk
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\baboon_hawk.md
+253 MIGRATE    Baboon Hawk
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\baboon_hawk.md
+  path       vault\outdoor_entity_pages\baboon_hawk.md
+---------- END ITEM 253 ----------
+
+========== ITEM 254 ==========
+254 NEXT       Cadaver Bloom
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Cadaver_Bloom
+  cancel     Ctrl+C skips this page and continues
+  related    indoor_entity_pages -> vault\indoor_entity_pages\cadaver_bloom.md
+254 MIGRATE    Cadaver Bloom
+  reason     reused completed source from another kind
+  from       indoor_entity_pages -> vault\indoor_entity_pages\cadaver_bloom.md
+  path       vault\outdoor_entity_pages\cadaver_bloom.md
+---------- END ITEM 254 ----------
+
+========== ITEM 255 ==========
+255 NEXT       Earth Leviathan
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Earth_Leviathan
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\earth_leviathan.md
+255 MIGRATE    Earth Leviathan
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\earth_leviathan.md
+  path       vault\outdoor_entity_pages\earth_leviathan.md
+---------- END ITEM 255 ----------
+
+========== ITEM 256 ==========
+256 NEXT       Eyeless Dog
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Eyeless_Dog
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\eyeless_dog.md
+256 MIGRATE    Eyeless Dog
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\eyeless_dog.md
+  path       vault\outdoor_entity_pages\eyeless_dog.md
+---------- END ITEM 256 ----------
+
+========== ITEM 257 ==========
+257 NEXT       Feiopar
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Feiopar
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\feiopar.md
+257 MIGRATE    Feiopar
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\feiopar.md
+  path       vault\outdoor_entity_pages\feiopar.md
+---------- END ITEM 257 ----------
+
+========== ITEM 258 ==========
+258 NEXT       Forest Keeper
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Forest_Keeper
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\forest_keeper.md
+258 MIGRATE    Forest Keeper
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\forest_keeper.md
+  path       vault\outdoor_entity_pages\forest_keeper.md
+---------- END ITEM 258 ----------
+
+========== ITEM 259 ==========
+259 NEXT       Kidnapper Fox
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Kidnapper_Fox
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\kidnapper_fox.md
+259 MIGRATE    Kidnapper Fox
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\kidnapper_fox.md
+  path       vault\outdoor_entity_pages\kidnapper_fox.md
+---------- END ITEM 259 ----------
+
+========== ITEM 260 ==========
+260 NEXT       Old Bird
+  category   Outdoor Entities
+  kind       outdoor_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Old_Bird
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\old_bird.md
+260 MIGRATE    Old Bird
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\old_bird.md
+  path       vault\outdoor_entity_pages\old_bird.md
+---------- END ITEM 260 ----------
+
+========== ITEM 261 ==========
+261 NEXT       Batteries
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Batteries
+  cancel     Ctrl+C skips this page and continues
+261 DONE       Batteries
+  result     compiled
+  path       vault\scrapped_content_pages\batteries.md
+  wikitext   863 chars -> 446 chars
+---------- END ITEM 261 ----------
+
+========== ITEM 262 ==========
+262 NEXT       Binoculars
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Binoculars
+  cancel     Ctrl+C skips this page and continues
+262 QUARANTINE Binoculars
+  result     validation errors
+  path       vault\_quarantine\binoculars.md
+  wikitext   749 chars -> 660 chars
+  error      0 is not of type 'string'
+---------- END ITEM 262 ----------
+
+========== ITEM 263 ==========
+263 NEXT       Box
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Box
+  cancel     Ctrl+C skips this page and continues
+263 DONE       Box
+  result     compiled
+  path       vault\scrapped_content_pages\box.md
+  wikitext   1039 chars -> 1030 chars
+---------- END ITEM 263 ----------
+
+========== ITEM 264 ==========
+264 NEXT       Cut Content
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Cut_Content
+  cancel     Ctrl+C skips this page and continues
+264 DONE       Cut Content
+  result     compiled
+  path       vault\scrapped_content_pages\cut_content.md
+  wikitext   3210 chars -> 2927 chars
+---------- END ITEM 264 ----------
+
+========== ITEM 265 ==========
+265 NEXT       Lasso Man
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Lasso_Man
+  cancel     Ctrl+C skips this page and continues
+265 DONE       Lasso Man
+  result     compiled
+  path       vault\scrapped_content_pages\lasso_man.md
+  wikitext   2338 chars -> 2337 chars
+---------- END ITEM 265 ----------
+
+========== ITEM 266 ==========
+266 NEXT       Liquidation
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Liquidation
+  cancel     Ctrl+C skips this page and continues
+  related    destination_pages -> vault\destination_pages\44_liquidation.md
+266 MIGRATE    Liquidation
+  reason     reused completed source from another kind
+  from       destination_pages -> vault\destination_pages\44_liquidation.md
+  path       vault\scrapped_content_pages\44_liquidation.md
+---------- END ITEM 266 ----------
+
+========== ITEM 267 ==========
+267 NEXT       Mapper
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Mapper
+  cancel     Ctrl+C skips this page and continues
+267 DONE       Mapper
+  result     compiled
+  path       vault\scrapped_content_pages\mapper.md
+  wikitext   1259 chars -> 1088 chars
+---------- END ITEM 267 ----------
+
+========== ITEM 268 ==========
+268 NEXT       Red Pill
+  category   Scrapped Content
+  kind       scrapped_content_pages
+  source     https://lethal-company.fandom.com/wiki/Red_Pill
+  cancel     Ctrl+C skips this page and continues
+268 DONE       Red Pill
+  result     compiled
+  path       vault\scrapped_content_pages\red_pill.md
+  wikitext   2418 chars -> 2281 chars
+---------- END ITEM 268 ----------
+
+========== ITEM 269 ==========
+269 NEXT       Circuit Bee
+  category   Daytime Entities
+  kind       daytime_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Circuit_Bee
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\circuit_bee.md
+269 MIGRATE    Circuit Bee
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\circuit_bee.md
+  path       vault\daytime_entity_pages\circuit_bee.md
+---------- END ITEM 269 ----------
+
+========== ITEM 270 ==========
+270 NEXT       Giant Sapsucker
+  category   Daytime Entities
+  kind       daytime_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Giant_Sapsucker
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\giant_sapsucker.md
+270 MIGRATE    Giant Sapsucker
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\giant_sapsucker.md
+  path       vault\daytime_entity_pages\giant_sapsucker.md
+---------- END ITEM 270 ----------
+
+========== ITEM 271 ==========
+271 NEXT       Manticoil
+  category   Daytime Entities
+  kind       daytime_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Manticoil
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\manticoil.md
+271 MIGRATE    Manticoil
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\manticoil.md
+  path       vault\daytime_entity_pages\manticoil.md
+---------- END ITEM 271 ----------
+
+========== ITEM 272 ==========
+272 NEXT       Roaming Locust
+  category   Daytime Entities
+  kind       daytime_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Roaming_Locust
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\roaming_locust.md
+272 MIGRATE    Roaming Locust
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\roaming_locust.md
+  path       vault\daytime_entity_pages\roaming_locust.md
+---------- END ITEM 272 ----------
+
+========== ITEM 273 ==========
+273 NEXT       Tulip Snake
+  category   Daytime Entities
+  kind       daytime_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Tulip_Snake
+  cancel     Ctrl+C skips this page and continues
+  related    entity_pages -> vault\entity_pages\tulip_snake.md
+273 MIGRATE    Tulip Snake
+  reason     reused completed source from another kind
+  from       entity_pages -> vault\entity_pages\tulip_snake.md
+  path       vault\daytime_entity_pages\tulip_snake.md
+---------- END ITEM 273 ----------
+
+========== ITEM 274 ==========
+274 NEXT       Vain Shroud
+  category   Daytime Entities
+  kind       daytime_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Vain_Shroud
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\vain_shroud.md
+274 MIGRATE    Vain Shroud
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\vain_shroud.md
+  path       vault\daytime_entity_pages\vain_shroud.md
+---------- END ITEM 274 ----------
+
+========== ITEM 275 ==========
+275 NEXT       Backwater Gunkfish
+  category   Harmless Entities
+  kind       harmless_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Backwater_Gunkfish
+  cancel     Ctrl+C skips this page and continues
+  related    indoor_entity_pages -> vault\indoor_entity_pages\backwater_gunkfish.md
+275 MIGRATE    Backwater Gunkfish
+  reason     reused completed source from another kind
+  from       indoor_entity_pages -> vault\indoor_entity_pages\backwater_gunkfish.md
+  path       vault\harmless_entity_pages\backwater_gunkfish.md
+---------- END ITEM 275 ----------
+
+========== ITEM 276 ==========
+276 NEXT       Manticoil
+  category   Harmless Entities
+  kind       harmless_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Manticoil
+  cancel     Ctrl+C skips this page and continues
+  related    daytime_entity_pages -> vault\daytime_entity_pages\manticoil.md
+276 MIGRATE    Manticoil
+  reason     reused completed source from another kind
+  from       daytime_entity_pages -> vault\daytime_entity_pages\manticoil.md
+  path       vault\harmless_entity_pages\manticoil.md
+---------- END ITEM 276 ----------
+
+========== ITEM 277 ==========
+277 NEXT       Roaming Locust
+  category   Harmless Entities
+  kind       harmless_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Roaming_Locust
+  cancel     Ctrl+C skips this page and continues
+  related    daytime_entity_pages -> vault\daytime_entity_pages\roaming_locust.md
+277 MIGRATE    Roaming Locust
+  reason     reused completed source from another kind
+  from       daytime_entity_pages -> vault\daytime_entity_pages\roaming_locust.md
+  path       vault\harmless_entity_pages\roaming_locust.md
+---------- END ITEM 277 ----------
+
+========== ITEM 278 ==========
+278 NEXT       Tulip Snake
+  category   Harmless Entities
+  kind       harmless_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Tulip_Snake
+  cancel     Ctrl+C skips this page and continues
+  related    daytime_entity_pages -> vault\daytime_entity_pages\tulip_snake.md
+278 MIGRATE    Tulip Snake
+  reason     reused completed source from another kind
+  from       daytime_entity_pages -> vault\daytime_entity_pages\tulip_snake.md
+  path       vault\harmless_entity_pages\tulip_snake.md
+---------- END ITEM 278 ----------
+
+========== ITEM 279 ==========
+279 NEXT       Vain Shroud
+  category   Harmless Entities
+  kind       harmless_entity_pages
+  source     https://lethal-company.fandom.com/wiki/Vain_Shroud
+  cancel     Ctrl+C skips this page and continues
+  related    daytime_entity_pages -> vault\daytime_entity_pages\vain_shroud.md
+279 MIGRATE    Vain Shroud
+  reason     reused completed source from another kind
+  from       daytime_entity_pages -> vault\daytime_entity_pages\vain_shroud.md
+  path       vault\harmless_entity_pages\vain_shroud.md
+---------- END ITEM 279 ----------
+
+========== ITEM 280 ==========
+280 NEXT       Landmine
+  category   Map Hazard
+  kind       map_hazard_pages
+  source     https://lethal-company.fandom.com/wiki/Landmine
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\landmine.md
+280 MIGRATE    Landmine
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\landmine.md
+  path       vault\map_hazard_pages\landmine.md
+---------- END ITEM 280 ----------
+
+========== ITEM 281 ==========
+281 NEXT       Map Hazard
+  category   Map Hazard
+  kind       map_hazard_pages
+  source     https://lethal-company.fandom.com/wiki/Map_Hazard
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\map_hazards.md
+281 MIGRATE    Map Hazard
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\map_hazards.md
+  path       vault\map_hazard_pages\map_hazards.md
+---------- END ITEM 281 ----------
+
+========== ITEM 282 ==========
+282 NEXT       Spike Trap
+  category   Map Hazard
+  kind       map_hazard_pages
+  source     https://lethal-company.fandom.com/wiki/Spike_Trap
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\spike_trap.md
+282 MIGRATE    Spike Trap
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\spike_trap.md
+  path       vault\map_hazard_pages\spike_trap.md
+---------- END ITEM 282 ----------
+
+========== ITEM 283 ==========
+283 NEXT       Turret
+  category   Map Hazard
+  kind       map_hazard_pages
+  source     https://lethal-company.fandom.com/wiki/Turret
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\turret.md
+283 MIGRATE    Turret
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\turret.md
+  path       vault\map_hazard_pages\turret.md
+---------- END ITEM 283 ----------
+
+========== ITEM 284 ==========
+284 NEXT       Bunkbeds
+  category   Ship Furniture
+  kind       ship_furniture_pages
+  source     https://lethal-company.fandom.com/wiki/Bunkbeds
+  cancel     Ctrl+C skips this page and continues
+284 DONE       Bunkbeds
+  result     compiled
+  path       vault\ship_furniture_pages\bunkbeds.md
+  wikitext   463 chars -> 434 chars
+---------- END ITEM 284 ----------
+
+========== ITEM 285 ==========
+285 NEXT       Cupboard
+  category   Ship Furniture
+  kind       ship_furniture_pages
+  source     https://lethal-company.fandom.com/wiki/Cupboard
+  cancel     Ctrl+C skips this page and continues
+285 DONE       Cupboard
+  result     compiled
+  path       vault\ship_furniture_pages\cupboard.md
+  wikitext   545 chars -> 464 chars
+---------- END ITEM 285 ----------
+
+========== ITEM 286 ==========
+286 NEXT       File Cabinet
+  category   Ship Furniture
+  kind       ship_furniture_pages
+  source     https://lethal-company.fandom.com/wiki/File_Cabinet
+  cancel     Ctrl+C skips this page and continues
+286 DONE       File Cabinet
+  result     compiled
+  path       vault\ship_furniture_pages\file_cabinet.md
+  wikitext   735 chars -> 697 chars
+---------- END ITEM 286 ----------
+
+========== ITEM 287 ==========
+287 NEXT       Template:Guide
+  category   Guides
+  kind       guide_pages
+  source     https://lethal-company.fandom.com/wiki/Template%3AGuide
+  cancel     Ctrl+C skips this page and continues
+287 DONE       Template:Guide
+  result     compiled
+  path       vault\guide_pages\guide.md
+  wikitext   462 chars -> 443 chars
+---------- END ITEM 287 ----------
+
+========== ITEM 288 ==========
+288 NEXT       Guide:Camera duty
+  category   Guides
+  kind       guide_pages
+  source     https://lethal-company.fandom.com/wiki/Guide%3ACamera_duty
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\camera_duty.md
+288 MIGRATE    Guide:Camera duty
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\camera_duty.md
+  path       vault\guide_pages\camera_duty.md
+---------- END ITEM 288 ----------
+
+========== ITEM 289 ==========
+289 NEXT       Guide:Contract
+  category   Guides
+  kind       guide_pages
+  source     https://lethal-company.fandom.com/wiki/Guide%3AContract
+  cancel     Ctrl+C skips this page and continues
+  related    gameplay_mechanics -> vault\gameplay_mechanics\guide_contract.md
+289 MIGRATE    Guide:Contract
+  reason     reused completed source from another kind
+  from       gameplay_mechanics -> vault\gameplay_mechanics\guide_contract.md
+  path       vault\guide_pages\guide_contract.md
+---------- END ITEM 289 ----------
+
+========== ITEM 290 ==========
+290 NEXT       Lethal Company
+  category   Lethal Company
+  kind       franchise_pages
+  source     https://lethal-company.fandom.com/wiki/Lethal_Company
+  cancel     Ctrl+C skips this page and continues
+290 DONE       Lethal Company
+  result     compiled
+  path       vault\franchise_pages\lethal_company.md
+  wikitext   7303 chars -> 7275 chars
+---------- END ITEM 290 ----------
+
+========== ITEM 291 ==========
+291 NEXT       Zeekerss
+  category   Lethal Company
+  kind       franchise_pages
+  source     https://lethal-company.fandom.com/wiki/Zeekerss
+  cancel     Ctrl+C skips this page and continues
+291 DONE       Zeekerss
+  result     compiled
+  path       vault\franchise_pages\zeekerss.md
+  wikitext   1383 chars -> 1346 chars
+---------- END ITEM 291 ----------
+
+========== ITEM 292 ==========
+292 NEXT       Loud Horn
+  category   Ship Upgrades
+  kind       ship_upgrade_pages
+  source     https://lethal-company.fandom.com/wiki/Loud_Horn
+  cancel     Ctrl+C skips this page and continues
+  related    store_items -> vault\store_items\loud_horn.md
+292 MIGRATE    Loud Horn
+  reason     reused completed source from another kind
+  from       store_items -> vault\store_items\loud_horn.md
+  path       vault\ship_upgrade_pages\loud_horn.md
+---------- END ITEM 292 ----------
+
+========== ITEM 293 ==========
+293 NEXT       Signal translator
+  category   Ship Upgrades
+  kind       ship_upgrade_pages
+  source     https://lethal-company.fandom.com/wiki/Signal_translator
+  cancel     Ctrl+C skips this page and continues
+  related    store_items -> vault\store_items\signal_translator.md
+293 MIGRATE    Signal translator
+  reason     reused completed source from another kind
+  from       store_items -> vault\store_items\signal_translator.md
+  path       vault\ship_upgrade_pages\signal_translator.md
+---------- END ITEM 293 ----------
+
+========== ITEM 294 ==========
+294 NEXT       Single Item Day
+  category   Events
+  kind       event_pages
+  source     https://lethal-company.fandom.com/wiki/Single_Item_Day
+  cancel     Ctrl+C skips this page and continues
+294 DONE       Single Item Day
+  result     compiled
+  path       vault\event_pages\single_item_day.md
+  wikitext   2518 chars -> 2498 chars
+---------- END ITEM 294 ----------
+
+========== ITEM 295 ==========
+295 NEXT       Lethal Company Wiki
+  category   Lethal Company Wiki
+  kind       wiki_homepage_pages
+  source     https://lethal-company.fandom.com/wiki/Lethal_Company_Wiki
+  cancel     Ctrl+C skips this page and continues
+295 DONE       Lethal Company Wiki
+  result     compiled
+  path       vault\wiki_homepage_pages\lethal_company_wiki.md
+  wikitext   2563 chars -> 2039 chars
+---------- END ITEM 295 ----------
+
+========== ITEM 296 ==========
+296 NEXT       Lethal Company Wiki:Wiki rules
+  category   Lethal Company Wiki
+  kind       wiki_homepage_pages
+  source     https://lethal-company.fandom.com/wiki/Lethal_Company_Wiki%3AWiki_rules
+  cancel     Ctrl+C skips this page and continues
+296 DONE       Lethal Company Wiki:Wiki rules
+  result     compiled
+  path       vault\wiki_homepage_pages\wiki_rules.md
+  wikitext   1452 chars -> 1418 chars
+---------- END ITEM 296 ----------
+
+========== ITEM 297 ==========
+297 NEXT       Known Bugs
+  category   Pages with reference errors
+  kind       maintenance_tracking_pages
+  source     https://lethal-company.fandom.com/wiki/Known_Bugs
+  cancel     Ctrl+C skips this page and continues
+297 DONE       Known Bugs
+  result     compiled
+  path       vault\maintenance_tracking_pages\known_bugs.md
+  wikitext   13705 chars -> 13108 chars
+---------- END ITEM 297 ----------
+warning: missing per-kind schemas: maintenance_tracking_pages

@@ -109,7 +109,27 @@ def _propose_schemas_and_engines(
         schemas = {}
     print("[Phase 0] Proposing target-engine candidates...")
     engines = analyze_module.propose_engine_candidates(kinds, mapped_categories, **kwargs)
-    return schemas, engines
+    print("[Phase 0] Classifying kinds as code-vs-data (codegen flags)...")
+    codegen_flags = analyze_module.propose_codegen_flags(
+        kinds, mapped_categories, sample_pages, **kwargs
+    )
+    # Phase 3 systems: per-game gameplay-loop plugins (state machine, HUD,
+    # input, combat, etc.) generated AFTER per-entity leaves. Marks the
+    # `chosen_engine.systems` block consumed by
+    # `phase2/loop_driver.py --from-systems`.
+    print("[Phase 0] Proposing gameplay systems (Phase 3 goals)...")
+    # Apply codegen flags to kinds before proposing systems so the proposer
+    # only depends_on code-kinds (no `depends_on: ["version_pages"]`).
+    flagged_kinds = {}
+    for name, data in kinds.items():
+        d = dict(data) if isinstance(data, dict) else {}
+        if name in codegen_flags:
+            d["codegen"] = codegen_flags[name]
+        flagged_kinds[name] = d
+    systems = analyze_module.propose_gameplay_systems(
+        flagged_kinds, sample_pages, **kwargs
+    )
+    return schemas, engines, codegen_flags, systems
 
 
 def _kinds_missing_frontmatter_schema(
@@ -144,6 +164,8 @@ def _merge_proposals(
     engines: list[dict[str, Any]],
     mapped_categories: list[dict[str, Any]],
     dropped_categories: list[dict[str, Any]] | None = None,
+    codegen_flags: dict[str, bool] | None = None,
+    systems: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     enriched_kinds: dict[str, Any] = {}
     current_kinds = current_config.get("kinds", {})
@@ -156,18 +178,36 @@ def _merge_proposals(
             if isinstance(previous_kind_data, dict)
             else None
         )
+        previous_codegen = (
+            previous_kind_data.get("codegen")
+            if isinstance(previous_kind_data, dict)
+            else None
+        )
         entry = dict(kind_data)
         if isinstance(previous_schema, dict) and previous_schema:
             entry["frontmatter_schema"] = previous_schema
         elif kind_key in schemas:
             entry["frontmatter_schema"] = schemas[kind_key]
+        # codegen flag precedence: existing hand-set value wins over the
+        # auto-classification (operators may toggle a kind by hand and not
+        # want Phase 0 to flip it back); fall back to the classifier output.
+        if isinstance(previous_codegen, bool):
+            entry["codegen"] = previous_codegen
+        elif codegen_flags and kind_key in codegen_flags:
+            entry["codegen"] = codegen_flags[kind_key]
         enriched_kinds[kind_key] = entry
-    return {
+    out: dict[str, Any] = {
         "kinds": enriched_kinds,
         "categories": mapped_categories,
         "dropped_categories": dropped_categories or [],
         "engine_candidates": engines,
     }
+    if systems:
+        # Top-level so it survives even when chosen_engine is null at first
+        # write; `derive_goals_from_systems` reads from
+        # ``chosen_engine.systems`` first and falls back here.
+        out["systems"] = systems
+    return out
 
 
 def main(argv: list[str]) -> int:
@@ -226,7 +266,7 @@ def main(argv: list[str]) -> int:
     sample_pages = _sample_pages_by_category(phase0_fetch, wiki_url, categories)
     schema_kinds = _kinds_missing_frontmatter_schema(config, kinds)
     schema_categories = _categories_for_kinds(mapped_categories, schema_kinds)
-    schemas, engines = _propose_schemas_and_engines(
+    schemas, engines, codegen_flags, systems = _propose_schemas_and_engines(
         phase0_analyze,
         kinds,
         mapped_categories,
@@ -235,9 +275,21 @@ def main(argv: list[str]) -> int:
         schema_kinds,
         schema_categories,
     )
-    print(f"Proposed schemas for {len(schemas)} kinds, {len(engines)} engine candidates.")
+    code_kinds_n = sum(1 for v in codegen_flags.values() if v)
+    print(
+        f"Proposed schemas for {len(schemas)} kinds, {len(engines)} engine candidates, "
+        f"{code_kinds_n} code-kinds / {len(codegen_flags) - code_kinds_n} data-kinds, "
+        f"{len(systems)} gameplay systems."
+    )
     proposal = _merge_proposals(
-        config, kinds, schemas, engines, mapped_categories, dropped_categories
+        config,
+        kinds,
+        schemas,
+        engines,
+        mapped_categories,
+        dropped_categories,
+        codegen_flags=codegen_flags,
+        systems=systems,
     )
 
     if args.dry_run:

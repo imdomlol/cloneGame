@@ -1,0 +1,10 @@
+[package]
+name = "clone-game"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy        = "0.15"
+fixed       = "1"
+rand_chacha = "0.3"
+rand_core   = "0.6"
