@@ -199,10 +199,6 @@ implemented:
   file: src/map_hazard_pages/map_hazards.rs
   hash: 310909084901885cdd0e4ae47e170a6421103664204cfe81be679f828f2fbe9e
   verified_against: vault/map_hazard_pages/map_hazards.md
-- id: game_state_machine
-  file: src/system/game_state_machine.rs
-  hash: 38a473e848fe262934c66e018f95e24afe26e8da95df50fc71ab511b76e5e098
-  verified_against: vault/item_index_pages/items.md,vault/version_pages/version_4.md
 - id: input_handler
   file: src/system/input_handler.rs
   hash: 3b6e4a399c90b65226f653f7b0fa5fca76550578cd3606c486aa66afec60d442
@@ -359,91 +355,291 @@ implemented:
   file: src/scrap_items/rubber_ducky.rs
   hash: 3a80822dd36dbfb7edc3b9513e65071fb261a240990f513d4541d41da30f82dc
   verified_against: vault/scrap_items/rubber_ducky.md
-pending:
-- id: hud
-  blocked_by:
-  - missing_sources_header
-- id: entity_spawner
-  blocked_by:
-  - codegen_error
-- id: scrap_economy
-  blocked_by:
-  - codegen_error
-- id: combat_system
-  blocked_by:
-  - codegen_error
-- id: facility_timer
-  blocked_by:
-  - codegen_error
-- id: hazard_system
-  blocked_by:
-  - codegen_error
-- id: creature_ai
-  blocked_by:
-  - codegen_error
-- id: ship_system
-  blocked_by:
-  - codegen_error
-- id: baboon_hawk
-  blocked_by:
-  - vault/outdoor_entity_pages/baboon_hawk.md
 - id: old_phone
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/old_phone.rs
+  hash: dddb1d6cb71d87fc378ba2add3ed507c477cbaa2e1a401951b7ac74d5100cb95
+  verified_against: vault/scrap_items/old_phone.md
 - id: painting
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/painting.rs
+  hash: 8d73df17ac8d8367828d6c22ec02dec737f78a159e13f0fcf8a2491f1c8459cc
+  verified_against: vault/scrap_items/painting.md
 - id: player_body
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/player_body.rs
+  hash: 8db0a30079f0b685ca51ad2d844ce083d3c10f8b4bfff63e926b2236242d44c4
+  verified_against: vault/scrap_items/player_body.md
 - id: red_soda
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/red_soda.rs
+  hash: 9fecc4bb50d72f033bbfc64dc95e6c5c92d5bd1db661452bd4dcc1616c71dfa0
+  verified_against: vault/scrap_items/red_soda.md
 - id: remote
-  blocked_by:
-  - codegen_error
-- id: ribcage
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/remote.rs
+  hash: 0485e3f82691d383670c1d41d9292dec81dd4a8f4f9f97d184637de2ecd72de4
+  verified_against: vault/scrap_items/remote.md
 - id: robot_toy
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/robot_toy.rs
+  hash: 11cc0095c10dbe2385d761857a32336aa8e7a19dca9905b342c10d3aab8fabae
+  verified_against: vault/scrap_items/robot_toy.md
+- id: ribcage
+  file: src/scrap_items/ribcage.rs
+  hash: 17fe8e64615e523073c15c2cced60c945e66045804bcdb428eb0805527472f15
+  verified_against: vault/scrap_items/ribcage.md
 - id: soccer_ball
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/soccer_ball.rs
+  hash: 6f1c043c707f6986088547b83538092093aac70083c68551369395f5cae0f979
+  verified_against: vault/scrap_items/soccer_ball.md
 - id: steering_wheel
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/steering_wheel.rs
+  hash: d4be6c534dfc0b604e22be663120964165dbb4f6558ffc7be42438633f0dd0fa
+  verified_against: vault/scrap_items/steering_wheel.md
 - id: tattered_metal_sheet
-  blocked_by:
-  - codegen_error
-- id: teeth
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/tattered_metal_sheet.rs
+  hash: 0c2001a9619d25dc567516a10688eb8fe45eae702b206c649100d5cc2a71d23b
+  verified_against: vault/scrap_items/tattered_metal_sheet.md
 - id: toilet_paper
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/toilet_paper.rs
+  hash: 07a1963bd50ce69e8375ecffa36332bb382dd075ffdbeff030d5fd7dab30cf14
+  verified_against: vault/scrap_items/toilet_paper.md
 - id: toy_cube
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/toy_cube.rs
+  hash: 94861e216e562a6d3f94b81a4a90e2c865ab49ee4eae7352dda0aa4c0435b11d
+  verified_against: vault/scrap_items/toy_cube.md
 - id: toy_train
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/toy_train.rs
+  hash: bde56f5120c4e2fa4c8ae9d943e96569629486f3dbed08b7f42d052a2219e5f5
+  verified_against: vault/scrap_items/toy_train.md
 - id: v_type_engine
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/v_type_engine.rs
+  hash: 99d0a66b3fed14bd1a56de502c3fd461bdedbe410ee38e27805a581fe66fb941
+  verified_against: vault/scrap_items/v_type_engine.md,vault/item_index_pages/scrap.md
 - id: wedding_ring
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/wedding_ring.rs
+  hash: 0eeac04947efe845b1008c8db060df2d27af19c042294a6cd86a805e2e0779e0
+  verified_against: vault/scrap_items/wedding_ring.md
 - id: zed_dog
-  blocked_by:
-  - codegen_error
+  file: src/scrap_items/zed_dog.rs
+  hash: 08a15cd24d46864591d84157c154d81f7a4cf5679e0ed0bf5d3467d61492bb49
+  verified_against: vault/scrap_items/zed_dog.md
 - id: bunkbeds
-  blocked_by:
-  - codegen_error
+  file: src/ship_furniture_pages/bunkbeds.rs
+  hash: 0ef87208266fd3466193e40c6a23cbc5db5608271c57ed275dc95345af756b0b
+  verified_against: vault/ship_furniture_pages/bunkbeds.md,vault/item_index_pages/decor.md,vault/ship_furniture_pages/bunkbeds.md
+- id: file_cabinet
+  file: src/ship_furniture_pages/file_cabinet.rs
+  hash: cb71243f6f5a8e86c9be13983b45fad98f630fd87347cd1266b37a11b3e5093b
+  verified_against: vault/ship_furniture_pages/file_cabinet.md,vault/outdoor_entity_pages/eyeless_dog.md
+- id: teeth
+  file: src/scrap_items/teeth.rs
+  hash: 0d51888701a9424a5b4cdd7901c5d2a88f9c96629e7b8183a94bfb3c1a587ed2
+  verified_against: vault/scrap_items/teeth.md
 - id: cupboard
-  blocked_by:
-  - codegen_error
+  file: src/ship_furniture_pages/cupboard.rs
+  hash: ed3cf306626b4cce56a6d81f8b3f724f2d2d2db081d94c78b3fac97ca52cb296
+  verified_against: vault/ship_furniture_pages/cupboard.md
+- id: loud_horn
+  file: src/ship_upgrade_pages/loud_horn.rs
+  hash: 59795c7c5783b2e22920b5e742ec7815c818b4a831e09bdab230bf66583a0fc6
+  verified_against: vault/ship_upgrade_pages/loud_horn.md
+- id: signal_translator
+  file: src/ship_upgrade_pages/signal_translator.rs
+  hash: e058873e41fadd5016c939a01355eca9cca53328154c91f297a17865632a113b
+  verified_against: vault/ship_upgrade_pages/signal_translator.md
+- id: classic_painting
+  file: src/store_items/classic_painting.rs
+  hash: c7d8fd87d80409e040f7b0564c47b24e93f3432fef96d7b1f241331879cc34ab
+  verified_against: vault/store_items/classic_painting.md,vault/item_index_pages/items.md
+- id: disco_ball
+  file: src/store_items/disco_ball.rs
+  hash: 582edc5b9b5c0a9aec7c5aa25a3f039c61f32f4521d2874fc3aac235d248d546
+  verified_against: vault/store_items/disco_ball.md,vault/item_index_pages/items.md
+- id: boombox
+  file: src/store_items/boombox.rs
+  hash: 882c0ce57be9f153754154fc3caccbbaa34b071d16d32d0e2110906439845480
+  verified_against: vault/store_items/boombox.md,vault/item_index_pages/decor.md
+- id: cozy_lights
+  file: src/store_items/cozy_lights.rs
+  hash: 709ef28519103523356720fe5335a030dc66b2f1eb79255bf9367d7243d50036
+  verified_against: vault/store_items/cozy_lights.md,vault/item_index_pages/decor.md
+- id: dog_house
+  file: src/store_items/dog_house.rs
+  hash: be2e4822aaa593cf3df994130cece356470dc4ba9453fcbd2027037dcf48f33a
+  verified_against: vault/store_items/dog_house.md,vault/item_index_pages/decor.md
+- id: extension_ladder
+  file: src/store_items/extension_ladder.rs
+  hash: 3e8fc1108e3babd722808c810c31f16676979c6dde637c0e7ec430fa9ba9d525
+  verified_against: vault/store_items/extension_ladder.md,vault/item_index_pages/items.md
+- id: flashlight
+  file: src/store_items/flashlight.rs
+  hash: 238059937e707042f61e689c9fd51703d83abfe73645ba88977b7d9e0cf2824b
+  verified_against: vault/store_items/flashlight.md
+- id: fridge
+  file: src/store_items/fridge.rs
+  hash: 904c67b3e760668895ec639b5372097267e9337f693b44ce73db38bbba8d9973
+  verified_against: vault/store_items/fridge.md,vault/item_index_pages/items.md
+- id: goldfish
+  file: src/store_items/goldfish.rs
+  hash: c4123fa7779f470ec59d43160e9bf3d4453b75c9294e6f2c126e30dd56165b59
+  verified_against: vault/store_items/goldfish.md,vault/item_index_pages/items.md
+- id: inverse_teleporter
+  file: src/store_items/inverse_teleporter.rs
+  hash: 482cc9477b5ea60247853068bd9588dfb67559a2b797232d4b63cebe66038436
+  verified_against: vault/store_items/inverse_teleporter.md
+- id: jack_o_lantern
+  file: src/store_items/jack_o_lantern.rs
+  hash: b632325161100e7efa00f212d924b2e8308d31bc524f0e12731a551583999dab
+  verified_against: vault/store_items/jack_o_lantern.md,vault/item_index_pages/items.md
+- id: jetpack
+  file: src/store_items/jetpack.rs
+  hash: 4cafdb00896b863fd67a0828736d282da989f1e3eb34803c208e2720cbfc880d
+  verified_against: vault/store_items/jetpack.md,vault/item_index_pages/items.md
+- id: lockpicker
+  file: src/store_items/lockpicker.rs
+  hash: 6e348e38cdaf9aba6eb68eb3a2b6be76b94121211efbcde7f39ef058ac6cd37f
+  verified_against: vault/store_items/lockpicker.md,vault/item_index_pages/items.md
+- id: microwave
+  file: src/store_items/microwave.rs
+  hash: c09b16077937abd4b8c1a2403aac2ff9f4ce957c24839ddf91d83a8127fadc72
+  verified_against: vault/store_items/microwave.md,vault/item_index_pages/items.md
+- id: plushie_pajama_man
+  file: src/store_items/plushie_pajama_man.rs
+  hash: 5e186c48e3e6f9e65c44744136311042bb3fe2dfc6179b754b2a760ac317d0d0
+  verified_against: vault/store_items/plushie_pajama_man.md,vault/item_index_pages/decor.md
+- id: pro_flashlight
+  file: src/store_items/pro_flashlight.rs
+  hash: 4e4013476cf5adf57e5e945deec3a9b5c3161c447c6cebe683415732d8436a4b
+  verified_against: vault/store_items/pro_flashlight.md,vault/store_items/flashlight.md,vault/item_index_pages/items.md
+- id: radar_booster
+  file: src/store_items/radar_booster.rs
+  hash: 12b008f5a73bfda5b35943c7934d8d9b3a8991383b99e93b6a941bafa32047db
+  verified_against: vault/store_items/radar_booster.md
+- id: record_player
+  file: src/store_items/record_player.rs
+  hash: 699f64ca62bfa8c172f83fe602c48ded5a839b11836bb74fd0fdc32dd98cc3cb
+  verified_against: vault/store_items/record_player.md,vault/item_index_pages/items.md
+- id: baboon_hawk
+  file: src/outdoor_entity_pages/baboon_hawk.rs
+  hash: b1b880571d033b78399d64affda40616f40ce48c2240095bf3b153c0b6521872
+  verified_against: vault/wiki_homepage_pages/lethal_company_wiki.md
+- id: romantic_table
+  file: src/store_items/romantic_table.rs
+  hash: 7677aaf6b7aa202ac2f488fed00aa0acbec99ece6bb8a3c367f550dd746c8461
+  verified_against: vault/store_items/romantic_table.md,vault/item_index_pages/decor.md
+- id: shower
+  file: src/store_items/shower.rs
+  hash: 6639dd581f4ba2d1827a87907190dffc5f170415d8062024ac844b477571f19d
+  verified_against: vault/store_items/shower.md,vault/item_index_pages/items.md
+- id: sofa_chair
+  file: src/store_items/sofa_chair.rs
+  hash: cb01c8e3e671423a5cdca3cba5794d295ffdd79ddc2f446c6e910fc71754db8c
+  verified_against: vault/store_items/sofa_chair.md,vault/item_index_pages/decor.md
+- id: spray_paint
+  file: src/store_items/spray_paint.rs
+  hash: 42923750d27d360767e44df2ec497a4f04dcd2e65cb5c83338fee2c7c2f907db
+  verified_against: vault/store_items/spray_paint.md,vault/item_index_pages/items.md
+- id: suits
+  file: src/store_items/suits.rs
+  hash: db7fbb6106bb124d79bb8410df4e20f29ec53f878fe31b745b631d5a4652606a
+  verified_against: vault/store_items/suits.md,vault/item_index_pages/items.md
+- id: table
+  file: src/store_items/table.rs
+  hash: b5b58945553febe7b79e8909be2405ddbbcd26dc95849cf43d4aa4f6d093ef2e
+  verified_against: vault/store_items/table.md,vault/item_index_pages/items.md,vault/store_items/record_player.md
+- id: teleporter
+  file: src/store_items/teleporter.rs
+  hash: 04a612ada19f9ebdea8be3ca4a0cec322729283e0aa47295051d2a0843ae9196
+  verified_against: vault/store_items/teleporter.md,vault/store_items/teleporter.md
+- id: television
+  file: src/store_items/television.rs
+  hash: 2f2f7d48c0629f5e5fca14401cc8c26c7669c1bd1fa76adc1e13773317288fa9
+  verified_against: vault/store_items/television.md,vault/item_index_pages/decor.md
+- id: toilet
+  file: src/store_items/toilet.rs
+  hash: d6adb412432fe48a3340ad3d1b5b89038870b66bd1286a39e9d9656f3cb52d0f
+  verified_against: vault/store_items/toilet.md,vault/item_index_pages/items.md
+- id: tzp_inhalant
+  file: src/store_items/tzp_inhalant.rs
+  hash: e5132387d67e44f234f0e83a6649ce4dbdd9b83105a38b436b440e6aa8b8d7fe
+  verified_against: vault/store_items/tzp_inhalant.md
+- id: walkie_talkie
+  file: src/store_items/walkie_talkie.rs
+  hash: 5a74c53215e868e212763ff4a7bc44cab223c61862146add7ef7cfe5a1f17484
+  verified_against: vault/store_items/walkie_talkie.md
+- id: weed_killer
+  file: src/store_items/weed_killer.rs
+  hash: c13a69487f71a9c6e0b1bb26c724befe66853109d200716b48bc54c81b028925
+  verified_against: vault/store_items/weed_killer.md
+- id: welcome_mat
+  file: src/store_items/welcome_mat.rs
+  hash: 9ab523dda3b92e71487a21bf8fb023492e05c10b4a6c78e191c4f562e6f44f3c
+  verified_against: vault/store_items/welcome_mat.md,vault/item_index_pages/items.md
+- id: double_barrel
+  file: src/weapon_pages/double_barrel.rs
+  hash: e5bf97013310d4853643092b8aab46019c4510df6df06e9e30c6b54ce7a503b3
+  verified_against: vault/weapon_pages/double_barrel.md,vault/item_index_pages/items.md,vault/gameplay_mechanics/cause_of_death.md
+- id: homemade_flashbang
+  file: src/weapon_pages/homemade_flashbang.rs
+  hash: fbdacc696ddb331922df636d79c250ee2377b822e41c1bed0bc45eb8519f7a15
+  verified_against: vault/weapon_pages/homemade_flashbang.md,vault/weapon_pages/stun_grenade.md
+- id: kitchen_knife
+  file: src/weapon_pages/kitchen_knife.rs
+  hash: a4e8f64e83b1bcb479dc496c562a32e79d85258c8bf81d116801e65ce963bf60
+  verified_against: vault/weapon_pages/kitchen_knife.md,vault/item_index_pages/items.md
+- id: shovel
+  file: src/weapon_pages/shovel.rs
+  hash: c02a4d019de5298f2954d1c9e7a4701e55020c36437d932be2286c66c311667c
+  verified_against: vault/weapon_pages/shovel.md,vault/weapon_pages/stop_sign.md,vault/gameplay_mechanics/cause_of_death.md
+- id: stop_sign
+  file: src/weapon_pages/stop_sign.rs
+  hash: 46638effe7915803f1df6698649389b26d8e0bd7f2a20e4483ba630ac43b7d22
+  verified_against: vault/weapon_pages/stop_sign.md,vault/item_index_pages/weapon.md,vault/gameplay_mechanics/cause_of_death.md
+- id: stun_grenade
+  file: src/weapon_pages/stun_grenade.rs
+  hash: 926debd5449a4b168ca13b14882b59e29cdcea317f7d9c5079f9cafaaa3b5d9f
+  verified_against: vault/weapon_pages/stun_grenade.md,vault/weapon_pages/homemade_flashbang.md
+- id: yield_sign
+  file: src/weapon_pages/yield_sign.rs
+  hash: bac748649e67fd825bdaf489f409bd7132195c2571a81cd5f162d92e52640185
+  verified_against: vault/weapon_pages/yield_sign.md
+- id: zap_gun
+  file: src/weapon_pages/zap_gun.rs
+  hash: 8d807dbd7234053dfa859a17b2f9bc75423f336cf1f8b96463e700bd207fc5d4
+  verified_against: vault/weapon_pages/zap_gun.md,vault/item_index_pages/weapon.md,vault/gameplay_mechanics/cause_of_death.md
+- id: game_state_machine
+  file: src/system/game_state_machine.rs
+  hash: 2e6f9b0f283f2270ab71e8b75f738a76a91b9d36a5cb8b154e45ea7e91963458
+  verified_against: vault/item_index_pages/items.md,vault/version_pages/version_4.md,vault/item_index_pages/items.md,vault/version_pages/version_4.md
+- id: hud
+  file: src/system/hud.rs
+  hash: 734ffa7fae270a4d1f2b486769e071c683cd7df9bc6ec62b4f22ac850c9534a4
+  verified_against: vault/item_index_pages/items.md,vault/version_pages/version_72.md
+- id: entity_spawner
+  file: src/system/entity_spawner.rs
+  hash: 03663c4e57b422c9e10f2162926808ac428d5529f98c07a6ee2fba1c4a0b43df
+  verified_against: vault/destination_pages/61_march.md,vault/entity_pages/entity.md
+- id: scrap_economy
+  file: src/system/scrap_economy.rs
+  hash: a3facf16677009c33939a7b0631bcad37347591489947c06b5d4d3ff79ff8699
+  verified_against: vault/item_index_pages/items.md,vault/item_index_pages/scrap.md,vault/scrap_items/old_phone.md
+- id: combat_system
+  file: src/system/combat_system.rs
+  hash: bcebec1f862125030c7fafb8fa1842a11aabd17f3af1e86feb140a01722db4a7
+  verified_against: vault/item_index_pages/items.md,vault/item_index_pages/weapon.md
+- id: facility_timer
+  file: src/system/facility_timer.rs
+  hash: 61ef33aba60a597d900b7928894d2fe5b2e4ccfaf933e2da3c86f2264438484d
+  verified_against: vault/indoor_entity_pages/ghost_girl.md,vault/scrap_items/apparatus.md,vault/indoor_entity_pages/ghost_girl.md,vault/scrap_items/apparatus.md
+- id: hazard_system
+  file: src/system/hazard_system.rs
+  hash: 438731810e9c02e82e8bfd483a030c88ef11a7d5f4a2136e5e4f49b35dd0146b
+  verified_against: vault/map_hazard_pages/map_hazards.md,vault/gameplay_mechanics/employee.md
+- id: creature_ai
+  file: src/system/creature_ai.rs
+  hash: 656f26071f5a31020b4ac9b7308ec7bc062c0e8e0cd25bd4104ee1354965396a
+  verified_against: vault/entity_pages/the_company_monster.md,vault/gameplay_mechanics/fear.md
+- id: ship_system
+  file: src/system/ship_system.rs
+  hash: 60278bf750106f7b78a170ad324707737196a4c0caa99fbdf58ae98793e32987
+  verified_against: vault/gameplay_mechanics/the_ship.md,vault/item_index_pages/company_store.md
+pending: []
 test_state:
   passing: 0
   failing: 0

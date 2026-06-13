@@ -1,0 +1,179 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 3430.35it/s]
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+usage: <unavailable in CLI mode>
+[SKIP] circuit_bee: implement the circuit bee daytime_entity_pages
+[SKIP] giant_sapsucker: implement the giant sapsucker daytime_entity_pages
+[SKIP] bestiary: implement the bestiary entity_pages
+[SKIP] entity: implement the entity entity_pages
+[SKIP] the_company_monster: implement the the company monster entity_pages
+[SKIP] single_item_day: implement the single item day event_pages
+[SKIP] cause_of_death: implement the cause of death gameplay_mechanics
+[SKIP] company_ranks: implement the company ranks gameplay_mechanics
+[SKIP] credits: implement the credits gameplay_mechanics
+[SKIP] dropship: implement the dropship gameplay_mechanics
+[SKIP] electric_coil: implement the electric coil gameplay_mechanics
+[SKIP] employee: implement the employee gameplay_mechanics
+[SKIP] entity_targeting: implement the entity targeting gameplay_mechanics
+[SKIP] fear: implement the fear gameplay_mechanics
+[SKIP] fire_exit: implement the fire exit gameplay_mechanics
+[SKIP] global_game_variables: implement the global game variables gameplay_mechanics
+[SKIP] interior: implement the interior gameplay_mechanics
+[SKIP] item_bar: implement the item bar gameplay_mechanics
+[SKIP] lore: implement the lore gameplay_mechanics
+[SKIP] monitors: implement the monitors gameplay_mechanics
+[SKIP] orbit: implement the orbit gameplay_mechanics
+[SKIP] profit_quota: implement the profit quota gameplay_mechanics
+[SKIP] scanner: implement the scanner gameplay_mechanics
+[SKIP] terminal: implement the terminal gameplay_mechanics
+[SKIP] the_ship: implement the the ship gameplay_mechanics
+[SKIP] weather: implement the weather gameplay_mechanics
+[SKIP] backwater_gunkfish: implement the backwater gunkfish harmless_entity_pages
+[SKIP] manticoil: implement the manticoil harmless_entity_pages
+[SKIP] roaming_locust: implement the roaming locust harmless_entity_pages
+[SKIP] tulip_snake: implement the tulip snake harmless_entity_pages
+[SKIP] vain_shroud: implement the vain shroud harmless_entity_pages
+[SKIP] barber: implement the barber indoor_entity_pages
+[SKIP] bracken: implement the bracken indoor_entity_pages
+[SKIP] bunker_spider: implement the bunker spider indoor_entity_pages
+[SKIP] butler: implement the butler indoor_entity_pages
+[SKIP] cadaver: implement the cadaver indoor_entity_pages
+[SKIP] coil_head: implement the coil head indoor_entity_pages
+[SKIP] ghost_girl: implement the ghost girl indoor_entity_pages
+[SKIP] hoarding_bug: implement the hoarding bug indoor_entity_pages
+[SKIP] hygrodere: implement the hygrodere indoor_entity_pages
+[SKIP] jester: implement the jester indoor_entity_pages
+[SKIP] maneater: implement the maneater indoor_entity_pages
+[SKIP] mask_hornets: implement the mask hornets indoor_entity_pages
+[SKIP] masked: implement the masked indoor_entity_pages
+[SKIP] nutcrackers: implement the nutcrackers indoor_entity_pages
+[SKIP] snare_flea: implement the snare flea indoor_entity_pages
+[SKIP] spore_lizard: implement the spore lizard indoor_entity_pages
+[SKIP] thumper: implement the thumper indoor_entity_pages
+[SKIP] landmine: implement the landmine map_hazard_pages
+[SKIP] map_hazards: implement the map hazards map_hazard_pages
+[SKIP] spike_trap: implement the spike trap map_hazard_pages
+[SKIP] turret: implement the turret map_hazard_pages
+[OK  ] baboon_hawk: implement the baboon hawk outdoor_entity_pages  -> 1 files
+[SKIP] cadaver_bloom: implement the cadaver bloom outdoor_entity_pages
+[SKIP] earth_leviathan: implement the earth leviathan outdoor_entity_pages
+[SKIP] eyeless_dog: implement the eyeless dog outdoor_entity_pages
+[SKIP] feiopar: implement the feiopar outdoor_entity_pages
+[SKIP] forest_keeper: implement the forest keeper outdoor_entity_pages
+[SKIP] kidnapper_fox: implement the kidnapper fox outdoor_entity_pages
+[SKIP] old_bird: implement the old bird outdoor_entity_pages
+[SKIP] airhorn: implement the airhorn scrap_items
+[SKIP] apparatus: implement the apparatus scrap_items
+[SKIP] bee_hive: implement the bee hive scrap_items
+[SKIP] bone: implement the bone scrap_items
+[SKIP] brass_bell: implement the brass bell scrap_items
+[SKIP] cash_register: implement the cash register scrap_items
+[SKIP] chemical_jug: implement the chemical jug scrap_items
+[SKIP] clock: implement the clock scrap_items
+[SKIP] clown_horn: implement the clown horn scrap_items
+[SKIP] coffee_mug: implement the coffee mug scrap_items
+[SKIP] control_pad: implement the control pad scrap_items
+[SKIP] cookie_pan: implement the cookie pan scrap_items
+[SKIP] dramatic_mask: implement the dramatic mask scrap_items
+[SKIP] dust_pan: implement the dust pan scrap_items
+[SKIP] ear: implement the ear scrap_items
+[SKIP] egg: implement the egg scrap_items
+[SKIP] egg_beater: implement the egg beater scrap_items
+[SKIP] fancy_lamp: implement the fancy lamp scrap_items
+[SKIP] foot: implement the foot scrap_items
+[SKIP] garbage_lid: implement the garbage lid scrap_items
+[SKIP] golden_cup: implement the golden cup scrap_items
+[SKIP] hairdryer: implement the hairdryer scrap_items
+[SKIP] hand: implement the hand scrap_items
+[SKIP] heart: implement the heart scrap_items
+[SKIP] knee: implement the knee scrap_items
+[SKIP] laser_pointer: implement the laser pointer scrap_items
+[SKIP] magic_7_ball: implement the magic 7 ball scrap_items
+[SKIP] magnifying_glass: implement the magnifying glass scrap_items
+[SKIP] old_phone: implement the old phone scrap_items
+[SKIP] painting: implement the painting scrap_items
+[SKIP] player_body: implement the player body scrap_items
+[SKIP] red_soda: implement the red soda scrap_items
+[SKIP] remote: implement the remote scrap_items
+[SKIP] ribcage: implement the ribcage scrap_items
+[SKIP] robot_toy: implement the robot toy scrap_items
+[SKIP] rubber_ducky: implement the rubber ducky scrap_items
+[SKIP] soccer_ball: implement the soccer ball scrap_items
+[SKIP] steering_wheel: implement the steering wheel scrap_items
+[SKIP] tattered_metal_sheet: implement the tattered metal sheet scrap_items
+[SKIP] teeth: implement the teeth scrap_items
+[SKIP] toilet_paper: implement the toilet paper scrap_items
+[SKIP] toy_cube: implement the toy cube scrap_items
+[SKIP] toy_train: implement the toy train scrap_items
+[SKIP] v_type_engine: implement the v type engine scrap_items
+[SKIP] wedding_ring: implement the wedding ring scrap_items
+[SKIP] zed_dog: implement the zed dog scrap_items
+[SKIP] bunkbeds: implement the bunkbeds ship_furniture_pages
+[SKIP] cupboard: implement the cupboard ship_furniture_pages
+[SKIP] file_cabinet: implement the file cabinet ship_furniture_pages
+[SKIP] loud_horn: implement the loud horn ship_upgrade_pages
+[SKIP] signal_translator: implement the signal translator ship_upgrade_pages
+[SKIP] boombox: implement the boombox store_items
+[SKIP] classic_painting: implement the classic painting store_items
+[SKIP] cozy_lights: implement the cozy lights store_items
+[SKIP] disco_ball: implement the disco ball store_items
+[SKIP] dog_house: implement the dog house store_items
+[SKIP] extension_ladder: implement the extension ladder store_items
+[SKIP] flashlight: implement the flashlight store_items
+[SKIP] fridge: implement the fridge store_items
+[SKIP] goldfish: implement the goldfish store_items
+[SKIP] inverse_teleporter: implement the inverse teleporter store_items
+[SKIP] jack_o_lantern: implement the jack o lantern store_items
+[SKIP] jetpack: implement the jetpack store_items
+[SKIP] lockpicker: implement the lockpicker store_items
+[SKIP] microwave: implement the microwave store_items
+[SKIP] plushie_pajama_man: implement the plushie pajama man store_items
+[SKIP] pro_flashlight: implement the pro flashlight store_items
+[SKIP] radar_booster: implement the radar booster store_items
+[SKIP] record_player: implement the record player store_items
+[OK  ] romantic_table: implement the romantic table store_items  -> 1 files
+[OK  ] shower: implement the shower store_items  -> 1 files
+[OK  ] sofa_chair: implement the sofa chair store_items  -> 1 files
+[OK  ] spray_paint: implement the spray paint store_items  -> 1 files
+[OK  ] suits: implement the suits store_items  -> 1 files
+[OK  ] table: implement the table store_items  -> 1 files
+[OK  ] teleporter: implement the teleporter store_items  -> 1 files  (skipped: src/store_items/mod.rs)
+[OK  ] television: implement the television store_items  -> 1 files
+[OK  ] toilet: implement the toilet store_items  -> 1 files
+[OK  ] tzp_inhalant: implement the tzp inhalant store_items  -> 1 files
+[OK  ] walkie_talkie: implement the walkie talkie store_items  -> 1 files
+[OK  ] weed_killer: implement the weed killer store_items  -> 1 files
+[OK  ] welcome_mat: implement the welcome mat store_items  -> 1 files
+[OK  ] double_barrel: implement the double barrel weapon_pages  -> 1 files
+[OK  ] homemade_flashbang: implement the homemade flashbang weapon_pages  -> 1 files
+[OK  ] kitchen_knife: implement the kitchen knife weapon_pages  -> 1 files
+[OK  ] shovel: implement the shovel weapon_pages  -> 1 files
+[OK  ] stop_sign: implement the stop sign weapon_pages  -> 1 files
+[OK  ] stun_grenade: implement the stun grenade weapon_pages  -> 1 files
+[OK  ] yield_sign: implement the yield sign weapon_pages  -> 1 files
+[OK  ] zap_gun: implement the zap gun weapon_pages  -> 1 files
+
+summary: {'skipped': 128, 'implemented': 22}

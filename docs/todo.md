@@ -118,12 +118,60 @@ Status keys: `[ ]` not started · `[~]` in progress · `[!]` blocked · `[-]` de
 
 ## 2026-06-09 deferred
 
-- [ ] **#5 Wire generated systems into `main.rs` so the game does more than
+- [!] **#5 Wire generated systems into `main.rs` so the game does more than
       tick.** `InputHandlerPlugin` is registered today but `main.rs` doesn't
-      spawn an entity for it to control. Minor scaffold update: add a basic
-      player entity + camera-follow so input actually moves something visible.
-      ~45 min. No LLM cost. Makes the game feel less inert. (Scoped during the
-      autonomous session that built ship/load; circle back when convenient.)
+      spawn an entity for it to control. **Attempted 2026-06-11 and reverted:**
+      a player entity + camera-follow was added to the engine scaffold
+      (`prompts/engine_scaffold/bevy/src/main.rs` + `game/src/main.rs`), but a
+      player avatar baked into the *game-agnostic* scaffold is wrong — it would
+      appear in every Bevy game (an RTS like They Are Billions has no single
+      controllable character) and assumes a perspective that may not fit.
+      Player representation and camera perspective are **per-game**, not
+      scaffold. Superseded by the perspective TODO below.
+
+## Game-specific perspective + 2D/3D world (deferred 2026-06-11, for a future model)
+
+- [ ] **Phase 0 proposes a `perspective`, and the pipeline builds a 2D or 3D
+      world from it.** Decision (dom, 2026-06-11): perspective is game-specific
+      data, expressed via **config + a generated system**.
+
+      **The gap this addresses:** the engine scaffold currently bakes in a 2D
+      top-down worldview for *every* Bevy game, as an unstated assumption — not
+      a choice expressed anywhere:
+      - `spawn_camera` hardcodes `Camera2d`.
+      - the demo sprites are 2D `Sprite`s.
+      - `SimPosition { x: I32F32, y: I32F32 }` in `game/src/sim.rs` is **2D**
+        (no `z`), and the `SimPosition → Transform` mirror is 2D.
+      This suits an RTS (They Are Billions) and is wrong for a first-person
+      game (Lethal Company, the current target, is genuinely first-person 3D).
+
+      **Target design (config + generated system):**
+      1. Phase 0's analyzer proposes a `perspective` for the game (e.g.
+         `first_person_3d`, `top_down_2d`, `side_2d`) and writes it to
+         `game-config.json` (likely `chosen_engine.perspective`). Game-agnostic
+         data, same as the engine choice itself.
+      2. The scaffold stops hardcoding `Camera2d` / 2D spawns. Camera + player
+         become a **generated** per-game system (Phase 3
+         `propose_gameplay_systems`), so the controller behavior is per-game,
+         not in the shared scaffold.
+      3. The world is built 2D **or** 3D based on the proposed perspective.
+
+      **Foundation implication (this is the large part — read before starting):**
+      A real 3D / first-person world requires `SimPosition` to become **3D**
+      (`x, y, z`), all in fixed-point per the determinism rules. `SimPosition`
+      is the position component every simulated entity uses, so this is a
+      change to `game/src/sim.rs` (the determinism foundation) that ripples
+      through the determinism rules in `prompts/engine_determinism/bevy.md`
+      **and all ~90 generated entity modules** that read/write position. It is
+      a deliberate foundation change, not a localized `main.rs` edit. A
+      "first-person camera over the 2D sim" was explicitly rejected as a veneer
+      (camera looks FP, but the world stays a flat plane of billboards with no
+      verticality — doesn't deliver first-person gameplay).
+
+      **Scope note:** the cheap half (perspective field + de-hardcoding the
+      scaffold camera) is doable with no LLM cost; the 2D↔3D world build +
+      generated controller is the foundation work. Plan the dimensionality
+      decision (per perspective value) before touching `sim.rs`.
 
 ## Fresh-run follow-ups (2026-06-06)
 

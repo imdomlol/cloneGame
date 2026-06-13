@@ -1,3 +1,28 @@
+## 2026-06-13 — Two high-fan-in Phase 3 systems won't generate: agent dead-locks on "read files first" with tools disabled
+
+**Context:** Phase 2 `--from-vault` reached 100% (158 leaves). Phase 3 `--from-systems` landed 7 of 9 systems (game_state_machine, hud, entity_spawner, scrap_economy, combat_system, facility_timer, hazard_system). Two would not generate on any backend: `creature_ai` and `ship_system` — the two highest-fan-in systems (creature_ai depends on every creature kind; ship_system on scrap + upgrades + mission state).
+
+**What didn't work (4 attempts, both backends):**
+1. codex c=1: `creature_ai` hit the 300s timeout (killed); `ship_system` `codegen_error`.
+2. codex c=1 retry: both `codegen_error` (no parseable output, error tail was just the echoed goal — codex produced nothing usable).
+3. claude c=1: both hit the 300s timeout (killed).
+4. claude single foreground call with a **540s** cap: `creature_ai` produced **0 bytes** in 540s.
+
+**Root cause (confirmed via `claude -p ... --output-format stream-json --verbose` probe):** the input prompt is normal size (~5.1k tokens: baseline 2089 + user 3042, only 2 retrieved files), so it is NOT an input-size problem. The probe showed 1 `init` event, then **129 `thinking_tokens` events** (extended thinking, 3543 tokens) and only 4 `assistant` events. The assistant text was: *"Let me read the existing system files to understand the patterns and types used before writing the creature AI system"* followed by `<function_calls><invoke name=...`. The model wants to **call a tool to read sibling files before writing**, but tools are disabled (`--tools "" --disallowed-tools LSP`), so it loops in thinking/aborted tool-call attempts and never emits the `=== FILE: ===` blocks. Simple leaves (e.g. `teeth`) write directly and finish in ~40s; complex cross-cutting systems insist on inspecting code first and dead-lock when they can't.
+
+So the LSP-disable fix (which stopped the *infinite* hang) converted "hang on a real tool call" into "spin in thinking trying to call a tool that's denied" for the few goals complex enough to want file reads. The 300s timeout then fires.
+
+**What worked instead:** nothing yet for these 2. The game is fine without them: 158 leaves + 7 systems build clean, `cargo test --test app_smoke` green, sim ticks. They are recorded `pending` in `build/system_map.yaml`.
+
+**Fix candidates (not yet applied — shared-path change, needs a decision):**
+- (a) Add a codegen-prompt instruction: "Do not attempt to read files or call tools; emit the FILE blocks using ONLY the provided context." Forces direct output. Cheap but edits the shared system prompt (cache invalidation, affects all codegen) — test on these 2 first.
+- (b) Give system goals richer retrieval (only 2 files were included) so the model has the foundation types/signatures it wants without needing to read them. Knob change in retrieval.
+- (c) Split the 2 high-fan-in systems in `propose_gameplay_systems` into smaller, concrete goals the model can satisfy from local context. Phase 0 change.
+
+**Note for next time:** don't burn blind retries on a system goal that times out with **zero** output — probe with `--output-format stream-json --verbose` first. If the events are mostly `thinking_tokens` + aborted `<function_calls>`, it's the read-first dead-lock, not quota/backend; the fix is prompt/context, not another retry. Don't exceed ~2 attempts before probing (this cost 4 long calls + a 540s probe before the cause was clear).
+
+---
+
 ## 2026-06-09 — Phase 3 first run: StatesPlugin double-add + smoke gate scope gap
 
 **Context:** first Phase 3 run on Lethal Company. Phase 0's `propose_gameplay_systems` produced 10 systems; the loop generated `GameStateMachinePlugin` and `InputHandlerPlugin`. cargo build passed, smoke test passed, but `cargo run --bin clone-game` panicked at startup: `Error adding plugin bevy_state::app::StatesPlugin: : plugin was already added`.

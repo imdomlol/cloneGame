@@ -8,6 +8,29 @@ Repo: `C:\Users\dominic\Documents\GitHub\cloneGame`. Project status board: `clon
 
 ---
 
+## 2026-06-13 — Lethal Company complete (160/160); 4 codegen-reliability fixes in `compile_cache.run_llm`
+
+**Decided / done:** Drove the Lethal Company crate to **100% codegen coverage** — all entity leaves + all 9 Phase 3 systems (game_state_machine, input_handler, hud, entity_spawner, scrap_economy, combat_system, facility_timer, hazard_system, creature_ai, ship_system). `cargo build` clean, `cargo test --test app_smoke` green, `cargo run --bin clone-game` opens a window and ticks a deterministic sim (checksum advances per tick). Re-shipped to `releases/lethal-company/` with the binary bundled (the prior ship was source-only).
+
+Getting there required fixing four backend-dispatch problems, all in `scripts/compile_cache.run_llm` (the single CLI chokepoint, so all engine/game-agnostic):
+
+1. **Surface the real error.** On a non-zero CLI exit, fall back to the stdout tail when stderr is empty. `claude -p` prints its real error (e.g. usage-limit) to stdout, so failures were showing a blank `claude exited 1`.
+2. **The claude hang root cause (confirmed via `--output-format stream-json --verbose`):** `claude -p` is a full agent and loads the user's `rust-analyzer-lsp` plugin, which injects an `LSP` tool. On a real codegen prompt the agent calls `LSP documentSymbol` to inspect sibling code; rust-analyzer indexes the whole Bevy crate and never returns → infinite hang (one call sat 6.5h). `--tools ""` does NOT cover plugin tools — only built-ins. Fix: `--disallowed-tools "LSP" --strict-mcp-config` on the claude command.
+3. **Call timeout (`_CALL_TIMEOUT_SECS`).** `proc.communicate` had no timeout, so any stall froze the whole loop. Added a hard cap that kills the subprocess and fails the turn (recorded pending) so the loop keeps moving.
+4. **Sized the timeout to real work: 300 → 600s.** 300s was sized for 30-90s entity leaves; complex cross-cutting systems legitimately generate 200-300s+ (measured: creature_ai 145s, ship_system 215s standalone). The 300s cap was killing ship_system under loop latency. The two "stuck" systems were never stuck — just timeout-bound.
+
+**Why (key insight):** the LSP fix converted the *infinite* hang into a fast failure, but for the few goals complex enough to want file reads it became "spin in thinking trying to call a denied tool." The real unblock was realizing codex's `--sandbox read-only` already lets it READ sibling files (which is why its generated imports cite real sibling types), and it finishes those systems in 145-215s — so the fix for the last two was simply a timeout large enough for legitimate heavy generations, not a prompt/context change. Option 2 (inject foundation files) and "let claude read via `--tools Read`" were scoped but NOT needed once the timeout was right.
+
+**Rejected:** (a) raising the timeout as the fix for the *claude* deadlock — disproven, a 540s claude run produced 0 bytes (genuinely stuck on denied-tool thinking, not slow). The timeout bump only helps backends that actually make progress (codex). (b) Hand-merging the diagnostic codegen output — bypasses the cargo gate; always route through the loop. (c) Building the foundation-context-injection feature (config key + prompt section) — unnecessary once codex + 600s landed both systems; revisit only if a future game has systems that genuinely exceed 600s.
+
+**Operational notes:** claude has a hard 5-hour usage window (full reset, not rolling); codex has its own daily cap. The autonomous wall→wait→resume pattern (background quota-waiter that exits when a backend returns) worked overnight. A disk-progress watchdog (new `.rs` files vs 16-min silence) distinguishes a real hang from a quota-wall fast-fail.
+
+**Don't reintroduce:** `--tools ""` alone for the claude codegen call (plugin tools leak past it → LSP hang). Always pair with `--disallowed-tools "LSP" --strict-mcp-config`. Don't drop the call timeout. See [[errors]] 2026-06-13 for the full diagnostic trail.
+
+**Deferred (logged in docs/todo.md, not started):** game-specific perspective — Phase 0 should propose a `perspective` and the pipeline build a 2D or 3D world from it (Lethal Company is first-person; the scaffold is currently 2D top-down with a 2D `SimPosition`). A naive player-in-the-scaffold attempt was reverted (player/perspective is per-game, not scaffold).
+
+---
+
 ## 2026-06-09 — `scripts/ship.py` + `scripts/load_game.py` + `releases/` convention
 
 **Decided:** Finished games are preserved via a snapshot directory under

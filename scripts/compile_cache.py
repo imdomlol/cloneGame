@@ -44,16 +44,50 @@ def cache_key(rendered_prompt: str, model: str) -> str:
 # claude and the SDK have no equivalent race and ignore the lock.
 _CODEX_SPAWN_LOCK = threading.Lock()
 _CODEX_STARTUP_DELAY_SECS = 3.0
+# Hard ceiling on a single backend call. Its job is defense-in-depth against a
+# hung CLI (e.g. an agent that calls a tool which never returns): without it a
+# single stalled call freezes the whole loop indefinitely. On timeout the
+# subprocess is killed and the turn fails fast (recorded codegen_error /
+# pending), so the loop keeps moving instead of hanging. Backend-agnostic.
+#
+# Sized for the slowest *legitimate* generation, not the typical one. Simple
+# entity leaves return in 30-90s, but complex cross-cutting Phase 3 systems
+# (e.g. ship_system: docking + cargo + upgrades + mission state) read several
+# sibling files and legitimately generate for 200-300s+; measured 215s
+# standalone for ship_system, which the old 300s cap killed under loop latency.
+# 600s gives those a comfortable margin while still bounding a true hang.
+_CALL_TIMEOUT_SECS = 600.0
 
 
 def run_llm(prompt: str, mode: str, model: str) -> str:
     if mode == "claude":
-        # --tools "" disables all built-in tools. Without it, `claude -p` behaves
-        # like an interactive agent: it tries to Write/Edit the output, gets
-        # blocked by the sandbox, and inconsistently falls back to either inline
-        # code or a plan-only summary ("grant permissions and I'll write..."). A
-        # pure text transform must not have tools, so the model just emits text.
-        cmd = ["claude", "-p", "--model", model, "--tools", ""]
+        # `claude -p` is a full Claude Code agent, not a thin completion call, so
+        # it must be pinned to a pure text transform or it acts agentically.
+        # - `--tools ""` disables all BUILT-IN tools. Without it the agent tries
+        #   to Write/Edit the output, gets sandbox-blocked, and falls back to
+        #   inline code or a plan-only summary inconsistently.
+        # - `--tools ""` does NOT cover PLUGIN-provided tools. The
+        #   `rust-analyzer-lsp` plugin injects an `LSP` tool; on a real
+        #   "implement X" prompt the agent reaches for it to inspect sibling
+        #   code, which drives rust-analyzer to index the whole crate and never
+        #   returns. Since run_llm has no timeout, that stalls the turn forever
+        #   (observed: large prompts hung indefinitely while tiny ones returned
+        #   in 5s). `--disallowed-tools "LSP"` denies it so the agent emits code
+        #   from the prompt context instead.
+        # - `--strict-mcp-config` with no `--mcp-config` pins MCP to nothing, so
+        #   no configured MCP server (Obsidian, Context7, ...) can hang the call
+        #   either. Keeps the transform hermetic.
+        cmd = [
+            "claude",
+            "-p",
+            "--model",
+            model,
+            "--tools",
+            "",
+            "--disallowed-tools",
+            "LSP",
+            "--strict-mcp-config",
+        ]
     elif mode == "codex":
         # --sandbox read-only is critical: `codex exec` is an agent that defaults
         # to workspace-write and will edit files in the repo directly during
@@ -86,7 +120,16 @@ def run_llm(prompt: str, mode: str, model: str) -> str:
             encoding="utf-8",
         )
     try:
-        stdout, stderr = proc.communicate(prompt)
+        stdout, stderr = proc.communicate(prompt, timeout=_CALL_TIMEOUT_SECS)
+    except subprocess.TimeoutExpired:
+        # The CLI stalled (hung tool call, dropped stream, etc.). Kill it and
+        # fail this turn so the loop records it and continues instead of
+        # freezing forever; nothing downstream has its own timeout.
+        proc.kill()
+        proc.communicate()
+        raise RuntimeError(
+            f"{cmd[0]} timed out after {int(_CALL_TIMEOUT_SECS)}s (killed)"
+        )
     except KeyboardInterrupt:
         proc.terminate()
         try:
@@ -96,7 +139,10 @@ def run_llm(prompt: str, mode: str, model: str) -> str:
             proc.wait()
         raise
     if proc.returncode != 0:
-        raise RuntimeError(stderr.strip() or f"{cmd[0]} exited {proc.returncode}")
+        # Some CLIs (claude -p) print the real error to stdout and exit with an
+        # empty stderr; keep the tail, where banner-then-error CLIs put the signal.
+        detail = stderr.strip() or stdout.strip()[-480:]
+        raise RuntimeError(detail or f"{cmd[0]} exited {proc.returncode}")
     return stdout
 
 

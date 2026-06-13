@@ -17,3 +17,7 @@ pub mod map_hazard_pages;
 pub mod system;
 pub mod outdoor_entity_pages;
 pub mod scrap_items;
+pub mod ship_furniture_pages;
+pub mod ship_upgrade_pages;
+pub mod store_items;
+pub mod weapon_pages;

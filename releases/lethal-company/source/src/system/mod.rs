@@ -1,2 +1,10 @@
-pub mod game_state_machine;
 pub mod input_handler;
+pub mod game_state_machine;
+pub mod hud;
+pub mod entity_spawner;
+pub mod scrap_economy;
+pub mod combat_system;
+pub mod facility_timer;
+pub mod hazard_system;
+pub mod creature_ai;
+pub mod ship_system;

@@ -1,0 +1,9 @@
+ship: snapshotting 'Lethal Company' -> C:\Users\dominic\Documents\GitHub\cloneGame\releases\lethal-company
+  source: 181 files
+  vault: 230 files
+  game-config.json: 1 file
+  system_map.yaml: 1 file
+  binary: cargo build --release ... (this takes a minute on a cold build)
+  binary: clone-game.exe -> binary\windows-amd64/
+  README.md: 1 file
+ship: done -> releases\lethal-company

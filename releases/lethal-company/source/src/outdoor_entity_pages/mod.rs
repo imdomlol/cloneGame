@@ -5,3 +5,4 @@ pub mod feiopar;
 pub mod forest_keeper;
 pub mod kidnapper_fox;
 pub mod old_bird;
+pub mod baboon_hawk;

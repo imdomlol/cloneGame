@@ -1573,9 +1573,7 @@
       "aggregator_module": "app_plugins",
       "tuple_chunk_size": 14,
       "main_file": "src/main.rs",
-      "excluded_plugins": {
-        "GameStateMachinePlugin": "Generated plugin adds StatesPlugin which DefaultPlugins already includes; smoke test uses MinimalPlugins so this went undetected. Will be fixed when bevy.md S1 rule update flows through next regen."
-      }
+      "excluded_plugins": {}
     },
     "systems": [
       {

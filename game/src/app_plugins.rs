@@ -9,13 +9,16 @@ use bevy::prelude::*;
 
 use crate::scrap_items::airhorn::AirhornPlugin;
 use crate::scrap_items::apparatus::ApparatusPlugin;
+use crate::outdoor_entity_pages::baboon_hawk::BaboonHawkPlugin;
 use crate::harmless_entity_pages::backwater_gunkfish::BackwaterGunkfishPlugin;
 use crate::indoor_entity_pages::barber::BarberPlugin;
 use crate::scrap_items::bee_hive::BeeHivePlugin;
 use crate::entity_pages::bestiary::BestiaryPlugin;
 use crate::scrap_items::bone::BonePlugin;
+use crate::store_items::boombox::BoomboxPlugin;
 use crate::indoor_entity_pages::bracken::BrackenPlugin;
 use crate::scrap_items::brass_bell::BrassBellPlugin;
+use crate::ship_furniture_pages::bunkbeds::BunkbedsPlugin;
 use crate::indoor_entity_pages::bunker_spider::BunkerSpiderPlugin;
 use crate::indoor_entity_pages::butler::ButlerPlugin;
 use crate::outdoor_entity_pages::cadaver_bloom::CadaverBloomPlugin;
@@ -24,14 +27,22 @@ use crate::scrap_items::cash_register::CashRegisterPlugin;
 use crate::gameplay_mechanics::cause_of_death::CauseOfDeathPlugin;
 use crate::scrap_items::chemical_jug::ChemicalJugPlugin;
 use crate::daytime_entity_pages::circuit_bee::CircuitBeePlugin;
+use crate::store_items::classic_painting::ClassicPaintingPlugin;
 use crate::scrap_items::clock::ClockPlugin;
 use crate::scrap_items::clown_horn::ClownHornPlugin;
 use crate::scrap_items::coffee_mug::CoffeeMugPlugin;
 use crate::indoor_entity_pages::coil_head::CoilHeadPlugin;
+use crate::system::combat_system::CombatSystemPlugin;
 use crate::gameplay_mechanics::company_ranks::CompanyRanksPlugin;
 use crate::scrap_items::control_pad::ControlPadPlugin;
 use crate::scrap_items::cookie_pan::CookiePanPlugin;
+use crate::store_items::cozy_lights::CozyLightsPlugin;
+use crate::system::creature_ai::CreatureAiPlugin;
 use crate::gameplay_mechanics::credits::CreditsPlugin;
+use crate::ship_furniture_pages::cupboard::CupboardPlugin;
+use crate::store_items::disco_ball::DiscoBallPlugin;
+use crate::store_items::dog_house::DogHousePlugin;
+use crate::weapon_pages::double_barrel::DoubleBarrelPlugin;
 use crate::scrap_items::dramatic_mask::DramaticMaskPlugin;
 use crate::gameplay_mechanics::dropship::DropshipPlugin;
 use crate::scrap_items::dust_pan::DustPanPlugin;
@@ -42,33 +53,50 @@ use crate::scrap_items::egg::EggPlugin;
 use crate::gameplay_mechanics::electric_coil::ElectricCoilPlugin;
 use crate::gameplay_mechanics::employee::EmployeePlugin;
 use crate::entity_pages::entity::EntityPlugin;
+use crate::system::entity_spawner::EntitySpawnerPlugin;
 use crate::gameplay_mechanics::entity_targeting::EntityTargetingPlugin;
+use crate::store_items::extension_ladder::ExtensionLadderPlugin;
 use crate::outdoor_entity_pages::eyeless_dog::EyelessDogPlugin;
+use crate::system::facility_timer::FacilityTimerPlugin;
 use crate::scrap_items::fancy_lamp::FancyLampPlugin;
 use crate::gameplay_mechanics::fear::FearPlugin;
 use crate::outdoor_entity_pages::feiopar::FeioparPlugin;
+use crate::ship_furniture_pages::file_cabinet::FileCabinetPlugin;
 use crate::gameplay_mechanics::fire_exit::FireExitPlugin;
+use crate::store_items::flashlight::FlashlightPlugin;
 use crate::scrap_items::foot::FootPlugin;
 use crate::outdoor_entity_pages::forest_keeper::ForestKeeperPlugin;
+use crate::store_items::fridge::FridgePlugin;
+use crate::system::game_state_machine::GameStateMachinePlugin;
 use crate::scrap_items::garbage_lid::GarbageLidPlugin;
 use crate::indoor_entity_pages::ghost_girl::GhostGirlPlugin;
 use crate::daytime_entity_pages::giant_sapsucker::GiantSapsuckerPlugin;
 use crate::gameplay_mechanics::global_game_variables::GlobalGameVariablesPlugin;
 use crate::scrap_items::golden_cup::GoldenCupPlugin;
+use crate::store_items::goldfish::GoldfishPlugin;
 use crate::scrap_items::hairdryer::HairdryerPlugin;
 use crate::scrap_items::hand::HandPlugin;
+use crate::system::hazard_system::HazardSystemPlugin;
 use crate::scrap_items::heart::HeartPlugin;
 use crate::indoor_entity_pages::hoarding_bug::HoardingBugPlugin;
+use crate::weapon_pages::homemade_flashbang::HomemadeFlashbangPlugin;
+use crate::system::hud::HudPlugin;
 use crate::indoor_entity_pages::hygrodere::HygroderePlugin;
 use crate::system::input_handler::InputHandlerPlugin;
 use crate::gameplay_mechanics::interior::InteriorPlugin;
+use crate::store_items::inverse_teleporter::InverseTeleporterPlugin;
 use crate::gameplay_mechanics::item_bar::ItemBarPlugin;
+use crate::store_items::jack_o_lantern::JackOLanternPlugin;
 use crate::indoor_entity_pages::jester::JesterPlugin;
+use crate::store_items::jetpack::JetpackPlugin;
 use crate::outdoor_entity_pages::kidnapper_fox::KidnapperFoxPlugin;
+use crate::weapon_pages::kitchen_knife::KitchenKnifePlugin;
 use crate::scrap_items::knee::KneePlugin;
 use crate::map_hazard_pages::landmine::LandminePlugin;
 use crate::scrap_items::laser_pointer::LaserPointerPlugin;
+use crate::store_items::lockpicker::LockpickerPlugin;
 use crate::gameplay_mechanics::lore::LorePlugin;
+use crate::ship_upgrade_pages::loud_horn::LoudHornPlugin;
 use crate::scrap_items::magic_7_ball::Magic7BallPlugin;
 use crate::scrap_items::magnifying_glass::MagnifyingGlassPlugin;
 use crate::indoor_entity_pages::maneater::ManeaterPlugin;
@@ -76,28 +104,71 @@ use crate::harmless_entity_pages::manticoil::ManticoilPlugin;
 use crate::map_hazard_pages::map_hazards::MapHazardsPlugin;
 use crate::indoor_entity_pages::mask_hornets::MaskHornetsPlugin;
 use crate::indoor_entity_pages::masked::MaskedPlugin;
+use crate::store_items::microwave::MicrowavePlugin;
 use crate::gameplay_mechanics::monitors::MonitorsPlugin;
 use crate::indoor_entity_pages::nutcrackers::NutcrackersPlugin;
 use crate::outdoor_entity_pages::old_bird::OldBirdPlugin;
+use crate::scrap_items::old_phone::OldPhonePlugin;
 use crate::gameplay_mechanics::orbit::OrbitPlugin;
+use crate::scrap_items::painting::PaintingPlugin;
+use crate::scrap_items::player_body::PlayerBodyPlugin;
+use crate::store_items::plushie_pajama_man::PlushiePajamaManPlugin;
+use crate::store_items::pro_flashlight::ProFlashlightPlugin;
 use crate::gameplay_mechanics::profit_quota::ProfitQuotaPlugin;
+use crate::store_items::radar_booster::RadarBoosterPlugin;
+use crate::store_items::record_player::RecordPlayerPlugin;
+use crate::scrap_items::red_soda::RedSodaPlugin;
+use crate::scrap_items::remote::RemotePlugin;
+use crate::scrap_items::ribcage::RibcagePlugin;
 use crate::harmless_entity_pages::roaming_locust::RoamingLocustPlugin;
+use crate::scrap_items::robot_toy::RobotToyPlugin;
+use crate::store_items::romantic_table::RomanticTablePlugin;
 use crate::scrap_items::rubber_ducky::RubberDuckyPlugin;
 use crate::gameplay_mechanics::scanner::ScannerPlugin;
+use crate::system::scrap_economy::ScrapEconomyPlugin;
+use crate::system::ship_system::ShipSystemPlugin;
+use crate::weapon_pages::shovel::ShovelPlugin;
+use crate::store_items::shower::ShowerPlugin;
+use crate::ship_upgrade_pages::signal_translator::SignalTranslatorPlugin;
 use crate::sim::SimChecksumPlugin;
 use crate::sim::SimEventsPlugin;
 use crate::event_pages::single_item_day::SingleItemDayPlugin;
 use crate::indoor_entity_pages::snare_flea::SnareFleaPlugin;
+use crate::scrap_items::soccer_ball::SoccerBallPlugin;
+use crate::store_items::sofa_chair::SofaChairPlugin;
 use crate::map_hazard_pages::spike_trap::SpikeTrapPlugin;
 use crate::indoor_entity_pages::spore_lizard::SporeLizardPlugin;
+use crate::store_items::spray_paint::SprayPaintPlugin;
+use crate::scrap_items::steering_wheel::SteeringWheelPlugin;
+use crate::weapon_pages::stop_sign::StopSignPlugin;
+use crate::weapon_pages::stun_grenade::StunGrenadePlugin;
+use crate::store_items::suits::SuitsPlugin;
+use crate::store_items::table::TablePlugin;
+use crate::scrap_items::tattered_metal_sheet::TatteredMetalSheetPlugin;
+use crate::scrap_items::teeth::TeethPlugin;
+use crate::store_items::teleporter::TeleporterPlugin;
+use crate::store_items::television::TelevisionPlugin;
 use crate::gameplay_mechanics::terminal::TerminalPlugin;
 use crate::entity_pages::the_company_monster::TheCompanyMonsterPlugin;
 use crate::gameplay_mechanics::the_ship::TheShipPlugin;
 use crate::indoor_entity_pages::thumper::ThumperPlugin;
+use crate::scrap_items::toilet_paper::ToiletPaperPlugin;
+use crate::store_items::toilet::ToiletPlugin;
+use crate::scrap_items::toy_cube::ToyCubePlugin;
+use crate::scrap_items::toy_train::ToyTrainPlugin;
 use crate::harmless_entity_pages::tulip_snake::TulipSnakePlugin;
 use crate::map_hazard_pages::turret::TurretPlugin;
+use crate::store_items::tzp_inhalant::TzpInhalantPlugin;
+use crate::scrap_items::v_type_engine::VTypeEnginePlugin;
 use crate::harmless_entity_pages::vain_shroud::VainShroudPlugin;
+use crate::store_items::walkie_talkie::WalkieTalkiePlugin;
 use crate::gameplay_mechanics::weather::WeatherPlugin;
+use crate::scrap_items::wedding_ring::WeddingRingPlugin;
+use crate::store_items::weed_killer::WeedKillerPlugin;
+use crate::store_items::welcome_mat::WelcomeMatPlugin;
+use crate::weapon_pages::yield_sign::YieldSignPlugin;
+use crate::weapon_pages::zap_gun::ZapGunPlugin;
+use crate::scrap_items::zed_dog::ZedDogPlugin;
 
 /// Register every plugin discovered under `src/`.
 ///
@@ -106,11 +177,16 @@ use crate::gameplay_mechanics::weather::WeatherPlugin;
 /// spawning, and any per-engine resources that vary per binary.
 pub fn add_all(app: &mut App) -> &mut App {
     app
-        .add_plugins((AirhornPlugin, ApparatusPlugin, BackwaterGunkfishPlugin, BarberPlugin, BeeHivePlugin, BestiaryPlugin, BonePlugin, BrackenPlugin, BrassBellPlugin, BunkerSpiderPlugin, ButlerPlugin, CadaverBloomPlugin, CadaverPlugin, CashRegisterPlugin))
-        .add_plugins((CauseOfDeathPlugin, ChemicalJugPlugin, CircuitBeePlugin, ClockPlugin, ClownHornPlugin, CoffeeMugPlugin, CoilHeadPlugin, CompanyRanksPlugin, ControlPadPlugin, CookiePanPlugin, CreditsPlugin, DramaticMaskPlugin, DropshipPlugin, DustPanPlugin))
-        .add_plugins((EarPlugin, EarthLeviathanPlugin, EggBeaterPlugin, EggPlugin, ElectricCoilPlugin, EmployeePlugin, EntityPlugin, EntityTargetingPlugin, EyelessDogPlugin, FancyLampPlugin, FearPlugin, FeioparPlugin, FireExitPlugin, FootPlugin))
-        .add_plugins((ForestKeeperPlugin, GarbageLidPlugin, GhostGirlPlugin, GiantSapsuckerPlugin, GlobalGameVariablesPlugin, GoldenCupPlugin, HairdryerPlugin, HandPlugin, HeartPlugin, HoardingBugPlugin, HygroderePlugin, InputHandlerPlugin, InteriorPlugin, ItemBarPlugin))
-        .add_plugins((JesterPlugin, KidnapperFoxPlugin, KneePlugin, LandminePlugin, LaserPointerPlugin, LorePlugin, Magic7BallPlugin, MagnifyingGlassPlugin, ManeaterPlugin, ManticoilPlugin, MapHazardsPlugin, MaskHornetsPlugin, MaskedPlugin, MonitorsPlugin))
-        .add_plugins((NutcrackersPlugin, OldBirdPlugin, OrbitPlugin, ProfitQuotaPlugin, RoamingLocustPlugin, RubberDuckyPlugin, ScannerPlugin, SimChecksumPlugin, SimEventsPlugin, SingleItemDayPlugin, SnareFleaPlugin, SpikeTrapPlugin, SporeLizardPlugin, TerminalPlugin))
-        .add_plugins((TheCompanyMonsterPlugin, TheShipPlugin, ThumperPlugin, TulipSnakePlugin, TurretPlugin, VainShroudPlugin, WeatherPlugin))
+        .add_plugins((AirhornPlugin, ApparatusPlugin, BaboonHawkPlugin, BackwaterGunkfishPlugin, BarberPlugin, BeeHivePlugin, BestiaryPlugin, BonePlugin, BoomboxPlugin, BrackenPlugin, BrassBellPlugin, BunkbedsPlugin, BunkerSpiderPlugin, ButlerPlugin))
+        .add_plugins((CadaverBloomPlugin, CadaverPlugin, CashRegisterPlugin, CauseOfDeathPlugin, ChemicalJugPlugin, CircuitBeePlugin, ClassicPaintingPlugin, ClockPlugin, ClownHornPlugin, CoffeeMugPlugin, CoilHeadPlugin, CombatSystemPlugin, CompanyRanksPlugin, ControlPadPlugin))
+        .add_plugins((CookiePanPlugin, CozyLightsPlugin, CreatureAiPlugin, CreditsPlugin, CupboardPlugin, DiscoBallPlugin, DogHousePlugin, DoubleBarrelPlugin, DramaticMaskPlugin, DropshipPlugin, DustPanPlugin, EarPlugin, EarthLeviathanPlugin, EggBeaterPlugin))
+        .add_plugins((EggPlugin, ElectricCoilPlugin, EmployeePlugin, EntityPlugin, EntitySpawnerPlugin, EntityTargetingPlugin, ExtensionLadderPlugin, EyelessDogPlugin, FacilityTimerPlugin, FancyLampPlugin, FearPlugin, FeioparPlugin, FileCabinetPlugin, FireExitPlugin))
+        .add_plugins((FlashlightPlugin, FootPlugin, ForestKeeperPlugin, FridgePlugin, GameStateMachinePlugin, GarbageLidPlugin, GhostGirlPlugin, GiantSapsuckerPlugin, GlobalGameVariablesPlugin, GoldenCupPlugin, GoldfishPlugin, HairdryerPlugin, HandPlugin, HazardSystemPlugin))
+        .add_plugins((HeartPlugin, HoardingBugPlugin, HomemadeFlashbangPlugin, HudPlugin, HygroderePlugin, InputHandlerPlugin, InteriorPlugin, InverseTeleporterPlugin, ItemBarPlugin, JackOLanternPlugin, JesterPlugin, JetpackPlugin, KidnapperFoxPlugin, KitchenKnifePlugin))
+        .add_plugins((KneePlugin, LandminePlugin, LaserPointerPlugin, LockpickerPlugin, LorePlugin, LoudHornPlugin, Magic7BallPlugin, MagnifyingGlassPlugin, ManeaterPlugin, ManticoilPlugin, MapHazardsPlugin, MaskHornetsPlugin, MaskedPlugin, MicrowavePlugin))
+        .add_plugins((MonitorsPlugin, NutcrackersPlugin, OldBirdPlugin, OldPhonePlugin, OrbitPlugin, PaintingPlugin, PlayerBodyPlugin, PlushiePajamaManPlugin, ProFlashlightPlugin, ProfitQuotaPlugin, RadarBoosterPlugin, RecordPlayerPlugin, RedSodaPlugin, RemotePlugin))
+        .add_plugins((RibcagePlugin, RoamingLocustPlugin, RobotToyPlugin, RomanticTablePlugin, RubberDuckyPlugin, ScannerPlugin, ScrapEconomyPlugin, ShipSystemPlugin, ShovelPlugin, ShowerPlugin, SignalTranslatorPlugin, SimChecksumPlugin, SimEventsPlugin, SingleItemDayPlugin))
+        .add_plugins((SnareFleaPlugin, SoccerBallPlugin, SofaChairPlugin, SpikeTrapPlugin, SporeLizardPlugin, SprayPaintPlugin, SteeringWheelPlugin, StopSignPlugin, StunGrenadePlugin, SuitsPlugin, TablePlugin, TatteredMetalSheetPlugin, TeethPlugin, TeleporterPlugin))
+        .add_plugins((TelevisionPlugin, TerminalPlugin, TheCompanyMonsterPlugin, TheShipPlugin, ThumperPlugin, ToiletPaperPlugin, ToiletPlugin, ToyCubePlugin, ToyTrainPlugin, TulipSnakePlugin, TurretPlugin, TzpInhalantPlugin, VTypeEnginePlugin, VainShroudPlugin))
+        .add_plugins((WalkieTalkiePlugin, WeatherPlugin, WeddingRingPlugin, WeedKillerPlugin, WelcomeMatPlugin, YieldSignPlugin, ZapGunPlugin, ZedDogPlugin))
 }
